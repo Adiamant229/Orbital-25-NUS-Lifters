@@ -10,17 +10,18 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo/vector-icons": "^14.1.0",
     "expo": "~53.0.9",
+    "expo-constants": "~17.1.6",
+    "expo-linking": "~7.1.4",
+    "expo-router": "~5.0.6",
     "expo-status-bar": "~2.2.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-native": "0.79.2",
-    "react-native-web": "^0.20.0",
-    "expo-router": "~5.0.6",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.10.0",
-    "expo-linking": "~7.1.4",
-    "expo-constants": "~17.1.6"
+    "react-native-web": "^0.20.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"

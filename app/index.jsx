@@ -17,12 +17,25 @@ const Home = () => {
         <ThemedText style={{fontSize: 16}}>Official NUS lifting club 2025</ThemedText>
         <Spacer/>
 
-      <Link href="/GymCapacity" asChild>
+      <Link href="/login" asChild>
         <TouchableOpacity style={styles.card}>
-          <Text>Gym Capacity</Text>
+          <Text>Login</Text>
+        </TouchableOpacity>
+       </Link>
+      
+      <Spacer />
+
+     <Link href="/register" asChild>
+        <TouchableOpacity style={styles.card}>
+          <Text>Register</Text>
         </TouchableOpacity>
        </Link>
 
+        <Link href="/gymCapacity" asChild>
+        <TouchableOpacity style={styles.card}>
+          <Text>Check capacity</Text>
+        </TouchableOpacity>
+       </Link>
         <Image source={Logo} style={styles.img}/> 
 
     </ThemedView>

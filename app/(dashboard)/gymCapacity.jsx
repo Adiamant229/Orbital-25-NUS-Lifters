@@ -1,9 +1,9 @@
 import {StyleSheet} from 'react-native'
 
-import ThemedText from '../components/themedText'
-import ThemedView from '../components/themedView'
+import ThemedText from '../../components/themedText'
+import ThemedView from '../../components/themedView'
 
-const GymCapacity = () => {
+const gymCapacity = () => {
   
   return (
     <ThemedView style={styles.container}>
@@ -14,7 +14,7 @@ const GymCapacity = () => {
   )
 }
 
-export default GymCapacity
+export default gymCapacity
 
 const styles = StyleSheet.create({
     container: {
