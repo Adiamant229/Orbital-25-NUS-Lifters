@@ -10,7 +10,7 @@ const Home = () => {
   return (
     <ThemedView style={styles.container}>
     
-        <ThemedText style={styles.title} title = {true} >NUS Lifters</ThemedText>
+        <ThemedText style={styles.title} title = {true} >NUS Lifters!!!</ThemedText>
         
         <Spacer height = {10} />
 

@@ -1,12 +1,12 @@
 {
   "expo": {
-    "scheme": "my-react-app", 
-    "name": "my-react-app",
-    "slug": "my-react-app",
+    "scheme": "NUS Lifters", 
+    "name": "NUS Lifters",
+    "slug": "NUS Lifters",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
