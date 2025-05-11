@@ -3,18 +3,18 @@ import {StyleSheet} from 'react-native'
 import ThemedText from '../../components/themedText'
 import ThemedView from '../../components/themedView'
 
-const profile = () => {
+const forum = () => {
   
   return (
     <ThemedView style={styles.container}>
       
-      <ThemedText style={styles.title} title={true}>profile</ThemedText>
+      <ThemedText style={styles.title} title={true}>Forum</ThemedText>
       
     </ThemedView>
   )
 }
 
-export default profile
+export default forum
 
 const styles = StyleSheet.create({
     container: {
