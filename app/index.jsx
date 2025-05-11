@@ -10,32 +10,33 @@ const Home = () => {
   return (
     <ThemedView style={styles.container}>
     
-        <ThemedText style={styles.title} title = {true} >NUS Lifters!!!</ThemedText>
+        <ThemedText style={styles.title} title={true}>NUS Lifters!!!</ThemedText>
         
-        <Spacer height = {10} />
+        <Spacer height={10} />
 
         <ThemedText style={{fontSize: 16}}>Official NUS lifting club 2025</ThemedText>
         <Spacer/>
 
-      <Link href="/login" asChild>
-        <TouchableOpacity style={styles.card}>
-          <Text>Login</Text>
-        </TouchableOpacity>
-       </Link>
+        <Link href="/login" asChild>
+          <TouchableOpacity style={styles.card}>
+            <Text>Login</Text>
+          </TouchableOpacity>
+        </Link>
       
-      <Spacer />
+        <Spacer />
 
-     <Link href="/register" asChild>
-        <TouchableOpacity style={styles.card}>
-          <Text>Register</Text>
-        </TouchableOpacity>
-       </Link>
+        <Link href="/register" asChild>
+          <TouchableOpacity style={styles.card}>
+            <Text>Register</Text>
+          </TouchableOpacity>
+        </Link>
 
         <Link href="/gymCapacity" asChild>
-        <TouchableOpacity style={styles.card}>
-          <Text>Check capacity</Text>
-        </TouchableOpacity>
-       </Link>
+          <TouchableOpacity style={styles.card}>
+            <Text>Check capacity</Text>
+          </TouchableOpacity>
+        </Link>
+
         <Image source={Logo} style={styles.img}/> 
 
     </ThemedView>
@@ -60,7 +61,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#eee',
         padding: 20,
         borderRadius: 5,
-        boxShadow:'4px 4px rgba(0,0,0,0.1)',
+        boxShadow: '4px 4px rgba(0,0,0,0.1)',
     },
 
     img: {

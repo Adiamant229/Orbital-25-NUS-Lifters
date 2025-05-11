@@ -1,7 +1,7 @@
 import { Tabs } from "expo-router"
 import { useColorScheme } from "react-native";
 import { Colors } from '../../constants/colors'
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
+import { Ionicons, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons'
 
 
 const dashBoardLayout = () => {
@@ -44,17 +44,17 @@ const dashBoardLayout = () => {
             <Tabs.Screen 
                 name="macro" 
                 options={{ title: 'Macro', tabBarIcon: ({ focused }) => (
-                    <MaterialCommunityIcons
+                    <MaterialIcons
                     size={24} 
-                    name={focused ? "food-drumstick": "food-drumstick-outline"}
+                    name="local-dining"
                     color={focused ? theme.iconColorFocused : theme.iconColor}
                     />
             )}}
             />
 
             <Tabs.Screen 
-                name="exercises" 
-                options={{ title: 'Exercises', tabBarIcon: ({ focused }) => (
+                name="weightTracker" 
+                options={{ title: 'Weights', tabBarIcon: ({ focused }) => (
                     <MaterialCommunityIcons
                     size={24} 
                     name="dumbbell"
