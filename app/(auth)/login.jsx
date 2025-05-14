@@ -1,62 +1,62 @@
-import { StyleSheet, Pressable, Text } from 'react-native'
-import { Link } from 'expo-router'
-import { Colors } from '../../constants/colors'
+import { StyleSheet, Pressable, Text } from "react-native";
+import { Link } from "expo-router";
+import { Colors } from "../../constants/colors";
 
 //themed components
-import ThemedView from '../../components/themedView'
-import ThemedText from '../../components/themedText'
-import ThemedButton from '../../components/themedButton'
-import Spacer from '../../components/spacer'
+import ThemedView from "../../components/themedView";
+import ThemedText from "../../components/themedText";
+import ThemedButton from "../../components/themedButton";
+import Spacer from "../../components/spacer";
 
 const login = () => {
-    const handleSubmit = () => {
-        console.log('login form submitted')
-    }
+  const handleSubmit = () => {
+    console.log("login form submitted");
+  };
   return (
     <ThemedView style={styles.container}>
+      <Spacer />
 
-        <Spacer />
+      <ThemedText title={true} style={styles.title}>
+        Login to Your Account
+      </ThemedText>
 
-        <ThemedText title={true} style={styles.title}> 
-            Login to Your Account
+      <ThemedButton onPress={handleSubmit}>
+        <Text style={{ color: "#f2f2f2" }}>Login</Text>
+      </ThemedButton>
+
+      <Spacer height={100} />
+
+      <Link href="/register">
+        <ThemedText style={{ textAlign: "center" }}>
+          Register instead
         </ThemedText>
-
-        <ThemedButton onPress={handleSubmit}> 
-            <Text style={{ color: '#f2f2f2'}}>Login</Text>
-        </ThemedButton>
-
-        <Spacer height={100} />
-
-        <Link href='/register'>
-        <ThemedText style={{ textAlign: 'center' }}>Register instead</ThemedText>
-        </Link>
-
+      </Link>
     </ThemedView>
-  )
-}
+  );
+};
 
-export default login
+export default login;
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
-    title: {
-        textAlign: 'center',
-        fontSize: 18,
-        marginBottom: 30
-    },
+  title: {
+    textAlign: "center",
+    fontSize: 18,
+    marginBottom: 30,
+  },
 
-    btn: {
-        backgroundColor: Colors.primary,
-        padding: 15,
-        borderRadius: 5,
-    },
+  btn: {
+    backgroundColor: Colors.primary,
+    padding: 15,
+    borderRadius: 5,
+  },
 
-    pressed: {
-        opacity: 0.8
-    }
-})
+  pressed: {
+    opacity: 0.8,
+  },
+});

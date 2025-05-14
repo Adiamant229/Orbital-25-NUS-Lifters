@@ -1,15 +1,17 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View } from "react-native";
 
-import ThemedText from '../../components/themedText'
-import ThemedView from '../../components/themedView'
-import Spacer from '../../components/spacer'
-import ThemedButton from '../../components/themedButton'
-import { MaterialIcons } from '@expo/vector-icons'
+import ThemedText from "../../components/themedText";
+import ThemedView from "../../components/themedView";
+import Spacer from "../../components/spacer";
+import ThemedButton from "../../components/themedButton";
+import { MaterialIcons } from "@expo/vector-icons";
 
 const Macro = () => {
   return (
     <ThemedView style={styles.container}>
-      <ThemedText style={styles.title} title={true}>Macro Calculator</ThemedText>
+      <ThemedText style={styles.title} title={true}>
+        Macro Calculator
+      </ThemedText>
 
       <Spacer />
 
@@ -41,21 +43,21 @@ const Macro = () => {
         </View>
       </View>
     </ThemedView>
-  )
-}
+  );
+};
 
-export default Macro
+export default Macro;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: 20,
   },
 
   title: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontSize: 18,
     marginBottom: 20,
   },
@@ -63,30 +65,30 @@ const styles = StyleSheet.create({
   searchButton: {
     paddingVertical: 12,
     paddingHorizontal: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   searchContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
 
   buttonText: {
-    color: '#f2f2f2',
+    color: "#f2f2f2",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 
   infoBox: {
-    width: '100%',
+    width: "100%",
     marginTop: 30,
-    backgroundColor: '#eee',
+    backgroundColor: "#eee",
     padding: 20,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
@@ -94,17 +96,17 @@ const styles = StyleSheet.create({
   },
 
   row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginVertical: 6,
   },
 
   label: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontSize: 16,
   },
 
   value: {
     fontSize: 16,
   },
-})
+});

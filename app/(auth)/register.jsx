@@ -1,53 +1,50 @@
-import { StyleSheet, Text } from 'react-native'
-import { Link } from 'expo-router'
+import { StyleSheet, Text } from "react-native";
+import { Link } from "expo-router";
 
 //themed components
-import ThemedView from '../../components/themedView'
-import ThemedText from '../../components/themedText'
-import ThemedButton from '../../components/themedButton'
-import Spacer from '../../components/spacer'
+import ThemedView from "../../components/themedView";
+import ThemedText from "../../components/themedText";
+import ThemedButton from "../../components/themedButton";
+import Spacer from "../../components/spacer";
 
 const register = () => {
-    
-    const handleSubmit = () => {
-        console.log('register form submitted')
-    }
-    
+  const handleSubmit = () => {
+    console.log("register form submitted");
+  };
+
   return (
     <ThemedView style={styles.container}>
+      <Spacer />
 
-        <Spacer />
+      <ThemedText title={true} style={styles.title}>
+        Register For an Account
+      </ThemedText>
 
-        <ThemedText title={true} style={styles.title}> 
-            Register For an Account 
-        </ThemedText>
+      <ThemedButton onPress={handleSubmit}>
+        <Text style={{ color: "#f2f2f2" }}>Register</Text>
+      </ThemedButton>
 
-        <ThemedButton onPress={handleSubmit}> 
-            <Text style={{ color: '#f2f2f2'}}>Register</Text>
-        </ThemedButton>
+      <Spacer height={100} />
 
-        <Spacer height={100} />
-
-        <Link href='/login'>
-        <ThemedText style={{ textAlign: 'center' }}>Login</ThemedText>
-        </Link>
-
+      <Link href="/login">
+        <ThemedText style={{ textAlign: "center" }}>Login</ThemedText>
+      </Link>
     </ThemedView>
-  )
-}
+  );
+};
 
-export default register
+export default register;
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
-    title: {
-        textAlign: 'center',
-        fontSize: 18,
-        marginBottom: 30
-    }
-})
+  title: {
+    textAlign: "center",
+    fontSize: 18,
+    marginBottom: 30,
+  },
+});
