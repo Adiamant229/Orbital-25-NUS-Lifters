@@ -2,6 +2,7 @@ import { StyleSheet, Image, View } from "react-native";
 
 import ThemedText from "../components/themedText";
 import ThemedView from "../components/themedView";
+import ThemedCard from "../components/themedCard";
 import Spacer from "../components/spacer";
 
 const exercises = () => {
@@ -15,21 +16,21 @@ const exercises = () => {
 
       {/* Placeholder for bench press image */}
       <Image
-        source={require("../assets/bench-press-800.jpg")} // Replace with your image path
+        source={require("../assets/bench-press-800.jpg")}
         style={styles.image}
       />
 
       <Spacer />
 
       {/* Exercise Card */}
-      <View style={styles.card}>
+      <ThemedCard>
         <ThemedText style={styles.cardTitle}>Bench Press</ThemedText>
         <ThemedText style={styles.cardDescription}>
           The bench press is a weight training exercise in which the individual
           presses a weight upwards while lying on a bench. It primarily targets
           the chest, shoulders, and triceps.
         </ThemedText>
-      </View>
+      </ThemedCard>
     </ThemedView>
   );
 };

@@ -10,6 +10,7 @@ const RootLayout = () => {
 
   return (
     //statusBar auto means time and battery level white and black
+    //stack screen is for back button 
     <>
       <StatusBar value="auto" />
       <Stack
