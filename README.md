@@ -1,6 +1,6 @@
-# Foobar
+# NUS Lifters
 
-Foobar is a Python library for dealing with word pluralization.
+All-one-app for your gym needs in NUS
 
 ## Installation
 
