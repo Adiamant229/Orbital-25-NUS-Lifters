@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { StyleSheet, Text, Alert } from "react-native";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { Colors } from "../../constants/colors";
 
 //themed components
@@ -14,7 +14,9 @@ import ThemedTextInput from "../../components/themedTextInput";
 import { auth } from "../../firebaseConfig";
 import { signInWithEmailAndPassword } from "firebase/auth";
 
-const login = () => {
+const Login = () => {
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -36,6 +38,8 @@ const login = () => {
       setEmail("");
       setPassword("");
       // TODO: Navigate to home or main screen here if you want
+
+      router.push("/dashboard/gymCapacity")
     } catch (error) {
       console.error("Login error:", error.code, error.message);
       let message = "Failed to login.";
@@ -90,7 +94,7 @@ const login = () => {
   );
 };
 
-export default login;
+export default Login;
 
 const styles = StyleSheet.create({
   container: {
