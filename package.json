@@ -16,7 +16,6 @@
     "@react-native-firebase/auth": "^22.2.0",
     "expo": "~53.0.9",
     "expo-constants": "~17.1.6",
-    "expo-dev-client": "~5.1.8",
     "expo-linking": "~7.1.4",
     "expo-router": "~5.0.7",
     "expo-status-bar": "~2.2.3",
