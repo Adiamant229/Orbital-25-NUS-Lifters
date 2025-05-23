@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { StyleSheet, Text, Alert } from "react-native";
 import { Link } from "expo-router";
 import { Colors } from "../../constants/colors";
@@ -8,7 +9,6 @@ import ThemedText from "../../components/themedText";
 import ThemedButton from "../../components/themedButton";
 import Spacer from "../../components/spacer";
 import ThemedTextInput from "../../components/themedTextInput";
-import { useState } from "react";
 
 // Firebase imports
 import { auth } from "../../firebaseConfig";
