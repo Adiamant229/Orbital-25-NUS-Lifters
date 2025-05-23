@@ -1,6 +1,6 @@
 {
   "expo": {
-    "scheme": "NUS Lifters", 
+    "scheme": "NUS Lifters",
     "name": "NUS Lifters",
     "slug": "NUS Lifters",
     "version": "1.0.0",
@@ -21,7 +21,8 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.NUSLifters"
     },
     "web": {
       "favicon": "./assets/favicon.png"

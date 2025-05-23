@@ -33,13 +33,6 @@ const Home = () => {
           <Text>Register</Text>
         </TouchableOpacity>
       </Link>
-
-      <Link href="/gymCapacity" asChild>
-        <TouchableOpacity style={styles.card}>
-          <Text>Check capacity</Text>
-        </TouchableOpacity>
-      </Link>
-
       <Image source={Logo} style={styles.img} />
     </ThemedView>
   );

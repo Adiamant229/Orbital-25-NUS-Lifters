@@ -1,13 +1,14 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import {
-  getAuth,
-  setPersistence,
-  browserLocalPersistence,
-} from "firebase/auth";
+import { initializeAuth, getReactNativePersistence } from "firebase/auth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getFirestore } from "firebase/firestore";
 
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
 // Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyD4A9RWGpRdmUaDuk9K0Ezka76KtGFT7YM",
   authDomain: "nus-lifters-club.firebaseapp.com",
@@ -18,20 +19,9 @@ const firebaseConfig = {
   measurementId: "G-QPDRWZTXRQ",
 };
 
-// Initialize Firebase app
+// Initialize Firebase
 export const app = initializeApp(firebaseConfig);
-
-// Initialize auth
-export const auth = getAuth(app);
-
-// Set persistence to browserLocalPersistence (works in Expo Go)
-setPersistence(auth, browserLocalPersistence)
-  .then(() => {
-    console.log("Firebase Auth persistence set to browserLocalPersistence");
-  })
-  .catch((error) => {
-    console.error("Failed to set persistence:", error);
-  });
-
-// Initialize Firestore
+export const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(AsyncStorage),
+});
 export const db = getFirestore(app);

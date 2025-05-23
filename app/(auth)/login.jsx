@@ -39,7 +39,7 @@ const Login = () => {
       setPassword("");
 
       // TODO: Navigate to home or main screen here if you want
-      router.replace("/dashboard/gymCapacity")
+      router.replace("/gymCapacity")
 
     } catch (error) {
       console.error("Login error:", error.code, error.message);
