@@ -39,8 +39,7 @@ const Login = () => {
       setPassword("");
 
       // TODO: Navigate to home or main screen here if you want
-      router.replace("/gymCapacity")
-
+      router.replace("/gymCapacity");
     } catch (error) {
       console.error("Login error:", error.code, error.message);
       let message = "Failed to login.";
@@ -65,7 +64,7 @@ const Login = () => {
       </ThemedText>
 
       <ThemedTextInput
-        style={{ width: "80", marginBottom: 20 }}
+        style={{ width: "80%", marginBottom: 20 }}
         placeholder="Email"
         keyboardType="email-address"
         onChangeText={setEmail}
@@ -73,7 +72,7 @@ const Login = () => {
       />
 
       <ThemedTextInput
-        style={{ width: "80", marginBottom: 20 }}
+        style={{ width: "80%", marginBottom: 20 }}
         placeholder="Password"
         onChangeText={setPassword}
         value={password}
@@ -84,11 +83,11 @@ const Login = () => {
         <Text style={{ color: "#f2f2f2" }}>Login</Text>
       </ThemedButton>
 
-      <Spacer height={100} />
+      <Spacer height={10} />
 
-      <Link href="/register">
+      <Link href="/signup">
         <ThemedText style={{ textAlign: "center" }}>
-          Register instead
+          Create new Account
         </ThemedText>
       </Link>
     </ThemedView>

@@ -1,6 +1,6 @@
 import { StyleSheet, Alert, Text } from "react-native";
 import { useState } from "react";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 
 //themed components
 import ThemedView from "../../components/themedView";
@@ -13,7 +13,9 @@ import ThemedTextInput from "../../components/themedTextInput";
 import { auth } from "../../firebaseConfig";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 
-const Register = () => {
+const Signup = () => {
+    const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -38,6 +40,8 @@ const Register = () => {
       setEmail("");
       setPassword("");
       // TODO: Navigate to main app or login page after successful registration
+      router.replace("/gymCapacity");
+      
     } catch (error) {
       const errorCode = error.code;
       console.error("Sign-up error:", errorCode);
@@ -61,7 +65,7 @@ const Register = () => {
       <Spacer />
 
       <ThemedText title={true} style={styles.title}>
-        Register For an Account
+        Create a New Account
       </ThemedText>
 
       <ThemedTextInput
@@ -83,20 +87,20 @@ const Register = () => {
 
       <ThemedButton onPress={handleRegister} disabled={loading}>
         <Text style={{ color: "#f2f2f2" }}>
-          {loading ? "Registering..." : "Register"}
+          {loading ? "Creating.." : "Create"}
         </Text>
       </ThemedButton>
 
-      <Spacer height={100} />
+      <Spacer height={10} />
 
       <Link href="/login">
-        <ThemedText style={{ textAlign: "center" }}>Login</ThemedText>
+        <ThemedText style={{ textAlign: "center" }}>Login instead</ThemedText>
       </Link>
     </ThemedView>
   );
 };
 
-export default Register;
+export default Signup;
 
 const styles = StyleSheet.create({
   container: {
