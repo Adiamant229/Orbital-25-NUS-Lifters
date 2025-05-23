@@ -37,9 +37,10 @@ const Login = () => {
       Alert.alert("Success", "Logged in successfully!");
       setEmail("");
       setPassword("");
-      // TODO: Navigate to home or main screen here if you want
 
-      router.push("/dashboard/gymCapacity")
+      // TODO: Navigate to home or main screen here if you want
+      router.replace("/dashboard/gymCapacity")
+
     } catch (error) {
       console.error("Login error:", error.code, error.message);
       let message = "Failed to login.";

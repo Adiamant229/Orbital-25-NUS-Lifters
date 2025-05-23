@@ -13,7 +13,7 @@ import ThemedTextInput from "../../components/themedTextInput";
 import { auth } from "../../firebaseConfig";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 
-const register = () => {
+const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -96,7 +96,7 @@ const register = () => {
   );
 };
 
-export default register;
+export default Register;
 
 const styles = StyleSheet.create({
   container: {
