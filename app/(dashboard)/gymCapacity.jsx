@@ -5,11 +5,30 @@ import ThemedView from "../../components/themedView";
 import Spacer from "../../components/spacer";
 import ThemedButton from "../../components/themedButton";
 import { MaterialIcons } from "@expo/vector-icons/";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
+import { auth } from "../../firebaseConfig";
+import { signOut } from "firebase/auth";
 
 const gymCapacity = () => {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.replace("/login"); // Redirect after logout, adjust path if needed
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
   return (
     <ThemedView style={styles.container}>
+      
+      {/* Logout button at top center */}
+      <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+        <Text style={{ color: "#f2f2f2", fontWeight: "bold" }}>Logout</Text>
+      </TouchableOpacity>
+
       <ThemedText style={styles.title} title={true}>
         Gym Traffic (as of 110525 1100am){" "}
       </ThemedText>
@@ -43,6 +62,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: 20,
+  },
+
+  logoutButton: {
+    position: "absolute",
+    top: 40, // Adjust as needed for status bar
+    alignSelf: "center",
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    backgroundColor: "#333",
+    borderRadius: 6,
+    zIndex: 10,
   },
 
   title: {

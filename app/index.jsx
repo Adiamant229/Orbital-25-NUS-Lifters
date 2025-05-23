@@ -28,9 +28,9 @@ const Home = () => {
 
       <Spacer />
 
-      <Link href="/register" asChild>
+      <Link href="/signup" asChild>
         <TouchableOpacity style={styles.card}>
-          <Text>Register</Text>
+          <Text>Sign up</Text>
         </TouchableOpacity>
       </Link>
       <Image source={Logo} style={styles.img} />
