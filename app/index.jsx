@@ -1,6 +1,6 @@
 import { TouchableOpacity, StyleSheet, Image, Text } from "react-native";
 import { Link } from "expo-router";
-import Logo from "../assets/img/arnold.jpg";
+import Logo from "../assets/img/NUS_Lifters1.png";
 
 import ThemedView from "../components/themedView";
 import Spacer from "../components/spacer";
@@ -19,7 +19,8 @@ const Home = () => {
         Official NUS lifting club 2025
       </ThemedText>
       <Spacer />
-
+      <Image source={Logo} style={styles.img} />
+      <Spacer />
       <Link href="/login" asChild>
         <TouchableOpacity style={styles.card}>
           <Text>Login</Text>
@@ -33,7 +34,6 @@ const Home = () => {
           <Text>Sign up</Text>
         </TouchableOpacity>
       </Link>
-      <Image source={Logo} style={styles.img} />
     </ThemedView>
   );
 };
@@ -60,6 +60,8 @@ const styles = StyleSheet.create({
   },
 
   img: {
-    marginVertical: 30,
+    width: 200,
+    height: 200,
+    resizeMode: "contain", // Prevents distortion
   },
 });
