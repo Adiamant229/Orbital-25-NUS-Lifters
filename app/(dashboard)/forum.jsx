@@ -1,11 +1,13 @@
 import { StyleSheet, Text, SafeAreaView } from "react-native";
+import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
+import { Link } from "expo-router";
 
+//themed components
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import Spacer from "../../components/spacer";
 import ThemedButton from "../../components/themedButton";
-import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
-import { Link } from "expo-router";
+
 
 const Forum = () => {
   return (

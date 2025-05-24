@@ -39,6 +39,7 @@ const Login = () => {
 
       // TODO: Navigate to home or main screen here if you want
       router.replace("/gymCapacity");
+      
     } catch (error) {
       console.error("Login error:", error.code, error.message);
       let message = "Failed to login.";

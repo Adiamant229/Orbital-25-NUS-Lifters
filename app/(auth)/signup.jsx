@@ -52,6 +52,7 @@ const Signup = () => {
 
       // TODO: Navigate to main app or login page after successful registration
       router.replace("/gymCapacity");
+      
     } catch (error) {
       const errorCode = error.code;
       console.error("Sign-up error:", errorCode);
@@ -75,7 +76,7 @@ const Signup = () => {
       <Spacer />
 
       <ThemedText title={true} style={styles.title}>
-        Create a New Account
+        Create New Account
       </ThemedText>
 
       <ThemedTextInput
