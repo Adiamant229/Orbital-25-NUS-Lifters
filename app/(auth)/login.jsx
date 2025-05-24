@@ -34,7 +34,6 @@ const Login = () => {
       );
       const user = userCredential.user;
       console.log("User signed in:", user.uid);
-      Alert.alert("Success", "Logged in successfully!");
       setEmail("");
       setPassword("");
 

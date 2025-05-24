@@ -9,13 +9,15 @@ import ThemedButton from "../../components/themedButton";
 import Spacer from "../../components/spacer";
 import ThemedTextInput from "../../components/themedTextInput";
 
-//backend
-import { auth } from "../../firebaseConfig";
+//firebase imports
+import { auth, db } from "../../firebaseConfig";
+import { doc, setDoc } from "firebase/firestore";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 
 const Signup = () => {
-    const router = useRouter();
+  const router = useRouter();
 
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -36,12 +38,20 @@ const Signup = () => {
 
       const user = userCredential.user;
       console.log("User signed up successfully:", user.uid);
+
+      // Save additional user info to Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        name: name,
+        email: email,
+        createdAt: new Date(),
+      });
+
       Alert.alert("Success", "Account created!");
       setEmail("");
       setPassword("");
+
       // TODO: Navigate to main app or login page after successful registration
       router.replace("/gymCapacity");
-      
     } catch (error) {
       const errorCode = error.code;
       console.error("Sign-up error:", errorCode);
@@ -67,6 +77,14 @@ const Signup = () => {
       <ThemedText title={true} style={styles.title}>
         Create a New Account
       </ThemedText>
+
+      <ThemedTextInput
+        style={{ width: "80%", marginBottom: 20 }}
+        placeholder="Username"
+        autoCapitalize="none"
+        onChangeText={setName}
+        value={name}
+      />
 
       <ThemedTextInput
         style={{ width: "80%", marginBottom: 20 }}

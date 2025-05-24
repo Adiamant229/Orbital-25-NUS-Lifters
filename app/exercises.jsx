@@ -16,7 +16,7 @@ const exercises = () => {
 
       {/* Placeholder for bench press image */}
       <Image
-        source={require("../assets/bench-press-800.jpg")}
+        source={require("../assets/img/bench-press-800.jpg")}
         style={styles.image}
       />
 
