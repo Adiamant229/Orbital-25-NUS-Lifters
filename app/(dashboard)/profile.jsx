@@ -7,6 +7,7 @@ import {
   View,
 } from "react-native";
 
+//themed components
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import Spacer from "../../components/spacer";
@@ -14,12 +15,14 @@ import ThemedButton from "../../components/themedButton";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
+//firebase imports
 import { auth, db } from "../../firebaseConfig";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 
 const ProfileIconPage = () => {
   const router = useRouter();
+
   const [userName, setUserName] = useState("Loading...");
   const [editMode, setEditMode] = useState(false);
   const [inputName, setInputName] = useState("");
@@ -203,6 +206,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     backgroundColor: "#333",
     borderRadius: 6,
-    zIndex: 10,
+    Index: 10,
   },
 });
