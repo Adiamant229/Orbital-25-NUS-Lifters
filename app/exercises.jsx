@@ -1,4 +1,4 @@
-import { StyleSheet, Image, View } from "react-native";
+import { StyleSheet, Image } from "react-native";
 
 import ThemedText from "../components/themedText";
 import ThemedView from "../components/themedView";

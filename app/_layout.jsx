@@ -10,7 +10,7 @@ const RootLayout = () => {
 
   return (
     //statusBar auto means time and battery level white and black
-    //stack screen is for back button 
+    //stack screen is for back button
     <>
       <StatusBar value="auto" />
       <Stack
@@ -22,6 +22,7 @@ const RootLayout = () => {
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(dashboard)" options={{ headerShown: false }} />
         <Stack.Screen name="index" options={{ headerShown: false }} />
+
         <Stack.Screen
           name="gymReports"
           options={{ title: "Latest Reports & Issues " }}
@@ -32,5 +33,3 @@ const RootLayout = () => {
 };
 
 export default RootLayout;
-
-const styles = StyleSheet.create({});
