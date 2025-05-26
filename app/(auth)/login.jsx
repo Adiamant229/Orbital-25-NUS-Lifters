@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -9,22 +9,33 @@ import {
 import { Link, useRouter } from "expo-router";
 import { Colors } from "../../constants/colors";
 
-//themed components
 import ThemedView from "../../components/themedView";
 import ThemedText from "../../components/themedText";
 import ThemedButton from "../../components/themedButton";
 import Spacer from "../../components/spacer";
 import ThemedTextInput from "../../components/themedTextInput";
 
-// Firebase imports
 import { auth } from "../../firebaseConfig";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 
 const Login = () => {
   const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  // 1. Check if user is already signed in when component mounts
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in, redirect to gymCapacity page
+        router.replace("/gymCapacity");
+      }
+    });
+
+    // Cleanup subscription on unmount
+    return unsubscribe;
+  }, []);
 
   const handleSubmit = async () => {
     if (!email || !password) {
@@ -43,7 +54,6 @@ const Login = () => {
       setEmail("");
       setPassword("");
 
-      // TODO: Navigate to home or main screen here if you want
       router.replace("/gymCapacity");
     } catch (error) {
       console.error("Login error:", error.code, error.message);
