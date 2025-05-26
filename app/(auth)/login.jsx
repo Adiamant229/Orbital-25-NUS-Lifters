@@ -9,34 +9,69 @@ import {
 import { Link, useRouter } from "expo-router";
 import { Colors } from "../../constants/colors";
 
+// Themed components
 import ThemedView from "../../components/themedView";
 import ThemedText from "../../components/themedText";
 import ThemedButton from "../../components/themedButton";
 import Spacer from "../../components/spacer";
 import ThemedTextInput from "../../components/themedTextInput";
 
+// Firebase Auth
 import { auth } from "../../firebaseConfig";
-import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
+import {
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signInWithCredential,
+  GoogleAuthProvider,
+} from "firebase/auth";
+
+// Google sign-in
+import * as WebBrowser from "expo-web-browser";
+import * as Google from "expo-auth-session/providers/google";
+
+WebBrowser.maybeCompleteAuthSession();
 
 const Login = () => {
   const router = useRouter();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // 1. Check if user is already signed in when component mounts
+  // Google Auth request setup
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    expoClientId: "YOUR_EXPO_CLIENT_ID.apps.googleusercontent.com",
+    iosClientId: "YOUR_IOS_CLIENT_ID.apps.googleusercontent.com",
+    androidClientId: "YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.com",
+    webClientId: "YOUR_WEB_CLIENT_ID.apps.googleusercontent.com", // enable "Web" in Firebase
+  });
+
+  // Redirect signed-in users automatically
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        // User is signed in, redirect to gymCapacity page
         router.replace("/gymCapacity");
       }
     });
-
-    // Cleanup subscription on unmount
     return unsubscribe;
   }, []);
 
+  // Handle Google login response
+  useEffect(() => {
+    if (response?.type === "success") {
+      const { id_token } = response.authentication;
+      const credential = GoogleAuthProvider.credential(id_token);
+      signInWithCredential(auth, credential)
+        .then((userCredential) => {
+          console.log("Google login successful:", userCredential.user.uid);
+          router.replace("/gymCapacity");
+        })
+        .catch((error) => {
+          console.error("Google Sign-In error:", error);
+          Alert.alert("Login Error", "Failed to sign in with Google.");
+        });
+    }
+  }, [response]);
+
+  // Handle Email/Password login
   const handleSubmit = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Please enter both email and password");
@@ -49,11 +84,9 @@ const Login = () => {
         email,
         password
       );
-      const user = userCredential.user;
-      console.log("User signed in:", user.uid);
+      console.log("User signed in:", userCredential.user.uid);
       setEmail("");
       setPassword("");
-
       router.replace("/gymCapacity");
     } catch (error) {
       console.error("Login error:", error.code, error.message);
@@ -97,6 +130,12 @@ const Login = () => {
 
         <ThemedButton onPress={handleSubmit}>
           <Text style={{ color: "#f2f2f2" }}>Login</Text>
+        </ThemedButton>
+
+        <Spacer height={10} />
+
+        <ThemedButton onPress={() => promptAsync()} disabled={!request}>
+          <Text style={{ color: "#f2f2f2" }}>Login with Google</Text>
         </ThemedButton>
 
         <Spacer height={10} />
