@@ -1,10 +1,13 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAuth, initializeAuth, getReactNativePersistence } from "firebase/auth";
+import {
+  getAuth,
+  initializeAuth,
+  getReactNativePersistence,
+} from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 
-// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyD4A9RWGpRdmUaDuk9K0Ezka76KtGFT7YM",
   authDomain: "nus-lifters-club.firebaseapp.com",
@@ -15,20 +18,13 @@ const firebaseConfig = {
   measurementId: "G-QPDRWZTXRQ",
 };
 
-// Initialize Firebase app
 export const app = initializeApp(firebaseConfig);
 
-// Initialize Auth conditionally (native vs web)
-let auth;
-
-if (Platform.OS === "web") {
-  auth = getAuth(app); // web doesn't use AsyncStorage
-} else {
-  auth = initializeAuth(app, {
-    persistence: getReactNativePersistence(AsyncStorage),
-  });
-}
-
-export { auth };
+export const auth =
+  Platform.OS === "web"
+    ? getAuth(app)
+    : initializeAuth(app, {
+        persistence: getReactNativePersistence(AsyncStorage),
+      });
 
 export const db = getFirestore(app);
