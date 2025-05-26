@@ -1,8 +1,8 @@
 {
   "expo": {
-    "scheme": "NUS Lifters",
-    "name": "NUS Lifters",
-    "slug": "NUS Lifters",
+    "scheme": "nus-lifters",
+    "name": "nus-lifters",
+    "slug": "nus-lifters",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/img/icon.png",
@@ -29,6 +29,12 @@
     },
     "plugins": [
       "expo-router"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "86de6634-a536-400a-a782-9914137cf57c"
+      }
+    }
   }
 }

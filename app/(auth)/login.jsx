@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { StyleSheet, Text, Alert } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  Alert,
+  Keyboard,
+  TouchableWithoutFeedback,
+} from "react-native";
 import { Link, useRouter } from "expo-router";
 import { Colors } from "../../constants/colors";
 
@@ -39,7 +45,6 @@ const Login = () => {
 
       // TODO: Navigate to home or main screen here if you want
       router.replace("/gymCapacity");
-      
     } catch (error) {
       console.error("Login error:", error.code, error.message);
       let message = "Failed to login.";
@@ -56,41 +61,43 @@ const Login = () => {
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <Spacer />
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <ThemedView style={styles.container}>
+        <Spacer />
 
-      <ThemedText title={true} style={styles.title}>
-        Login to Your Account
-      </ThemedText>
-
-      <ThemedTextInput
-        style={{ width: "80%", marginBottom: 20 }}
-        placeholder="Email"
-        keyboardType="email-address"
-        onChangeText={setEmail}
-        value={email}
-      />
-
-      <ThemedTextInput
-        style={{ width: "80%", marginBottom: 20 }}
-        placeholder="Password"
-        onChangeText={setPassword}
-        value={password}
-        secureTextEntry
-      />
-
-      <ThemedButton onPress={handleSubmit}>
-        <Text style={{ color: "#f2f2f2" }}>Login</Text>
-      </ThemedButton>
-
-      <Spacer height={10} />
-
-      <Link href="/signup">
-        <ThemedText style={{ textAlign: "center" }}>
-          Create new Account
+        <ThemedText title={true} style={styles.title}>
+          Login to Your Account
         </ThemedText>
-      </Link>
-    </ThemedView>
+
+        <ThemedTextInput
+          style={{ width: "80%", marginBottom: 20 }}
+          placeholder="Email"
+          keyboardType="email-address"
+          onChangeText={setEmail}
+          value={email}
+        />
+
+        <ThemedTextInput
+          style={{ width: "80%", marginBottom: 20 }}
+          placeholder="Password"
+          onChangeText={setPassword}
+          value={password}
+          secureTextEntry
+        />
+
+        <ThemedButton onPress={handleSubmit}>
+          <Text style={{ color: "#f2f2f2" }}>Login</Text>
+        </ThemedButton>
+
+        <Spacer height={10} />
+
+        <Link href="/signup">
+          <ThemedText style={{ textAlign: "center" }}>
+            Create new Account
+          </ThemedText>
+        </Link>
+      </ThemedView>
+    </TouchableWithoutFeedback>
   );
 };
 

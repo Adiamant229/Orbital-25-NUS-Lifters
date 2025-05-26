@@ -1,18 +1,18 @@
-import { StyleSheet, Alert, Text } from "react-native";
+import { StyleSheet, Alert, Text, Keyboard, TouchableWithoutFeedback } from "react-native";
 import { useState } from "react";
 import { Link, useRouter } from "expo-router";
 
-//themed components
+// Themed components
 import ThemedView from "../../components/themedView";
 import ThemedText from "../../components/themedText";
 import ThemedButton from "../../components/themedButton";
 import Spacer from "../../components/spacer";
 import ThemedTextInput from "../../components/themedTextInput";
 
-//firebase imports
+// Firebase imports
 import { auth, db } from "../../firebaseConfig";
 import { doc, setDoc } from "firebase/firestore";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 
 const Signup = () => {
   const router = useRouter();
@@ -23,6 +23,10 @@ const Signup = () => {
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
+    if (!name.trim()) {
+      Alert.alert("Error", "Please enter your username.");
+      return;
+    }
     if (!email || !password) {
       Alert.alert("Error", "Please enter both email and password.");
       return;
@@ -35,9 +39,12 @@ const Signup = () => {
         email,
         password
       );
-
       const user = userCredential.user;
-      console.log("User signed up successfully:", user.uid);
+
+      // Update displayName in Firebase Auth profile
+      await updateProfile(user, {
+        displayName: name,
+      });
 
       // Save additional user info to Firestore
       await setDoc(doc(db, "users", user.uid), {
@@ -47,12 +54,11 @@ const Signup = () => {
       });
 
       Alert.alert("Success", "Account created!");
+      setName("");
       setEmail("");
       setPassword("");
 
-      // TODO: Navigate to main app or login page after successful registration
       router.replace("/gymCapacity");
-      
     } catch (error) {
       const errorCode = error.code;
       console.error("Sign-up error:", errorCode);
@@ -72,50 +78,52 @@ const Signup = () => {
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <Spacer />
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <ThemedView style={styles.container}>
+        <Spacer />
 
-      <ThemedText title={true} style={styles.title}>
-        Create New Account
-      </ThemedText>
+        <ThemedText title={true} style={styles.title}>
+          Create New Account
+        </ThemedText>
 
-      <ThemedTextInput
-        style={{ width: "80%", marginBottom: 20 }}
-        placeholder="Username"
-        autoCapitalize="none"
-        onChangeText={setName}
-        value={name}
-      />
+        <ThemedTextInput
+          style={{ width: "80%", marginBottom: 20 }}
+          placeholder="Username"
+          autoCapitalize="none"
+          onChangeText={setName}
+          value={name}
+        />
 
-      <ThemedTextInput
-        style={{ width: "80%", marginBottom: 20 }}
-        placeholder="Email"
-        keyboardType="email-address"
-        autoCapitalize="none"
-        onChangeText={setEmail}
-        value={email}
-      />
+        <ThemedTextInput
+          style={{ width: "80%", marginBottom: 20 }}
+          placeholder="Email"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          onChangeText={setEmail}
+          value={email}
+        />
 
-      <ThemedTextInput
-        style={{ width: "80%", marginBottom: 20 }}
-        placeholder="Password"
-        secureTextEntry
-        onChangeText={setPassword}
-        value={password}
-      />
+        <ThemedTextInput
+          style={{ width: "80%", marginBottom: 20 }}
+          placeholder="Password"
+          secureTextEntry
+          onChangeText={setPassword}
+          value={password}
+        />
 
-      <ThemedButton onPress={handleRegister} disabled={loading}>
-        <Text style={{ color: "#f2f2f2" }}>
-          {loading ? "Creating.." : "Create"}
-        </Text>
-      </ThemedButton>
+        <ThemedButton onPress={handleRegister} disabled={loading}>
+          <Text style={{ color: "#f2f2f2" }}>
+            {loading ? "Creating..." : "Create"}
+          </Text>
+        </ThemedButton>
 
-      <Spacer height={10} />
+        <Spacer height={10} />
 
-      <Link href="/login">
-        <ThemedText style={{ textAlign: "center" }}>Login instead</ThemedText>
-      </Link>
-    </ThemedView>
+        <Link href="/login">
+          <ThemedText style={{ textAlign: "center" }}>Login instead</ThemedText>
+        </Link>
+      </ThemedView>
+    </TouchableWithoutFeedback>
   );
 };
 
