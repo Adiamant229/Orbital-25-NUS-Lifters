@@ -22,7 +22,4 @@ const scrapeData = async () => {
     await browser.close();
     return data;
 };
-scrapeData().then((res) => {
-    console.log(res);
-});
-//exports.scrapeData = scrapeData;
+exports.scrapeData = scrapeData;
