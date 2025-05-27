@@ -1,3 +1,4 @@
+// react and expo imports
 import { useEffect, useState } from "react";
 import {
   StyleSheet,
@@ -7,7 +8,7 @@ import {
   View,
 } from "react-native";
 
-//themed components
+// themed components
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import Spacer from "../../components/spacer";
@@ -15,12 +16,12 @@ import ThemedButton from "../../components/themedButton";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
-//firebase imports
+// firebase imports
 import { auth, db } from "../../firebaseConfig";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 
-const ProfileIconPage = () => {
+const Profile = () => {
   const router = useRouter();
 
   const [userName, setUserName] = useState("Loading...");
@@ -66,6 +67,11 @@ const ProfileIconPage = () => {
     }
   };
 
+  const handleCancel = () => {
+    setInputName(userName);
+    setEditMode(false);
+  };
+
   const handleLogout = async () => {
     try {
       const user = auth.currentUser;
@@ -85,39 +91,47 @@ const ProfileIconPage = () => {
 
       <Spacer />
 
-      <TouchableOpacity style={styles.iconContainer}>
+      <View style={styles.profileIconWrapper}>
         <MaterialIcons name="account-circle" size={80} color="#f2f2f2" />
-      </TouchableOpacity>
+        {!editMode && (
+          <TouchableOpacity
+            onPress={() => setEditMode(true)}
+            style={styles.editIconOnAvatar}
+          >
+            <MaterialIcons name="edit" size={20} color="#f2f2f2" />
+          </TouchableOpacity>
+        )}
+      </View>
 
       <Spacer />
 
-      {editMode ? (
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            value={inputName}
-            onChangeText={setInputName}
-            placeholder="Enter new name"
-          />
-          <ThemedButton onPress={handleSave} style={styles.saveButton}>
-            <Text style={styles.saveButtonText}>Save</Text>
-          </ThemedButton>
-        </View>
-      ) : (
-        <ThemedText style={styles.username}>{userName}</ThemedText>
-      )}
+      <View style={styles.usernameContainer}>
+        {editMode ? (
+          <View style={styles.inputWithIcons}>
+            <TextInput
+              style={styles.input}
+              value={inputName}
+              onChangeText={setInputName}
+              placeholder="Enter new name"
+            />
+            <View style={styles.editIconsRow}>
+              <TouchableOpacity onPress={handleSave} style={styles.iconButton}>
+                <MaterialIcons name="check" size={22} color="#2a9d8f" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleCancel}
+                style={styles.iconButton}
+              >
+                <MaterialIcons name="close" size={22} color="#e76f51" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          <Text style={styles.username}>{userName}</Text>
+        )}
+      </View>
 
       <Spacer />
-
-      <ThemedButton
-        style={styles.editButton}
-        onPress={() => setEditMode(!editMode)}
-      >
-        <MaterialIcons name="edit" size={24} color="#f2f2f2" />
-        <ThemedText style={styles.buttonText}>
-          {editMode ? "Cancel" : "Edit Profile"}
-        </ThemedText>
-      </ThemedButton>
 
       <ThemedButton onPress={handleLogout}>
         <Text style={{ color: "#f2f2f2", fontWeight: "bold" }}>Logout</Text>
@@ -126,7 +140,7 @@ const ProfileIconPage = () => {
   );
 };
 
-export default ProfileIconPage;
+export default Profile;
 
 const styles = StyleSheet.create({
   container: {
@@ -142,70 +156,63 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 
-  iconContainer: {
+  profileIconWrapper: {
+    position: "relative",
+    width: 80,
+    height: 80,
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 2,
     borderColor: "#f2f2f2",
     borderRadius: 50,
-    padding: 5,
-    overflow: "hidden",
+    overflow: "visible", // <- allow pen icon to overflow outside container if needed
+    backgroundColor: "transparent", // just in case
+  },
+
+  editIconOnAvatar: {
+    position: "absolute",
+    bottom: -6, // moved a bit down, adjust as needed
+    right: -10, // moved more to the right, adjust as needed
+    backgroundColor: "#333",
+    borderRadius: 10,
+    padding: 2,
+    zIndex: 9999, // super high to ensure on top
+    elevation: 9999, // Android layering
+  },
+
+  usernameContainer: {
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 10,
   },
 
   username: {
     fontWeight: "bold",
     fontSize: 20,
-    marginTop: 10,
+    textAlign: "center",
   },
 
-  inputContainer: {
-    width: "80%",
+  inputWithIcons: {
+    flexDirection: "row",
     alignItems: "center",
   },
 
   input: {
-    width: "100%",
     borderColor: "#ccc",
     borderWidth: 1,
     padding: 10,
-    marginBottom: 10,
     borderRadius: 6,
     backgroundColor: "#fff",
+    minWidth: 200,
   },
 
-  saveButton: {
-    backgroundColor: "#2a9d8f",
-    padding: 10,
-    borderRadius: 6,
-  },
-
-  saveButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-
-  editButton: {
+  editIconsRow: {
     flexDirection: "row",
-    alignItems: "center",
-    marginTop: 20,
-    padding: 12,
-    backgroundColor: "#2a9d8f",
-    borderRadius: 6,
-    width: "80%",
-    justifyContent: "center",
+    marginLeft: 8,
   },
 
-  buttonText: {
-    color: "#f2f2f2",
-    fontSize: 16,
-    marginLeft: 10,
-  },
-
-  logoutButton: {
-    top: 40,
-    alignSelf: "center",
-    paddingVertical: 6,
-    paddingHorizontal: 16,
-    backgroundColor: "#333",
-    borderRadius: 6,
-    Index: 10,
+  iconButton: {
+    marginHorizontal: 4,
   },
 });
