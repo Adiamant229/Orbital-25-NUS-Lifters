@@ -91,7 +91,7 @@ const Login = () => {
         />
 
         <ThemedButton onPress={handleSubmit}>
-          <Text style={{ color: "#f2f2f2" }}>Login</Text>
+          <Text style={{ color: "#f2f2f2", fontWeight: "bold" }}>Login</Text>
         </ThemedButton>
 
         <Spacer height={10} />

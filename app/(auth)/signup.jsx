@@ -97,7 +97,7 @@ const Signup = () => {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <ThemedView style={styles.container}>
-      <Image source={Logo} style={styles.img} />
+        <Image source={Logo} style={styles.img} />
         <ThemedText title={true} style={styles.title}>
           Create New Account
         </ThemedText>
@@ -134,7 +134,7 @@ const Signup = () => {
         />
 
         <ThemedButton onPress={handleRegister} disabled={loading}>
-          <Text style={{ color: "#f2f2f2" }}>
+          <Text style={{ color: "#f2f2f2", fontWeight: "bold" }}>
             {loading ? "Creating..." : "Create"}
           </Text>
         </ThemedButton>
