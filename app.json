@@ -5,11 +5,11 @@
     "slug": "nus-lifters",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/img/NUS_Lifters1.png",
+    "icon": "./assets/img/NUS_Lifters.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/img/NUS_Lifters1.png",
+      "image": "./assets/img/NUS_Lifters.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -18,14 +18,14 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/img/NUS_Lifters1.png",
+        "foregroundImage": "./assets/img/NUS_Lifters.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.anonymous.NUSLifters"
     },
     "web": {
-      "favicon": "./assets/img/NUS_Lifters1.png"
+      "favicon": "./assets/img/NUS_Lifters.png"
     },
     "plugins": [
       "expo-router",

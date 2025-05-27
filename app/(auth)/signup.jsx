@@ -21,7 +21,9 @@ import ThemedTextInput from "../../components/themedTextInput";
 import { auth, db } from "../../firebaseConfig";
 import { doc, setDoc } from "firebase/firestore";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import Logo from "../../assets/img/NUS_Lifters1.png";
+
+//logo 
+import Logo from "../../assets/img/NUS_Lifters.png";
 
 
 const Signup = () => {

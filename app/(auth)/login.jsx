@@ -17,7 +17,9 @@ import ThemedText from "../../components/themedText";
 import ThemedButton from "../../components/themedButton";
 import Spacer from "../../components/spacer";
 import ThemedTextInput from "../../components/themedTextInput";
-import Logo from "../../assets/img/NUS_Lifters1.png";
+
+//logo 
+import Logo from "../../assets/img/NUS_Lifters.png";
 
 //firebase imports
 import { auth } from "../../firebaseConfig";
