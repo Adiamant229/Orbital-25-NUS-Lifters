@@ -1,4 +1,12 @@
-import { StyleSheet, Alert, Text, Keyboard, TouchableWithoutFeedback } from "react-native";
+//react and expo imports
+import {
+  StyleSheet,
+  Alert,
+  Text,
+  Keyboard,
+  TouchableWithoutFeedback,
+  Image,
+} from "react-native";
 import { useState } from "react";
 import { Link, useRouter } from "expo-router";
 
@@ -13,6 +21,8 @@ import ThemedTextInput from "../../components/themedTextInput";
 import { auth, db } from "../../firebaseConfig";
 import { doc, setDoc } from "firebase/firestore";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import Logo from "../../assets/img/NUS_Lifters1.png";
+
 
 const Signup = () => {
   const router = useRouter();
@@ -20,6 +30,7 @@ const Signup = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
@@ -31,8 +42,13 @@ const Signup = () => {
       Alert.alert("Error", "Please enter both email and password.");
       return;
     }
+    if (password !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match.");
+      return;
+    }
 
     setLoading(true);
+    
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
@@ -57,6 +73,7 @@ const Signup = () => {
       setName("");
       setEmail("");
       setPassword("");
+      setConfirmPassword("");
 
       router.replace("/gymCapacity");
     } catch (error) {
@@ -80,35 +97,40 @@ const Signup = () => {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <ThemedView style={styles.container}>
-        <Spacer />
-
+      <Image source={Logo} style={styles.img} />
         <ThemedText title={true} style={styles.title}>
           Create New Account
         </ThemedText>
 
         <ThemedTextInput
-          style={{ width: "80%", marginBottom: 20 }}
           placeholder="Username"
-          autoCapitalize="none"
           onChangeText={setName}
           value={name}
         />
 
         <ThemedTextInput
-          style={{ width: "80%", marginBottom: 20 }}
           placeholder="Email"
           keyboardType="email-address"
-          autoCapitalize="none"
           onChangeText={setEmail}
           value={email}
         />
 
         <ThemedTextInput
-          style={{ width: "80%", marginBottom: 20 }}
           placeholder="Password"
           secureTextEntry
           onChangeText={setPassword}
           value={password}
+          textContentType="oneTimeCode"
+          autoComplete="off"
+        />
+
+        <ThemedTextInput
+          placeholder="Confirm Password"
+          secureTextEntry
+          onChangeText={setConfirmPassword}
+          value={confirmPassword}
+          textContentType="oneTimeCode"
+          autoComplete="off"
         />
 
         <ThemedButton onPress={handleRegister} disabled={loading}>
@@ -139,6 +161,14 @@ const styles = StyleSheet.create({
   title: {
     textAlign: "center",
     fontSize: 18,
-    marginBottom: 30,
+    marginBottom: 20,
+  },
+
+  img: {
+    width: 280,
+    height: 280,
+    resizeMode: "contain",
+    borderRadius: 20,
+    marginVertical: 10,
   },
 });

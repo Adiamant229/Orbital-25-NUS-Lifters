@@ -1,9 +1,9 @@
-import { TextInput, useColorScheme } from "react-native";
+import { TextInput, StyleSheet, useColorScheme } from "react-native";
 import { Colors } from "../constants/colors";
 
-const themedTextInput = ({ style, ...props }) => {
-  const colorScheme = useColorScheme(); //returns light or dark or null
-  const theme = Colors[colorScheme] ?? Colors.light; //defaults to light
+const ThemedTextInput = ({ style, ...props }) => {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme] ?? Colors.light;
 
   return (
     <TextInput
@@ -11,14 +11,23 @@ const themedTextInput = ({ style, ...props }) => {
         {
           backgroundColor: theme.uiBackground,
           color: theme.text,
-          padding: 20,
-          borderRadius: 6,
         },
-        style
+        styles.input,
+        style, // allow overrides
       ]}
+       autoCapitalize="none"
       {...props}
     />
   );
 };
 
-export default themedTextInput;
+export default ThemedTextInput;
+
+const styles = StyleSheet.create({
+  input: {
+    width: "80%",
+    padding: 20,
+    borderRadius: 6,
+    marginBottom: 20,
+  },
+});
