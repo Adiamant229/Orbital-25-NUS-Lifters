@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -215,6 +215,7 @@ const Forum = () => {
               style={[
                 styles.filterButton,
                 selectedCategory === cat && styles.filterButtonSelected,
+                { width: 5, paddingHorizontal: 5 },
               ]}
               onPress={() => setSelectedCategory(cat)}
             >
@@ -467,15 +468,19 @@ const styles = StyleSheet.create({
   },
   filterButton: {
     borderRadius: 20,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
     backgroundColor: "#eee",
+    minWidth: 50,
+    alignItems: "center",
+    justifyContent: "center",
   },
   filterButtonSelected: {
     backgroundColor: "#007AFF",
   },
   filterText: {
     color: "#000",
+    fontSize: 14, // Optional smaller font size if too wide
   },
   title: {
     fontSize: 24,
@@ -535,14 +540,15 @@ const styles = StyleSheet.create({
   filterButtonsRow: {
     flexDirection: "row",
     gap: 8,
+    flex: 1,
     flexWrap: "wrap",
-    flexShrink: 1,
   },
-
   newThreadButton: {
+    backgroundColor: "#007AFF",
     borderRadius: 20,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    backgroundColor: "#eee",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

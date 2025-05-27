@@ -1,77 +1,34 @@
-import { useState, useEffect } from "react";
+//react and expo imports
+import { useState } from "react";
 import {
   StyleSheet,
   Text,
   Alert,
   Keyboard,
   TouchableWithoutFeedback,
+  Image,
 } from "react-native";
 import { Link, useRouter } from "expo-router";
-import { Colors } from "../../constants/colors";
 
-// Themed components
+//themed components
+import { Colors } from "../../constants/colors";
 import ThemedView from "../../components/themedView";
 import ThemedText from "../../components/themedText";
 import ThemedButton from "../../components/themedButton";
 import Spacer from "../../components/spacer";
 import ThemedTextInput from "../../components/themedTextInput";
+import Logo from "../../assets/img/NUS_Lifters1.png";
 
-// Firebase Auth
+//firebase imports
 import { auth } from "../../firebaseConfig";
-import {
-  signInWithEmailAndPassword,
-  onAuthStateChanged,
-  signInWithCredential,
-  GoogleAuthProvider,
-} from "firebase/auth";
-
-// Google sign-in
-import * as WebBrowser from "expo-web-browser";
-import * as Google from "expo-auth-session/providers/google";
-
-WebBrowser.maybeCompleteAuthSession();
+import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 
 const Login = () => {
   const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // Google Auth request setup
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    expoClientId: "YOUR_EXPO_CLIENT_ID.apps.googleusercontent.com",
-    iosClientId: "YOUR_IOS_CLIENT_ID.apps.googleusercontent.com",
-    androidClientId: "YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.com",
-    webClientId: "YOUR_WEB_CLIENT_ID.apps.googleusercontent.com", // enable "Web" in Firebase
-  });
-
-  // Redirect signed-in users automatically
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        router.replace("/gymCapacity");
-      }
-    });
-    return unsubscribe;
-  }, []);
-
-  // Handle Google login response
-  useEffect(() => {
-    if (response?.type === "success") {
-      const { id_token } = response.authentication;
-      const credential = GoogleAuthProvider.credential(id_token);
-      signInWithCredential(auth, credential)
-        .then((userCredential) => {
-          console.log("Google login successful:", userCredential.user.uid);
-          router.replace("/gymCapacity");
-        })
-        .catch((error) => {
-          console.error("Google Sign-In error:", error);
-          Alert.alert("Login Error", "Failed to sign in with Google.");
-        });
-    }
-  }, [response]);
-
-  // Handle Email/Password login
   const handleSubmit = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Please enter both email and password");
@@ -84,9 +41,11 @@ const Login = () => {
         email,
         password
       );
-      console.log("User signed in:", userCredential.user.uid);
+      const user = userCredential.user;
+      console.log("User signed in:", user.uid);
       setEmail("");
       setPassword("");
+
       router.replace("/gymCapacity");
     } catch (error) {
       console.error("Login error:", error.code, error.message);
@@ -106,7 +65,10 @@ const Login = () => {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <ThemedView style={styles.container}>
-        <Spacer />
+
+        <Image source={Logo} style={styles.img} />
+
+        <Spacer height={10} />
 
         <ThemedText title={true} style={styles.title}>
           Login to Your Account
@@ -134,12 +96,6 @@ const Login = () => {
 
         <Spacer height={10} />
 
-        <ThemedButton onPress={() => promptAsync()} disabled={!request}>
-          <Text style={{ color: "#f2f2f2" }}>Login with Google</Text>
-        </ThemedButton>
-
-        <Spacer height={10} />
-
         <Link href="/signup">
           <ThemedText style={{ textAlign: "center" }}>
             Create new Account
@@ -152,7 +108,7 @@ const Login = () => {
 
 export default Login;
 
-const styles = StyleSheet.create({
+export const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
@@ -173,5 +129,13 @@ const styles = StyleSheet.create({
 
   pressed: {
     opacity: 0.8,
+  },
+
+  img: {
+    width: 350,
+    height: 350,
+    resizeMode: "contain",
+    borderRadius: 20,
+    marginVertical: 10,
   },
 });

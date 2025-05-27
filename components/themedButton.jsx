@@ -15,6 +15,9 @@ export default themedButton;
 const styles = StyleSheet.create({
   btn: {
     backgroundColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 110,
     padding: 18,
     borderRadius: 6,
     marginVertical: 10,
