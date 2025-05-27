@@ -67,9 +67,9 @@ const dashBoardLayout = () => {
       />
 
       <Tabs.Screen
-        name="weightTracker"
+        name="progressTracker"
         options={{
-          title: "Weights",
+          title: "Progress",
           tabBarIcon: ({ focused }) => (
             <MaterialCommunityIcons
               size={24}

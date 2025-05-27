@@ -1,46 +1,82 @@
-import { TouchableOpacity, StyleSheet, Image, Text } from "react-native";
-import { Link } from "expo-router";
-import Logo from "../assets/img/NUS_Lifters1.png";
+//react and expo imports
+import { useEffect, useState } from "react";
+import { StyleSheet, Image, Text } from "react-native";
+import { Link, useRouter } from "expo-router";
 
+//firebase imports 
+import { auth } from "../firebaseConfig";
+import { onAuthStateChanged } from "firebase/auth";
+
+//themed components 
 import ThemedView from "../components/themedView";
-import Spacer from "../components/spacer";
 import ThemedText from "../components/themedText";
+import ThemedCard from "../components/themedCard"
+import Spacer from "../components/spacer";
 
-const Home = () => {
+//logo 
+import Logo from "../assets/img/NUS_Lifters.png";
+
+export default function Index() {
+  const router = useRouter();
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is logged in, redirect to gymCapacity
+        router.replace("/gymCapacity");
+      } else {
+        // User not logged in, show home screen
+        setCheckingAuth(false);
+      }
+    });
+
+    return unsubscribe;
+  }, []);
+
+  if (checkingAuth) {
+    // Show loading while checking auth
+    return (
+      <ThemedView style={styles.loadingContainer}>
+        <ThemedText>Loading...</ThemedText>
+      </ThemedView>
+    );
+  }
+
   return (
     <ThemedView style={styles.container}>
-      <ThemedText style={styles.title} title={true}>
-        NUS Lifters
-      </ThemedText>
 
-      <Spacer height={10} />
+      <Image source={Logo} style={styles.img} />
 
       <ThemedText style={{ fontSize: 16 }}>
-        Official NUS lifting club 2025
+        For the Lifters, By the Lifters in NUS
       </ThemedText>
-      <Spacer />
-      <Image source={Logo} style={styles.img} />
+
       <Spacer />
       <Link href="/login" asChild>
-        <TouchableOpacity style={styles.card}>
-          <Text>Login</Text>
-        </TouchableOpacity>
+        <ThemedCard>
+          <Text style={{ color: "#f2f2f2" }}>Login</Text>
+        </ThemedCard>
       </Link>
 
-      <Spacer />
+      <Spacer height={25} />
 
       <Link href="/signup" asChild>
-        <TouchableOpacity style={styles.card}>
-          <Text>Sign up</Text>
-        </TouchableOpacity>
+        <ThemedCard>
+          <Text style={{ color: "#f2f2f2" }}>Sign up</Text>
+        </ThemedCard>
       </Link>
     </ThemedView>
   );
-};
+}
 
-export default Home;
+export const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
-const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
@@ -52,16 +88,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
 
-  card: {
-    backgroundColor: "#eee",
-    padding: 20,
-    borderRadius: 5,
-    boxShadow: "4px 4px rgba(0,0,0,0.1)",
-  },
-
   img: {
-    width: 200,
-    height: 200,
-    resizeMode: "contain", // Prevents distortion
-  },
+    width: 350,
+    height: 350,
+    resizeMode: "contain",
+    borderRadius: 20,
+    marginVertical: 10,
+  }
 });

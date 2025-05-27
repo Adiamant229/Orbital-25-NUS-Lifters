@@ -1,18 +1,29 @@
+//react and expo imports
 import { useState } from "react";
-import { StyleSheet, Text, Alert } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  Alert,
+  Keyboard,
+  TouchableWithoutFeedback,
+  Image,
+} from "react-native";
 import { Link, useRouter } from "expo-router";
-import { Colors } from "../../constants/colors";
 
 //themed components
+import { Colors } from "../../constants/colors";
 import ThemedView from "../../components/themedView";
 import ThemedText from "../../components/themedText";
 import ThemedButton from "../../components/themedButton";
 import Spacer from "../../components/spacer";
 import ThemedTextInput from "../../components/themedTextInput";
 
-// Firebase imports
+//logo 
+import Logo from "../../assets/img/NUS_Lifters.png";
+
+//firebase imports
 import { auth } from "../../firebaseConfig";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 
 const Login = () => {
   const router = useRouter();
@@ -37,9 +48,7 @@ const Login = () => {
       setEmail("");
       setPassword("");
 
-      // TODO: Navigate to home or main screen here if you want
       router.replace("/gymCapacity");
-      
     } catch (error) {
       console.error("Login error:", error.code, error.message);
       let message = "Failed to login.";
@@ -56,47 +65,52 @@ const Login = () => {
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <Spacer />
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <ThemedView style={styles.container}>
 
-      <ThemedText title={true} style={styles.title}>
-        Login to Your Account
-      </ThemedText>
+        <Image source={Logo} style={styles.img} />
 
-      <ThemedTextInput
-        style={{ width: "80%", marginBottom: 20 }}
-        placeholder="Email"
-        keyboardType="email-address"
-        onChangeText={setEmail}
-        value={email}
-      />
+        <Spacer height={10} />
 
-      <ThemedTextInput
-        style={{ width: "80%", marginBottom: 20 }}
-        placeholder="Password"
-        onChangeText={setPassword}
-        value={password}
-        secureTextEntry
-      />
-
-      <ThemedButton onPress={handleSubmit}>
-        <Text style={{ color: "#f2f2f2" }}>Login</Text>
-      </ThemedButton>
-
-      <Spacer height={10} />
-
-      <Link href="/signup">
-        <ThemedText style={{ textAlign: "center" }}>
-          Create new Account
+        <ThemedText title={true} style={styles.title}>
+          Login to Your Account
         </ThemedText>
-      </Link>
-    </ThemedView>
+
+        <ThemedTextInput
+          style={{ width: "80%", marginBottom: 20 }}
+          placeholder="Email"
+          keyboardType="email-address"
+          onChangeText={setEmail}
+          value={email}
+        />
+
+        <ThemedTextInput
+          style={{ width: "80%", marginBottom: 20 }}
+          placeholder="Password"
+          onChangeText={setPassword}
+          value={password}
+          secureTextEntry
+        />
+
+        <ThemedButton onPress={handleSubmit}>
+          <Text style={{ color: "#f2f2f2", fontWeight: "bold" }}>Login</Text>
+        </ThemedButton>
+
+        <Spacer height={10} />
+
+        <Link href="/signup">
+          <ThemedText style={{ textAlign: "center" }}>
+            Create new Account
+          </ThemedText>
+        </Link>
+      </ThemedView>
+    </TouchableWithoutFeedback>
   );
 };
 
 export default Login;
 
-const styles = StyleSheet.create({
+export const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
@@ -117,5 +131,13 @@ const styles = StyleSheet.create({
 
   pressed: {
     opacity: 0.8,
+  },
+
+  img: {
+    width: 350,
+    height: 350,
+    resizeMode: "contain",
+    borderRadius: 20,
+    marginVertical: 10,
   },
 });
