@@ -14,7 +14,7 @@ import ThemedCard from "../components/themedCard"
 import Spacer from "../components/spacer";
 
 //logo 
-import Logo from "../assets/img/NUS_Lifters1.png";
+import Logo from "../assets/img/NUS_Lifters.png";
 
 export default function Index() {
   const router = useRouter();
