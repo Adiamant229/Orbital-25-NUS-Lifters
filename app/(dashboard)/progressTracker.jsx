@@ -5,7 +5,7 @@ import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import Spacer from "../../components/spacer";
 
-const WeightTracker = () => {
+const progressTracker = () => {
   // State to track the weight lifted
   const [weight, setWeight] = useState("");
 
@@ -46,7 +46,7 @@ const WeightTracker = () => {
   );
 };
 
-export default WeightTracker;
+export default progressTracker;
 
 const styles = StyleSheet.create({
   container: {
