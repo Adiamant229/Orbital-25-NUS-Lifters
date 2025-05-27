@@ -204,7 +204,7 @@ const Forum = () => {
       <Spacer />
       <Spacer />
       <ThemedText style={styles.title} title={true}>
-        Latest Gym Discussions
+        Official NUS Lifters Club Forum 
       </ThemedText>
 
       <View style={styles.filterContainerRow}>
