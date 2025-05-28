@@ -1,6 +1,9 @@
-import { StyleSheet, TouchableOpacity, Text } from "react-native";
+import React, {useEffect, useState} from 'react';
+import {StyleSheet, TouchableOpacity, Text, ActivityIndicator} from "react-native";
 import { MaterialIcons } from "@expo/vector-icons/";
 import { Link } from "expo-router";
+import {httpsCallable} from "firebase/functions"
+import { functions } from "../../firebaseConfig.js"
 
 //themed components
 import ThemedText from "../../components/themedText";
@@ -8,38 +11,59 @@ import ThemedView from "../../components/themedView";
 import Spacer from "../../components/spacer";
 import ThemedButton from "../../components/themedButton";
 
+const GymCapacity = () => {
+    const [data, setData] = useState(null);
+    const [loading, setLoading] = useState(true)
+    useEffect(() => {
+        const fetchCapacity = async () => {
+            try {
+                const getCapacity = httpsCallable(functions, 'getCapacity');
+                const result = await getCapacity();
+                setData(result);
+                setLoading(false);
+            } catch (err) {
+                console.error('Error fetching capacity', err);
+            }
+        }
+        fetchCapacity()
+    }, [])
 
-const gymCapacity = () => {
+    if (loading) {
+        return (
+            <ThemedView style={styles.container}>
+                <ThemedText>Loading...</ThemedText>
+            </ThemedView>
+        )
+    }
+    return (
+        <ThemedView style={styles.container}>
 
-  return (
-    <ThemedView style={styles.container}>
-      
-      <ThemedText style={styles.title} title={true}>
-        Gym Traffic (as of 110525 1100am){" "}
-      </ThemedText>
+            <ThemedText style={styles.title} title={true}>
+                Gym Traffic as of {data.timestamp.toDate().toLocaleString()}
+            </ThemedText>
 
-      <Spacer />
+            <Spacer/>
 
-      <ThemedView style={styles.buttonContainer}>
-        <ThemedButton style={styles.button}>
-          <Link href="/gymReports">
-            <Text style={{ color: "#f2f2f2" }}>UTown Gym: 75%</Text>
-          </Link>
-          <Spacer />
-          <MaterialIcons size={50} name="groups" />
-        </ThemedButton>
+            <ThemedView style={styles.buttonContainer}>
+                <ThemedButton style={styles.button}>
+                    <Link href="/gymReports">
+                        <Text style={{color: "#f2f2f2"}}>UTown Gym: {data.gym_capacity[1].capacity}</Text>
+                    </Link>
+                    <Spacer/>
+                    <MaterialIcons size={50} name="groups"/>
+                </ThemedButton>
 
-        <ThemedButton style={styles.button}>
-          <Text style={{ color: "#f2f2f2" }}>MPSH Gym: 25%</Text>
-          <Spacer />
-          <MaterialIcons size={50} name="groups" />
-        </ThemedButton>
-      </ThemedView>
-    </ThemedView>
-  );
+                <ThemedButton style={styles.button}>
+                    <Text style={{color: "#f2f2f2"}}>MPSH Gym: 25%</Text>
+                    <Spacer/>
+                    <MaterialIcons size={50} name="groups"/>
+                </ThemedButton>
+            </ThemedView>
+        </ThemedView>
+    );
 };
 
-export default gymCapacity;
+export default GymCapacity;
 
 const styles = StyleSheet.create({
   container: {
