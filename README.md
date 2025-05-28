@@ -1,37 +1,35 @@
-# NUS Lifters
+# 🏋️ NUS Lifters
 
-All-one-app for your gym needs in NUS
+An all-in-one mobile app for NUS gym-goers — track gym capacity, report equipment issues, discuss in forums, and more! 
 
-## Installation
+---
 
-Use the package manager [pip](https://pip.pypa.io/en/stable/) to install foobar.
+## 🚀 Features
+
+- 📱 React Native (Expo)
+- 🔐 Firebase Authentication
+- 🔥 Firestore database
+- 🏋️ Weightlifting Tracker
+- 💬 Forum with threads and comments
+- 🏃 Gym Capacity Viewer (scraped in real-time)
+- 📸 Equipment Reporting
+
+---
+
+## 📱 APK Download (Android Only)
+
+You can try the app directly by downloading the APK:
+
+➡️ [Download Latest APK](https://drive.google.com/your-apk-link-here)
+
+No installation steps needed — just open the link and install the file on any Android device.
+
+---
+
+## 🧪 Local Development Setup
+
+### 1. Clone the Repository
 
 ```bash
-pip install foobar
-```
-
-## Usage
-
-```python
-import foobar
-
-# returns 'words'
-foobar.pluralize('word')
-
-# returns 'geese'
-foobar.pluralize('goose')
-
-# returns 'phenomenon'
-foobar.singularize('phenomena')
-```
-
-## Contributing
-
-Pull requests are welcome. For major changes, please open an issue first
-to discuss what you would like to change.
-
-Please make sure to update tests as appropriate.
-
-## License
-
-[MIT](https://choosealicense.com/licenses/mit/)
+git clone https://github.com/yourusername/nus-lifters.git
+cd nus-lifters
