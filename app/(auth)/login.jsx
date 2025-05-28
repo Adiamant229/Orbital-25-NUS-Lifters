@@ -23,7 +23,7 @@ import Logo from "../../assets/img/NUS_Lifters.png";
 
 //firebase imports
 import { auth } from "../../firebaseConfig";
-import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 const Login = () => {
   const router = useRouter();
