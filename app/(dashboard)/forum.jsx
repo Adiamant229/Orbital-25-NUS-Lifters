@@ -21,6 +21,8 @@ import {
   deleteDoc,
   doc,
   updateDoc,
+  arrayUnion,
+  orderBy
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { db } from "../../firebaseConfig";
@@ -56,7 +58,11 @@ const Forum = () => {
   const [editCategory, setEditCategory] = useState(categories[0]);
   const [editContent, setEditContent] = useState("");
 
-  useEffect(() => {
+  const [commentInput, setCommentInput] = useState("");
+  const [comments, setComments] = useState([]);
+
+
+    useEffect(() => {
     const auth = getAuth();
     const user = auth.currentUser;
     if (user) {
@@ -110,7 +116,7 @@ const Forum = () => {
         return;
       }
 
-      // Fetch fresh user name from Firestore:
+      // Fetch fresh username from Firestore:
       const userDocRef = doc(db, "users", user.uid);
       const userDocSnap = await getDoc(userDocRef);
       const freshUserName = userDocSnap.exists()
@@ -120,7 +126,7 @@ const Forum = () => {
       await addDoc(collection(db, "threads"), {
         title: newTitle,
         category: newCategory,
-        author: freshUserName, // use fresh user name here!
+        author: freshUserName,
         authorId: user.uid,
         content: newContent, // Save content here
         createdAt: new Date(),
@@ -198,6 +204,67 @@ const Forum = () => {
       Alert.alert("Error", "Could not update thread.");
     }
   };
+
+  const addComment = async (threadID, content) => {
+      if (!content.trim()) {
+          Alert.alert("Error", "Please enter a comment");
+          return;
+      }
+      try {
+          const auth = getAuth();
+          const user = auth.currentUser;
+          if (!user) {
+              Alert.alert("Error", "User not logged in.");
+              return;
+          }
+          const userDocRef = doc(db, "users", user.uid);
+          const userDocSnap = await getDoc(userDocRef);
+          const commenter = userDocSnap.exists()
+              ? userDocSnap.data().name
+              : "Anonymous";
+
+          const threadRef = doc(db, "threads", threadID);
+          const threadSnap = await getDoc(threadRef);
+          if (!threadSnap.exists()) {
+              Alert.alert("Error", "Thread not found")
+              return;
+          }
+          const comments = threadSnap.data().comments || [];
+          const newID = comments.length;
+          const comment = {
+              commenter: commenter,
+              id: newID,
+              content: content,
+              createdAt: new Date()
+          };
+          await updateDoc(threadRef, {
+              comments: arrayUnion(comment)
+          });
+          Alert.alert
+
+      } catch(err) {
+          console.error("Error adding comment: ", err);
+          Alert.alert("Error", "Could not add comment.");
+      }
+  }
+
+/*  const loadComments = async (threadID) => {
+      try {
+          const q = query(
+              collection(db, "threads", threadID, "comments"),
+              orderBy("createdAt", "asc")
+          );
+          const querySnap = await getDocs(q);
+          const commentList = [];
+          querySnap.forEach((doc) =>
+              commentList.push({
+                id: doc.id,
+                ...doc.data() }));
+          setComments(commentList);
+      } catch(err) {
+          console.error("Error loading comments: ", err);
+      }
+  }; */
 
   return (
     <ThemedView style={styles.innerContainer}>
@@ -430,7 +497,6 @@ const Forum = () => {
         transparent={true}
         onRequestClose={() => setSelectedThread(null)}
       >
-        <TouchableWithoutFeedback onPress={() => setSelectedThread(null)}>
           <View style={styles.modalBackdrop}>
             <View style={styles.modalContainer}>
               {selectedThread && (
@@ -443,11 +509,37 @@ const Forum = () => {
                   <Text style={styles.threadContent}>
                     {selectedThread.content}
                   </Text>
+                  { selectedThread.comments && (<FlatList
+                        data = {selectedThread.comments}
+                        keyExtractor={(item) => item.id}
+                        renderItem={({item}) => (
+                            <View style={styles.commentItem}>
+                                <Text style={styles.commentContent}>{item.content}</Text>
+                                <Text style={styles.commentAuthor}>by {item.commenter}</Text>
+                            </View>
+                        )}
+                    contentContainerStyle={{paddingVertical: 10}}/>)}
+                    <View style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}>
+                        <TextInput
+                            style={[styles.input, { flex: 1, height: 40 }]}
+                            placeholder="Add a comment..."
+                            value={commentInput}
+                            onChangeText={setCommentInput}
+                        />
+                        <ThemedButton
+                            onPress={() => {
+                                addComment(selectedThread.id, commentInput);
+                                setCommentInput("");
+                            }}
+                            style={{ marginLeft: 10 }}
+                        >
+                            <Text style={styles.filterText}>Post</Text>
+                        </ThemedButton>
+                    </View>
                 </>
               )}
             </View>
           </View>
-        </TouchableWithoutFeedback>
       </Modal>
     </ThemedView>
   );
@@ -551,4 +643,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  commentAuthor: {
+    fontSize: 12
+  },
+  commentItem: {
+      padding: 20,
+      borderColor: "#D3D3D3",
+      borderRadius: 1
+  },
+  commentContent: {
+      fontSize: 16
+  }
 });
