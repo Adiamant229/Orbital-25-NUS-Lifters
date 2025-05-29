@@ -62,7 +62,7 @@ export default function Index() {
 
       <Link href="/signup" asChild>
         <ThemedCard>
-          <Text style={{ color: "#f2f2f2", fontWeight: "bold" }}>Sign up</Text>
+          <Text style={{ color: "#f2f2f2", fontWeight:"bold" }}>Sign up</Text>
         </ThemedCard>
       </Link>
     </ThemedView>

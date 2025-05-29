@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
 
   searchButton: {
     paddingVertical: 12,
-    paddingHorizontal: 24,
+    paddingHorizontal: 30,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",

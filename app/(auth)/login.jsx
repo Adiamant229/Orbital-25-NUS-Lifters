@@ -7,6 +7,7 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   Image,
+  Platform
 } from "react-native";
 import { Link, useRouter } from "expo-router";
 
@@ -18,7 +19,7 @@ import ThemedButton from "../../components/themedButton";
 import Spacer from "../../components/spacer";
 import ThemedTextInput from "../../components/themedTextInput";
 
-//logo 
+//logo
 import Logo from "../../assets/img/NUS_Lifters.png";
 
 //firebase imports
@@ -64,13 +65,16 @@ const Login = () => {
     }
   };
 
+  // Platform-specific spacer height
+  const spacerHeight = Platform.OS === "ios" ? 10 : 3;
+  const logoWidthAndHeight = Platform.OS === "ios" ? 350 : 330;
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <ThemedView style={styles.container}>
+        <Image source={Logo} style={[styles.img, { width: logoWidthAndHeight, height: logoWidthAndHeight}]} />
 
-        <Image source={Logo} style={styles.img} />
-
-        <Spacer height={10} />
+        <Spacer height={spacerHeight} />
 
         <ThemedText title={true} style={styles.title}>
           Login to Your Account
@@ -96,7 +100,7 @@ const Login = () => {
           <Text style={{ color: "#f2f2f2", fontWeight: "bold" }}>Login</Text>
         </ThemedButton>
 
-        <Spacer height={10} />
+        <Spacer height={spacerHeight} />
 
         <Link href="/signup">
           <ThemedText style={{ textAlign: "center" }}>
