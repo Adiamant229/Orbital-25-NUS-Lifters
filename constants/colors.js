@@ -17,7 +17,7 @@ export const Colors = {
     title: "#000000",
     background: "#ffffff", // white background
     navBackground: "#f0f0f0", // light gray nav
-    iconColor: "#686477", // dark gray icons
+    iconColor: "#7d015c", // dark gray icons
     iconColorFocused: "#000000",
     uiBackground: "#e6e6e6", // soft gray UI background
   },

@@ -6,6 +6,7 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   Image,
+  Platform,
 } from "react-native";
 import { useState } from "react";
 import { Link, useRouter } from "expo-router";
@@ -22,9 +23,8 @@ import { auth, db } from "../../firebaseConfig";
 import { doc, setDoc } from "firebase/firestore";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 
-//logo 
+//logo
 import Logo from "../../assets/img/NUS_Lifters.png";
-
 
 const Signup = () => {
   const router = useRouter();
@@ -34,6 +34,10 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Platform-specific spacer height
+  const spacerHeight = Platform.OS === "ios" ? 10 : 3;
+  const logoWidthAndHeight = Platform.OS === "ios" ? 280 : 240;
 
   const handleRegister = async () => {
     if (!name.trim()) {
@@ -50,7 +54,7 @@ const Signup = () => {
     }
 
     setLoading(true);
-    
+
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
@@ -99,7 +103,7 @@ const Signup = () => {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <ThemedView style={styles.container}>
-        <Image source={Logo} style={styles.img} />
+        <Image source={Logo} style={[styles.img, { width: logoWidthAndHeight, height: logoWidthAndHeight}]} />
         <ThemedText title={true} style={styles.title}>
           Create New Account
         </ThemedText>
@@ -141,7 +145,7 @@ const Signup = () => {
           </Text>
         </ThemedButton>
 
-        <Spacer height={10} />
+        <Spacer height={spacerHeight} />
 
         <Link href="/login">
           <ThemedText style={{ textAlign: "center" }}>Login instead</ThemedText>
@@ -167,8 +171,6 @@ const styles = StyleSheet.create({
   },
 
   img: {
-    width: 280,
-    height: 280,
     resizeMode: "contain",
     borderRadius: 20,
     marginVertical: 10,
