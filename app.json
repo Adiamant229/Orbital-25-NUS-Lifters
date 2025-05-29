@@ -1,7 +1,7 @@
 {
   "expo": {
     "scheme": "nus-lifters",
-    "name": "nus-lifters",
+    "name": "NUS Lifters",
     "slug": "nus-lifters",
     "version": "1.0.0",
     "orientation": "portrait",
