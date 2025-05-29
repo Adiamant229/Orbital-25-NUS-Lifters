@@ -49,8 +49,8 @@ npm install -g expo-cli
 Clone the project to your local machine:
 
 ```bash
-git clone https://github.com/your-username/your-project.git
-cd your-project
+git clone https://github.com/Sengernest/Orbital-25-NUS-Lifters.git
+cd Orbital-25-NUS-Lifters
 ```
 
 ### 3. 📦 Install Project Dependencies
