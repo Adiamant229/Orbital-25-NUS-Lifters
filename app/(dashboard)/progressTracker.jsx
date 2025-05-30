@@ -2,6 +2,7 @@ import React, { useState } from "react"; // Import React and useState
 import { StyleSheet, View, TextInput, TouchableOpacity } from "react-native";
 
 import ThemedText from "../../components/themedText";
+import ThemedButton from "../../components/themedButton";
 import ThemedView from "../../components/themedView";
 import Spacer from "../../components/spacer";
 
@@ -39,9 +40,9 @@ const progressTracker = () => {
       <Spacer />
 
       {/* Submit button */}
-      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+      <ThemedButton  onPress={handleSubmit}>
         <ThemedText style={styles.submitButtonText}>Submit</ThemedText>
-      </TouchableOpacity>
+      </ThemedButton>
     </ThemedView>
   );
 };
