@@ -71,6 +71,22 @@ const Forum = () => {
     }
     fetchThreads();
   }, [selectedCategory]);
+    useEffect(() => {
+        const refreshThread = async () => {
+            if (selectedThread) {
+                try {
+                    const threadRef = doc(db, "threads", selectedThread.id);
+                    const threadSnap = await getDoc(threadRef);
+                    if (threadSnap.exists()) {
+                        setSelectedThread({id: threadSnap.id, ...threadSnap.data()});
+                    }
+                } catch (err) {
+                    console.error("Error refreshing thread", err);
+                }
+            }
+        };
+        refreshThread();
+    }, [selectedThread?.comments?.length])
 
   const fetchThreads = async () => {
     setLoading(true);
@@ -240,6 +256,10 @@ const Forum = () => {
           await updateDoc(threadRef, {
               comments: arrayUnion(comment)
           });
+          const updatedThreadSnap = await getDoc(threadRef);
+          if (updatedThreadSnap.exists()) {
+              setSelectedThread({ id: updatedThreadSnap.id, ...updatedThreadSnap.data() });
+          }
           Alert.alert
 
       } catch(err) {
@@ -497,49 +517,59 @@ const Forum = () => {
         transparent={true}
         onRequestClose={() => setSelectedThread(null)}
       >
-          <View style={styles.modalBackdrop}>
-            <View style={styles.modalContainer}>
-              {selectedThread && (
-                <>
-                  <Text style={styles.threadTitle}>{selectedThread.title}</Text>
-                  <Text style={styles.threadMeta}>
-                    by {selectedThread.author} · {selectedThread.category}
-                  </Text>
-                  <Spacer />
-                  <Text style={styles.threadContent}>
-                    {selectedThread.content}
-                  </Text>
-                  { selectedThread.comments && (<FlatList
-                        data = {selectedThread.comments}
-                        keyExtractor={(item) => item.id}
-                        renderItem={({item}) => (
-                            <View style={styles.commentItem}>
-                                <Text style={styles.commentContent}>{item.content}</Text>
-                                <Text style={styles.commentAuthor}>by {item.commenter}</Text>
+          <TouchableWithoutFeedback onPress={() => setSelectedThread(null)}>
+              <View style={styles.modalBackdrop}>
+                  <TouchableWithoutFeedback onPress={() => {}}>
+                    <View style={styles.modalContainer}>
+                      {selectedThread && (
+                        <>
+                          <Text style={styles.threadTitle}>{selectedThread.title}</Text>
+                          <Text style={styles.threadMeta}>
+                            by {selectedThread.author} · {selectedThread.category}
+                          </Text>
+                            <br/>
+                          <Text style={styles.threadContent}>
+                            {selectedThread.content}
+                          </Text>
+                          { selectedThread.comments && (
+                              <>
+                                  <br/>
+                              <Text style={styles.commentHead}>Comments</Text>
+                              <FlatList
+                                data = {selectedThread.comments}
+                                keyExtractor={(item) => item.id}
+                                renderItem={({item}) => (
+                                    <View style={styles.commentItem}>
+                                        <Text style={styles.commentContent}>{item.content}</Text>
+                                        <Text style={styles.commentAuthor}>by {item.commenter}</Text>
+                                    </View>
+                                )}
+                                contentContainerStyle={{paddingVertical: 10}}/>
+                                  </>
+                          )}
+                            <View style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}>
+                                <TextInput
+                                    style={[styles.input, { flex: 1, height: 40 }]}
+                                    placeholder="Add a comment..."
+                                    value={commentInput}
+                                    onChangeText={setCommentInput}
+                                />
+                                <ThemedButton
+                                    onPress={() => {
+                                        addComment(selectedThread.id, commentInput);
+                                        setCommentInput("");
+                                    }}
+                                    style={{ marginLeft: 10 }}
+                                >
+                                    <Text style={styles.filterText}>Post</Text>
+                                </ThemedButton>
                             </View>
-                        )}
-                    contentContainerStyle={{paddingVertical: 10}}/>)}
-                    <View style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}>
-                        <TextInput
-                            style={[styles.input, { flex: 1, height: 40 }]}
-                            placeholder="Add a comment..."
-                            value={commentInput}
-                            onChangeText={setCommentInput}
-                        />
-                        <ThemedButton
-                            onPress={() => {
-                                addComment(selectedThread.id, commentInput);
-                                setCommentInput("");
-                            }}
-                            style={{ marginLeft: 10 }}
-                        >
-                            <Text style={styles.filterText}>Post</Text>
-                        </ThemedButton>
+                        </>
+                      )}
                     </View>
-                </>
-              )}
-            </View>
-          </View>
+                  </TouchableWithoutFeedback>
+              </View>
+          </TouchableWithoutFeedback>
       </Modal>
     </ThemedView>
   );
@@ -598,6 +628,7 @@ const styles = StyleSheet.create({
   },
   threadContent: {
     fontSize: 16,
+    paddingHorizontal: 20
   },
   modalBackdrop: {
     flex: 1,
@@ -642,6 +673,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     alignItems: "center",
     justifyContent: "center",
+  },
+  commentHead: {
+      fontSize: 16,
   },
   commentAuthor: {
     fontSize: 12
