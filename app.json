@@ -1,12 +1,12 @@
 {
   "expo": {
     "scheme": "nus-lifters",
-    "name": "nus-lifters",
+    "name": "NUS Lifters",
     "slug": "nus-lifters",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/img/NUS_Lifters.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/img/NUS_Lifters.png",
