@@ -10,7 +10,7 @@ const Macro = () => {
   return (
     <ThemedView style={styles.container}>
       <ThemedText style={styles.title} title={true}>
-        Macro Calculator
+        Macro Tracker
       </ThemedText>
 
       <Spacer />
