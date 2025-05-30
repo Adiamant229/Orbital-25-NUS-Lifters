@@ -10,7 +10,7 @@ const Macro = () => {
   return (
     <ThemedView style={styles.container}>
       <ThemedText style={styles.title} title={true}>
-        Macro Calculator
+        Macro Tracker
       </ThemedText>
 
       <Spacer />
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
 
   searchButton: {
     paddingVertical: 12,
-    paddingHorizontal: 24,
+    paddingHorizontal: 30,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",

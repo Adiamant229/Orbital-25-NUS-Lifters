@@ -45,7 +45,6 @@ export default function Index() {
 
   return (
     <ThemedView style={styles.container}>
-
       <Image source={Logo} style={styles.img} />
 
       <ThemedText style={{ fontSize: 16 }}>
@@ -55,7 +54,7 @@ export default function Index() {
       <Spacer />
       <Link href="/login" asChild>
         <ThemedCard>
-          <Text style={{ color: "#f2f2f2" }}>Login</Text>
+          <Text style={{ color: "#f2f2f2", fontWeight: "bold" }}>Login</Text>
         </ThemedCard>
       </Link>
 
@@ -63,7 +62,7 @@ export default function Index() {
 
       <Link href="/signup" asChild>
         <ThemedCard>
-          <Text style={{ color: "#f2f2f2" }}>Sign up</Text>
+          <Text style={{ color: "#f2f2f2", fontWeight:"bold" }}>Sign up</Text>
         </ThemedCard>
       </Link>
     </ThemedView>

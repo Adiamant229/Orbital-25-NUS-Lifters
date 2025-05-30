@@ -28,6 +28,6 @@ const styles = StyleSheet.create({
     width: "80%",
     padding: 20,
     borderRadius: 6,
-    marginBottom: 20,
+    marginBottom: 10,
   },
 });
