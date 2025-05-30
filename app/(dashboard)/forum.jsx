@@ -527,13 +527,13 @@ const Forum = () => {
                           <Text style={styles.threadMeta}>
                             by {selectedThread.author} · {selectedThread.category}
                           </Text>
-                            <br/>
+                            <Spacer height={20}/>
                           <Text style={styles.threadContent}>
                             {selectedThread.content}
                           </Text>
                           { selectedThread.comments && (
                               <>
-                                  <br/>
+                                  <Spacer height ={20}/>
                               <Text style={styles.commentHead}>Comments</Text>
                               <FlatList
                                 data = {selectedThread.comments}
@@ -542,6 +542,7 @@ const Forum = () => {
                                     <View style={styles.commentItem}>
                                         <Text style={styles.commentContent}>{item.content}</Text>
                                         <Text style={styles.commentAuthor}>by {item.commenter}</Text>
+                                        <Spacer height={10}/>
                                     </View>
                                 )}
                                 contentContainerStyle={{paddingVertical: 10}}/>
@@ -681,7 +682,7 @@ const styles = StyleSheet.create({
     fontSize: 12
   },
   commentItem: {
-      padding: 20,
+      paddingHorizontal: 20,
       borderColor: "#D3D3D3",
       borderRadius: 1
   },
