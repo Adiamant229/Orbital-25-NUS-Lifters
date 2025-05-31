@@ -1,5 +1,7 @@
+//react and expo imports
 import { StyleSheet, Text, View } from "react-native";
 
+//themed components 
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import Spacer from "../../components/spacer";
