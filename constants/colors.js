@@ -3,22 +3,22 @@ export const Colors = {
   warning: "#cc475a",
 
   dark: {
-    text: "#ffffff", // white text
+    text: "#ffffff", 
     title: "#ffffff",
-    background: "#000000", // black background
-    navBackground: "#0a0a0a", // dark nav
-    iconColor: "#7d015c", // muted icon color
+    background: "#000000", 
+    navBackground: "#0a0a0a", 
+    iconColor: "#7d015c",
     iconColorFocused: "#ffffff",
-    uiBackground: "#1a1a1a", // dark UI sections
+    uiBackground: "#1a1a1a",
   },
 
   light: {
-    text: "#000000", // black text
+    text: "#000000", 
     title: "#000000",
-    background: "#ffffff", // white background
-    navBackground: "#f0f0f0", // light gray nav
-    iconColor: "#7d015c", // dark gray icons
+    background: "#ffffff",
+    navBackground: "#f0f0f0",
+    iconColor: "#7d015c", 
     iconColorFocused: "#000000",
-    uiBackground: "#e6e6e6", // soft gray UI background
+    uiBackground: "#e6e6e6", 
   },
 };

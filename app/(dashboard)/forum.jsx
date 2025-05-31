@@ -1,3 +1,4 @@
+//react and expo imports
 import { useEffect, useState } from "react";
 import {
   StyleSheet,
@@ -11,6 +12,8 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
 } from "react-native";
+
+//firebase imports 
 import {
   collection,
   addDoc,
@@ -22,13 +25,12 @@ import {
   doc,
   updateDoc,
   arrayUnion,
-  orderBy
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { db } from "../../firebaseConfig";
 
+//themed components 
 import { Ionicons } from "@expo/vector-icons";
-
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import ThemedButton from "../../components/themedButton";
@@ -599,7 +601,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   filterButtonSelected: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "#7d015c",
   },
   filterText: {
     color: "#000",

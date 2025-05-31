@@ -3,13 +3,12 @@ import { useEffect, useState } from "react";
 import {
   StyleSheet,
   TouchableOpacity,
-  Text,
-  TextInput,
   View,
 } from "react-native";
 
 // themed components
 import ThemedText from "../../components/themedText";
+import ThemedTextInput from "../../components/themedTextInput";
 import ThemedView from "../../components/themedView";
 import Spacer from "../../components/spacer";
 import ThemedButton from "../../components/themedButton";
@@ -108,8 +107,7 @@ const Profile = () => {
       <View style={styles.usernameContainer}>
         {editMode ? (
           <View style={styles.inputWithIcons}>
-            <TextInput
-              style={styles.input}
+            <ThemedTextInput
               value={inputName}
               onChangeText={setInputName}
               placeholder="Enter new name"
@@ -127,14 +125,14 @@ const Profile = () => {
             </View>
           </View>
         ) : (
-          <Text style={styles.username}>{userName}</Text>
+          <ThemedText>{userName}</ThemedText>
         )}
       </View>
 
       <Spacer />
 
       <ThemedButton onPress={handleLogout}>
-        <Text style={{ color: "#f2f2f2", fontWeight: "bold" }}>Logout</Text>
+        <ThemedText>Logout</ThemedText>
       </ThemedButton>
     </ThemedView>
   );
@@ -151,7 +149,6 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontWeight: "bold",
     fontSize: 18,
     marginBottom: 20,
   },
@@ -165,19 +162,19 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#f2f2f2",
     borderRadius: 50,
-    overflow: "visible", // <- allow pen icon to overflow outside container if needed
-    backgroundColor: "transparent", // just in case
+    overflow: "visible", 
+    backgroundColor: "transparent", 
   },
 
   editIconOnAvatar: {
     position: "absolute",
-    bottom: -6, // moved a bit down, adjust as needed
-    right: -10, // moved more to the right, adjust as needed
+    bottom: -6, 
+    right: -10, 
     backgroundColor: "#333",
     borderRadius: 10,
     padding: 2,
-    zIndex: 9999, // super high to ensure on top
-    elevation: 9999, // Android layering
+    zIndex: 9999, 
+    elevation: 9999, 
   },
 
   usernameContainer: {
@@ -187,24 +184,9 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
 
-  username: {
-    fontWeight: "bold",
-    fontSize: 20,
-    textAlign: "center",
-  },
-
   inputWithIcons: {
     flexDirection: "row",
     alignItems: "center",
-  },
-
-  input: {
-    borderColor: "#ccc",
-    borderWidth: 1,
-    padding: 10,
-    borderRadius: 6,
-    backgroundColor: "#fff",
-    minWidth: 200,
   },
 
   editIconsRow: {

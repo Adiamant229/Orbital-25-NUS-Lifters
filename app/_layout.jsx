@@ -1,4 +1,5 @@
-import { StyleSheet, Text, useColorScheme, View } from "react-native";
+//react and expo imports 
+import { useColorScheme } from "react-native";
 import { Stack } from "expo-router";
 import { Colors } from "../constants/colors";
 import { StatusBar } from "expo-status-bar";
@@ -9,8 +10,6 @@ const RootLayout = () => {
   const theme = Colors[colorScheme] ?? Colors.light;
 
   return (
-    //statusBar auto means time and battery level white and black
-    //stack screen is for back button
     <>
       <StatusBar value="auto" />
       <Stack
@@ -26,6 +25,10 @@ const RootLayout = () => {
         <Stack.Screen
           name="gymReports"
           options={{ title: "Latest Reports & Issues " }}
+        />
+        <Stack.Screen
+          name="exercises"
+          options={{ title: "Gym Info and Guide" }}
         />
       </Stack>
     </>
