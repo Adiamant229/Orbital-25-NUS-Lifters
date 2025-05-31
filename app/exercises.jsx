@@ -8,10 +8,11 @@ import ThemedCard from "../components/themedCard";
 import Spacer from "../components/spacer";
 
 const exercises = () => {
+
   return (
     <ThemedView style={styles.container}>
       <ThemedText style={styles.title} title={true}>
-        Chest Exercises 
+        Chest Exercises
       </ThemedText>
 
       <Spacer />

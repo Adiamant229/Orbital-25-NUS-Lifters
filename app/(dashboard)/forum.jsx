@@ -262,8 +262,7 @@ const Forum = () => {
           if (updatedThreadSnap.exists()) {
               setSelectedThread({ id: updatedThreadSnap.id, ...updatedThreadSnap.data() });
           }
-          Alert.alert
-
+          
       } catch(err) {
           console.error("Error adding comment: ", err);
           Alert.alert("Error", "Could not add comment.");
@@ -293,7 +292,7 @@ const Forum = () => {
       <Spacer />
       <Spacer />
       <ThemedText style={styles.title} title={true}>
-        Official NUS Lifters Club Forum 
+        Official NUS Lifters Club Forum
       </ThemedText>
 
       <View style={styles.filterContainerRow}>
@@ -393,6 +392,7 @@ const Forum = () => {
               <TextInput
                 style={styles.input}
                 placeholder="Thread Title"
+                placeholderTextColor={"grey"}
                 value={newTitle}
                 onChangeText={setNewTitle}
               />
@@ -420,6 +420,7 @@ const Forum = () => {
                   { height: 100, textAlignVertical: "top" },
                 ]}
                 placeholder="Write your thread content here..."
+                placeholderTextColor={"grey"}
                 value={newContent}
                 onChangeText={setNewContent}
                 multiline={true}
@@ -457,10 +458,11 @@ const Forum = () => {
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
           <View style={styles.modalBackdrop}>
             <View style={styles.modalContainer}>
-              <Text style={styles.modalTitle}>Edit Thread</Text>{" "}
+              <Text style={styles.modalTitle}>Edit Thread</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Thread Title"
+                placeholderTextColor={"grey"}
                 value={editTitle}
                 onChangeText={setEditTitle}
               />
@@ -486,6 +488,7 @@ const Forum = () => {
                   { height: 100, textAlignVertical: "top" },
                 ]}
                 placeholder="Edit your thread content here..."
+                placeholderTextColor={"grey"}
                 value={editContent}
                 onChangeText={setEditContent}
                 multiline={true}
@@ -519,60 +522,76 @@ const Forum = () => {
         transparent={true}
         onRequestClose={() => setSelectedThread(null)}
       >
-          <TouchableWithoutFeedback onPress={() => setSelectedThread(null)}>
-              <View style={styles.modalBackdrop}>
-                  <TouchableWithoutFeedback onPress={() => {}}>
-                    <View style={styles.modalContainer}>
-                      {selectedThread && (
-                        <>
-                          <Text style={styles.threadTitle}>{selectedThread.title}</Text>
-                          <Text style={styles.threadMeta}>
-                            by {selectedThread.author} · {selectedThread.category}
-                          </Text>
-                            <Spacer height={20}/>
-                          <Text style={styles.threadContent}>
-                            {selectedThread.content}
-                          </Text>
-                          { selectedThread.comments && (
-                              <>
-                                  <Spacer height ={20}/>
-                              <Text style={styles.commentHead}>Comments</Text>
-                              <FlatList
-                                data = {selectedThread.comments}
-                                keyExtractor={(item) => item.id}
-                                renderItem={({item}) => (
-                                    <View style={styles.commentItem}>
-                                        <Text style={styles.commentContent}>{item.content}</Text>
-                                        <Text style={styles.commentAuthor}>by {item.commenter}</Text>
-                                        <Spacer height={10}/>
-                                    </View>
-                                )}
-                                contentContainerStyle={{paddingVertical: 10}}/>
-                                  </>
-                          )}
-                            <View style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}>
-                                <TextInput
-                                    style={[styles.input, { flex: 1, height: 40 }]}
-                                    placeholder="Add a comment..."
-                                    value={commentInput}
-                                    onChangeText={setCommentInput}
-                                />
-                                <ThemedButton
-                                    onPress={() => {
-                                        addComment(selectedThread.id, commentInput);
-                                        setCommentInput("");
-                                    }}
-                                    style={{ marginLeft: 10 }}
-                                >
-                                    <Text style={styles.filterText}>Post</Text>
-                                </ThemedButton>
+        <TouchableWithoutFeedback onPress={() => setSelectedThread(null)}>
+          <View style={styles.modalBackdrop}>
+            <TouchableWithoutFeedback
+              onPress={Keyboard.dismiss}
+              accessible={false}
+            >
+              <View style={styles.modalContainer}>
+                {selectedThread && (
+                  <>
+                    <Text style={styles.threadTitle}>
+                      {selectedThread.title}
+                    </Text>
+                    <Text style={styles.threadMeta}>
+                      by {selectedThread.author} · {selectedThread.category}
+                    </Text>
+                    <Spacer height={20} />
+                    <Text style={styles.threadContent}>
+                      {selectedThread.content}
+                    </Text>
+                    {selectedThread.comments && (
+                      <>
+                        <Spacer height={20} />
+                        <Text style={styles.commentHead}>Comments:</Text>
+                        <FlatList
+                          data={selectedThread.comments}
+                          keyExtractor={(item) => item.id}
+                          renderItem={({ item }) => (
+                            <View style={styles.commentItem}>
+                              <Text style={styles.commentContent}>
+                                - {item.content}
+                              </Text>
+                              <Text style={styles.commentAuthor}>
+                                by {item.commenter}
+                              </Text>
+                              <Spacer height={10} />
                             </View>
-                        </>
-                      )}
+                          )}
+                          contentContainerStyle={{ paddingVertical: 10 }}
+                        />
+                      </>
+                    )}
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        marginTop: 10,
+                      }}
+                    >
+                      <TextInput
+                        style={[styles.input, { flex: 1, height: 40 }]}
+                        placeholder="Add a comment..."
+                        value={commentInput}
+                        onChangeText={setCommentInput}
+                      />
+                      <ThemedButton
+                        onPress={() => {
+                          addComment(selectedThread.id, commentInput);
+                          setCommentInput("");
+                        }}
+                        style={{ marginLeft: 10 }}
+                      >
+                        <Text style={styles.filterText}>Post</Text>
+                      </ThemedButton>
                     </View>
-                  </TouchableWithoutFeedback>
+                  </>
+                )}
               </View>
-          </TouchableWithoutFeedback>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
       </Modal>
     </ThemedView>
   );
@@ -605,7 +624,7 @@ const styles = StyleSheet.create({
   },
   filterText: {
     color: "#000",
-    fontSize: 14, // Optional smaller font size if too wide
+    fontSize: 10, // Optional smaller font size if too wide
   },
   title: {
     fontSize: 24,

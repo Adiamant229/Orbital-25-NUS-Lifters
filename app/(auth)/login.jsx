@@ -72,7 +72,13 @@ const Login = () => {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <ThemedView style={styles.container}>
-        <Image source={Logo} style={[styles.img, { width: logoWidthAndHeight, height: logoWidthAndHeight}]} />
+        <Image
+          source={Logo}
+          style={[
+            styles.img,
+            { width: logoWidthAndHeight, height: logoWidthAndHeight },
+          ]}
+        />
 
         <Spacer height={spacerHeight} />
 
@@ -84,6 +90,7 @@ const Login = () => {
           style={{ width: "80%", marginBottom: 20 }}
           placeholder="Email"
           keyboardType="email-address"
+          placeholderTextColor={"grey"}
           onChangeText={setEmail}
           value={email}
         />
@@ -91,6 +98,7 @@ const Login = () => {
         <ThemedTextInput
           style={{ width: "80%", marginBottom: 20 }}
           placeholder="Password"
+          placeholderTextColor={"grey"}
           onChangeText={setPassword}
           value={password}
           secureTextEntry
