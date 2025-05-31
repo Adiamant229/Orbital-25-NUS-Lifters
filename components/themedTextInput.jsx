@@ -13,7 +13,7 @@ const ThemedTextInput = ({ style, ...props }) => {
           color: theme.text,
         },
         styles.input,
-        style, // allow overrides
+        style, 
       ]}
        autoCapitalize="none"
       {...props}
