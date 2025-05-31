@@ -1,6 +1,6 @@
 //react and expo imports 
 import { useState } from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, TouchableWithoutFeedback, Keyboard } from "react-native";
 import { useRouter } from "expo-router";
 
 //themed components
@@ -22,34 +22,40 @@ const progressTracker = () => {
   const router = useRouter(); 
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText style={styles.title} title={true}>
-        Track Your Weights
-      </ThemedText>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <ThemedView style={styles.container}>
+        <ThemedText style={styles.title} title={true}>
+          Track Your Weights
+        </ThemedText>
 
-      <Spacer />
+        <Spacer />
 
-      <ThemedText style={styles.inputLabel}>
-        Enter Weight Lifted (kg):
-      </ThemedText>
+        <ThemedText style={styles.inputLabel}>
+          Enter Weight Lifted (kg):
+        </ThemedText>
+        <ThemedTextInput
+          value={weight}
+          onChangeText={setWeight}
+          keyboardType="numeric"
+          placeholder="Enter weight"
+          placeholderTextColor={"grey"}
+        />
+        <Spacer />
 
-      <ThemedTextInput
-        value={weight}
-        onChangeText={setWeight}
-        keyboardType="numeric"
-        placeholder="Enter weight"
-      />
+        <ThemedButton
+          onPress={() => {
+            handleSubmit();
+            Keyboard.dismiss();
+          }}
+        >
+          <ThemedText>Submit</ThemedText>
+        </ThemedButton>
 
-      <Spacer />
-
-      <ThemedButton onPress={handleSubmit}>
-        <ThemedText>Submit</ThemedText>
-      </ThemedButton>
-
-      <ThemedButton onPress={() => router.push('/exercises')}>
-        <ThemedText>Gym Info and Guide</ThemedText>
-      </ThemedButton>
-    </ThemedView>
+        <ThemedButton onPress={() => router.push("/exercises")}>
+          <ThemedText>Gym Info and Guide</ThemedText>
+        </ThemedButton>
+      </ThemedView>
+    </TouchableWithoutFeedback>
   );
 };
 

@@ -103,19 +103,27 @@ const Signup = () => {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <ThemedView style={styles.container}>
-        <Image source={Logo} style={[styles.img, { width: logoWidthAndHeight, height: logoWidthAndHeight}]} />
+        <Image
+          source={Logo}
+          style={[
+            styles.img,
+            { width: logoWidthAndHeight, height: logoWidthAndHeight },
+          ]}
+        />
         <ThemedText title={true} style={styles.title}>
           Create New Account
         </ThemedText>
 
         <ThemedTextInput
           placeholder="Username"
+          placeholderTextColor={"grey"}
           onChangeText={setName}
           value={name}
         />
 
         <ThemedTextInput
           placeholder="Email"
+          placeholderTextColor={"grey"}
           keyboardType="email-address"
           onChangeText={setEmail}
           value={email}
@@ -123,6 +131,7 @@ const Signup = () => {
 
         <ThemedTextInput
           placeholder="Password"
+          placeholderTextColor={"grey"}
           secureTextEntry
           onChangeText={setPassword}
           value={password}
@@ -132,6 +141,7 @@ const Signup = () => {
 
         <ThemedTextInput
           placeholder="Confirm Password"
+          placeholderTextColor={"grey"}
           secureTextEntry
           onChangeText={setConfirmPassword}
           value={confirmPassword}
