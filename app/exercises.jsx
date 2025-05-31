@@ -1,5 +1,7 @@
+//react imports
 import { StyleSheet, Image } from "react-native";
 
+//themed components 
 import ThemedText from "../components/themedText";
 import ThemedView from "../components/themedView";
 import ThemedCard from "../components/themedCard";
@@ -9,12 +11,11 @@ const exercises = () => {
   return (
     <ThemedView style={styles.container}>
       <ThemedText style={styles.title} title={true}>
-        Exercises
+        Chest Exercises 
       </ThemedText>
 
       <Spacer />
 
-      {/* Placeholder for bench press image */}
       <Image
         source={require("../assets/img/bench-press-800.jpg")}
         style={styles.image}
@@ -22,7 +23,6 @@ const exercises = () => {
 
       <Spacer />
 
-      {/* Exercise Card */}
       <ThemedCard>
         <ThemedText style={styles.cardTitle}>Bench Press</ThemedText>
         <ThemedText style={styles.cardDescription}>
@@ -54,21 +54,8 @@ const styles = StyleSheet.create({
   image: {
     width: "100%",
     height: 200,
-    resizeMode: "contain", // Makes sure the image is scaled to fit
+    resizeMode: "contain",
     borderRadius: 10,
-  },
-
-  card: {
-    width: "100%",
-    padding: 20,
-    backgroundColor: "#eee",
-    marginTop: 20,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 4,
   },
 
   cardTitle: {
@@ -78,6 +65,6 @@ const styles = StyleSheet.create({
   },
 
   cardDescription: {
-    fontSize: 16,
+    fontSize: 8,
   },
 });

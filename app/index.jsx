@@ -35,7 +35,6 @@ export default function Index() {
   }, []);
 
   if (checkingAuth) {
-    // Show loading while checking auth
     return (
       <ThemedView style={styles.loadingContainer}>
         <ThemedText>Loading...</ThemedText>
