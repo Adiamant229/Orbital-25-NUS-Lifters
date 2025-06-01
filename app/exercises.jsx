@@ -24,7 +24,7 @@ const exercises = () => {
 
       <Spacer />
 
-      <ThemedCard>
+      <ThemedCard style={{width: '100%', minHeight: 80}}>
         <ThemedText style={styles.cardTitle}>Bench Press</ThemedText>
         <ThemedText style={styles.cardDescription}>
           The bench press is a weight training exercise in which the individual
@@ -66,6 +66,6 @@ const styles = StyleSheet.create({
   },
 
   cardDescription: {
-    fontSize: 8,
+    fontSize: 12,
   },
 });
