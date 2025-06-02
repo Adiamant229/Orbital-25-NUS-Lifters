@@ -1,9 +1,7 @@
-import React, {useEffect, useState} from 'react';
-import {StyleSheet, TouchableOpacity, Text, ActivityIndicator} from "react-native";
+//react and expo imports 
+import { StyleSheet, Text } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons/";
-import { Link } from "expo-router";
-import {httpsCallable} from "firebase/functions"
-import { functions } from "../../firebaseConfig.js"
+import { Link, useRouter } from "expo-router";
 
 //themed components
 import ThemedText from "../../components/themedText";
@@ -11,59 +9,40 @@ import ThemedView from "../../components/themedView";
 import Spacer from "../../components/spacer";
 import ThemedButton from "../../components/themedButton";
 
-const GymCapacity = () => {
-    const [data, setData] = useState(null);
-    const [loading, setLoading] = useState(true)
-    useEffect(() => {
-        const fetchCapacity = async () => {
-            try {
-                const getCapacity = httpsCallable(functions, 'getCapacity');
-                const result = await getCapacity();
-                setData(result);
-                setLoading(false);
-            } catch (err) {
-                console.error('Error fetching capacity', err);
-            }
-        }
-        fetchCapacity()
-    }, [])
+const gymCapacity = () => {
+    const router = useRouter(); 
+  return (
+    <ThemedView style={styles.container}>
+      <ThemedText style={styles.title} title={true}>
+        Gym Traffic (as of 110525 1100am){" "}
+      </ThemedText>
 
-    if (loading) {
-        return (
-            <ThemedView style={styles.container}>
-                <ThemedText>Loading...</ThemedText>
-            </ThemedView>
-        )
-    }
-    return (
-        <ThemedView style={styles.container}>
+      <Spacer />
 
-            <ThemedText style={styles.title} title={true}>
-                Gym Traffic as of {data.timestamp.toDate().toLocaleString()}
-            </ThemedText>
+      <ThemedView style={styles.buttonContainer}>
+        <ThemedButton
+          style={styles.button}
+          onPress={() => router.push("/gymReports")}
+        >
+          <ThemedText>UTown Gym: 75%</ThemedText>
+          <Spacer />
+          <MaterialIcons size={50} name="groups" />
+        </ThemedButton>
 
-            <Spacer/>
-
-            <ThemedView style={styles.buttonContainer}>
-                <ThemedButton style={styles.button}>
-                    <Link href="/gymReports">
-                        <Text style={{color: "#f2f2f2"}}>UTown Gym: {data.gym_capacity[1].capacity}</Text>
-                    </Link>
-                    <Spacer/>
-                    <MaterialIcons size={50} name="groups"/>
-                </ThemedButton>
-
-                <ThemedButton style={styles.button}>
-                    <Text style={{color: "#f2f2f2"}}>MPSH Gym: 25%</Text>
-                    <Spacer/>
-                    <MaterialIcons size={50} name="groups"/>
-                </ThemedButton>
-            </ThemedView>
-        </ThemedView>
-    );
+        <ThemedButton
+          style={styles.button}
+          onPress={() => router.push("/gymReports")}
+        >
+          <Text style={{ color: "#f2f2f2" }}>MPSH Gym: 25%</Text>
+          <Spacer />
+          <MaterialIcons size={50} name="groups" />
+        </ThemedButton>
+      </ThemedView>
+    </ThemedView>
+  );
 };
 
-export default GymCapacity;
+export default gymCapacity;
 
 const styles = StyleSheet.create({
   container: {
@@ -80,16 +59,16 @@ const styles = StyleSheet.create({
   },
 
   buttonContainer: {
-    flexDirection: "row", // This arranges buttons side by side
-    width: "100%", // Full container width
-    justifyContent: "space-between", // Space between buttons
+    flexDirection: "row", 
+    width: "100%", 
+    justifyContent: "space-between", 
   },
 
   button: {
-    width: "48%", // Increase width to make the buttons wider (48% of container width)
-    marginHorizontal: 6, // Space between buttons
-    paddingVertical: 80, // Make the buttons bigger
-    alignItems: "center", // Center text horizontally
-    justifyContent: "center", // Center text vertically
+    width: "48%", 
+    marginHorizontal: 6, 
+    paddingVertical: 80, 
+    alignItems: "center", 
+    justifyContent: "center",
   },
 });
