@@ -573,6 +573,7 @@ const Forum = () => {
                       <TextInput
                         style={[styles.input, { flex: 1, height: 40 }]}
                         placeholder="Add a comment..."
+                        placeholderTextColor={"grey"}
                         value={commentInput}
                         onChangeText={setCommentInput}
                       />
