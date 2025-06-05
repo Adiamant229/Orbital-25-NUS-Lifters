@@ -2,11 +2,11 @@
 import { StyleSheet } from "react-native";
 
 //themed components 
-import ThemedText from "../components/themedText";
-import ThemedView from "../components/themedView";
-import Spacer from "../components/spacer";
+import ThemedText from "../../components/themedText";
+import ThemedView from "../../components/themedView";
+import Spacer from "../../components/spacer";
 
-const GymReports = () => {
+const UTownReports = () => {
   return (
     <ThemedView style={styles.container}>
       <Spacer />
@@ -22,7 +22,7 @@ const GymReports = () => {
   );
 };
 
-export default GymReports;
+export default UTownReports;
 
 const styles = StyleSheet.create({
   container: {

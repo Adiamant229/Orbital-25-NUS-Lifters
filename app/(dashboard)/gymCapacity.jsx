@@ -22,7 +22,7 @@ const gymCapacity = () => {
       <ThemedView style={styles.buttonContainer}>
         <ThemedButton
           style={styles.button}
-          onPress={() => router.push("/gymReports")}
+          onPress={() => router.push("/utownReports")}
         >
           <ThemedText>UTown Gym: 75%</ThemedText>
           <Spacer />
@@ -31,7 +31,7 @@ const gymCapacity = () => {
 
         <ThemedButton
           style={styles.button}
-          onPress={() => router.push("/gymReports")}
+          onPress={() => router.push("/mpshReports")}
         >
           <Text style={{ color: "#f2f2f2" }}>MPSH Gym: 25%</Text>
           <Spacer />
