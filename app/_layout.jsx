@@ -23,7 +23,7 @@ const RootLayout = () => {
         <Stack.Screen name="index" options={{ headerShown: false }} />
 
         <Stack.Screen
-          name="gymReports"
+          name="(reports)"
           options={{ title: "Latest Reports & Issues " }}
         />
         <Stack.Screen
