@@ -2,10 +2,10 @@
 import { StyleSheet, Image } from "react-native";
 
 //themed components 
-import ThemedText from "../components/themedText";
-import ThemedView from "../components/themedView";
-import ThemedCard from "../components/themedCard";
-import Spacer from "../components/spacer";
+import ThemedText from "../../components/themedText";
+import ThemedView from "../../components/themedView";
+import ThemedCard from "../../components/themedCard";
+import Spacer from "../../components/spacer";
 
 const exercises = () => {
 
@@ -18,7 +18,7 @@ const exercises = () => {
       <Spacer />
 
       <Image
-        source={require("../assets/img/bench-press-800.jpg")}
+        source={require("../../assets/img/bench-press-800.jpg")}
         style={styles.image}
       />
 
