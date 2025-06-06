@@ -1,4 +1,5 @@
-import { useState } from "react";
+//react imports
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,48 +7,121 @@ import {
   Modal,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
-  TextInput,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 
+//firebase imports
+import {
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
+import { db } from "../../firebaseConfig";
+
+//themed components
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import ThemedButton from "../../components/themedButton";
+import ThemedTextInput from "../../components/themedTextInput";
 import Spacer from "../../components/spacer";
 
-const GymReportPage = () => {
-  const [reports, setReports] = useState([
-    { id: "1", type: "Broken Treadmill" },
-    { id: "2", type: "Missing Dumbbell" },
-  ]);
-
+const UtownReports = () => {
+  const [reports, setReports] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
+  const [remarks, setRemarks] = useState("");
+  const [selectedReportId, setSelectedReportId] = useState(null);
 
-  // Dropdown states
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(null);
-  const [items, setItems] = useState([
-    { label: "Broken Equipment", value: "Broken Equipment" },
-    { label: "Missing Equipment", value: "Missing Equipment" },
+  const [equipmentItems, setEquipmentItems] = useState([
+    { label: "Bench Press", value: "Bench Press" },
+    { label: "Incline Bench Press", value: "Incline Bench Press" },
+    { label: "Squat Rack 1", value: "Squat Rack 1" },
+    { label: "Squat Rack 2", value: "Squat Rack 2" },
+    { label: "Smith Machine 1", value: "Smith Machine 1" },
+    { label: "Smith Machine 2", value: "Smith Machine 2" },
+    { label: "Treadmill 1", value: "Treadmill 1" },
+    { label: "Treadmill 2", value: "Treadmill 2" },
+    { label: "Treadmill 3", value: "Treadmill 3" },
+    { label: "Treadmill 4", value: "Treadmill 4" },
+    { label: "Treadmill 5", value: "Treadmill 5" },
+    { label: "Treadmill 6", value: "Treadmill 6" },
+    { label: "Leg Press Machine", value: "Leg Press Machine" },
+    { label: "Leg Extensions Machine", value: "Leg Extensions Machine" },
+  ]);
+
+  const [issueOpen, setIssueOpen] = useState(false);
+  const [issueValue, setIssueValue] = useState(null);
+  const [issueItems, setIssueItems] = useState([
+    { label: "Damaged", value: "Damaged" },
+    { label: "Missing", value: "Missing" },
+    {
+      label: "Under Maintenance",
+      value: "Under Maintenance",
+    },
     { label: "Cleanliness Issue", value: "Cleanliness Issue" },
   ]);
 
-  const handleAddReport = () => {
-    if (value) {
+  // Reference to the Firestore collection
+  const reportsRef = collection(db, "utownReports");
+
+  // Fetch reports from Firestore
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const snapshot = await getDocs(reportsRef);
+        const data = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setReports(data);
+      } catch (error) {
+        console.error("Error fetching reports:", error);
+      }
+    };
+
+    fetchReports();
+  }, []);
+
+  const handleAddReport = async () => {
+    if (value && issueValue) {
       const newReport = {
-        id: (reports.length + 1).toString(),
-        type: value,
+        equipment: value,
+        issueType: issueValue,
+        remarks: remarks.trim(),
       };
-      setReports([...reports, newReport]);
-      setValue(null);
-      setModalVisible(false);
+
+      try {
+        const docRef = await addDoc(reportsRef, newReport);
+        setReports([...reports, { id: docRef.id, ...newReport }]);
+
+        // Reset inputs
+        setValue(null);
+        setIssueValue(null);
+        setRemarks("");
+        setModalVisible(false);
+      } catch (error) {
+        console.error("Error adding report:", error);
+      }
+    } else {
+      alert("Please select equipment and issue type.");
+    }
+  };
+
+  const handleDeleteReport = async (id) => {
+    try {
+      await deleteDoc(doc(db, "utownReports", id));
+      setReports((prev) => prev.filter((r) => r.id !== id));
+      if (selectedReportId === id) setSelectedReportId(null);
+    } catch (error) {
+      console.error("Error deleting report:", error);
     }
   };
 
   return (
     <ThemedView style={styles.container}>
-      {/* Header with Add Button */}
       <View style={styles.header}>
         <ThemedText style={styles.title}>UTown Reports</ThemedText>
         <TouchableOpacity
@@ -58,18 +132,44 @@ const GymReportPage = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Report List */}
       <FlatList
         data={reports}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.reportItem}>
-            <ThemedText>{item.type}</ThemedText>
-          </View>
-        )}
+        renderItem={({ item }) => {
+          const isSelected = selectedReportId === item.id;
+          return (
+            <TouchableOpacity
+              onPress={() =>
+                setSelectedReportId((prev) =>
+                  prev === item.id ? null : item.id
+                )
+              }
+              style={styles.card}
+            >
+              <Text style={styles.cardTitle}>
+                {item.equipment} - {item.issueType}
+              </Text>
+              {isSelected && (
+                <>
+                  {item.remarks ? (
+                    <Text style={styles.cardRemarks}>
+                      Remarks: {item.remarks}
+                    </Text>
+                  ) : null}
+                  <TouchableOpacity
+                    onPress={() => handleDeleteReport(item.id)}
+                    style={styles.resolveButton}
+                  >
+                    <Text style={styles.resolveButtonText}>Resolved</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </TouchableOpacity>
+          );
+        }}
       />
 
-      {/* Add Report Modal */}
+      {/* Modal */}
       <Modal
         visible={modalVisible}
         animationType="slide"
@@ -80,44 +180,66 @@ const GymReportPage = () => {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Add Gym Report</Text>
 
-            <DropDownPicker
-              open={open}
-              value={value}
-              items={items}
-              setOpen={setOpen}
-              setValue={setValue}
-              setItems={setItems}
-              placeholder="Select issue type"
-              style={{ marginBottom: open ? 120 : 20 }}
+            <View style={{ zIndex: 3000, marginBottom: open ? 150 : 20 }}>
+              <Text style={{ marginBottom: 5 }}>Select Equipment:</Text>
+              <DropDownPicker
+                open={open}
+                value={value}
+                items={equipmentItems}
+                setOpen={setOpen}
+                setValue={setValue}
+                setItems={setEquipmentItems}
+                placeholder="Select equipment"
+                maxHeight={150}
+                style={styles.dropdown}
+                dropDownContainerStyle={styles.dropdownContainer}
+              />
+            </View>
+
+            <View style={{ zIndex: 2000, marginBottom: issueOpen ? 150 : 20 }}>
+              <Text style={{ marginBottom: 5 }}>Select Issue Type:</Text>
+              <DropDownPicker
+                open={issueOpen}
+                value={issueValue}
+                items={issueItems}
+                setOpen={setIssueOpen}
+                setValue={setIssueValue}
+                setItems={setIssueItems}
+                placeholder="Select issue type"
+                maxHeight={150}
+                style={styles.dropdown}
+                dropDownContainerStyle={styles.dropdownContainer}
+              />
+            </View>
+
+            <Text style={{ marginBottom: 5 }}>Remarks (optional):</Text>
+            <ThemedTextInput
+              placeholder="Enter remarks"
+              placeholderTextColor={"grey"}
+              value={remarks}
+              onChangeText={setRemarks}
             />
 
-            <TouchableOpacity
-              onPress={handleAddReport}
-              style={styles.submitButton}
-            >
-              <Text style={styles.submitButtonText}>Submit</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => setModalVisible(false)}
-              style={styles.cancelButton}
-            >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
+            <View style={styles.buttonRow}>
+              <ThemedButton onPress={handleAddReport}>
+                <ThemedText>Submit</ThemedText>
+              </ThemedButton>
+              <Spacer width="25" />
+              <ThemedButton onPress={() => setModalVisible(false)}>
+                <ThemedText>Cancel</ThemedText>
+              </ThemedButton>
+            </View>
           </View>
         </View>
       </Modal>
     </ThemedView>
   );
-}
+};
 
-export default GymReportPage; 
+export default UtownReports;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 10,
-  },
+  container: { flex: 1, paddingTop: 10 },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -125,26 +247,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 10,
   },
-  title: {
-    fontSize: 22,
-    fontWeight: "bold",
-  },
+  title: { fontSize: 22, fontWeight: "bold" },
   addButton: {
     backgroundColor: "#007bff",
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 8,
   },
-  addButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  reportItem: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-    marginHorizontal: 20,
-  },
+  addButtonText: { color: "#fff", fontWeight: "bold" },
   modalOverlay: {
     flex: 1,
     backgroundColor: "#00000088",
@@ -158,27 +268,46 @@ const styles = StyleSheet.create({
     padding: 20,
     zIndex: 1000,
   },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 16,
-  },
-  submitButton: {
-    backgroundColor: "#28a745",
-    paddingVertical: 10,
-    marginTop: 20,
+  modalTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 16 },
+  dropdown: {
+    borderColor: "#ccc",
+    borderWidth: 1,
     borderRadius: 8,
-    alignItems: "center",
+    paddingHorizontal: 10,
+    backgroundColor: "#f9f9f9",
   },
-  submitButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
+  dropdownContainer: {
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 8,
+    backgroundColor: "#fff",
   },
-  cancelButton: {
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 20,
+  },
+  card: {
+    marginHorizontal: 20,
+    marginVertical: 8,
+    padding: 16,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  cardTitle: { fontSize: 16, fontWeight: "bold" },
+  cardRemarks: { marginTop: 8, color: "#555" },
+  resolveButton: {
     marginTop: 10,
-    alignItems: "center",
+    backgroundColor: "#28a745",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    alignSelf: "flex-start",
   },
-  cancelButtonText: {
-    color: "#888",
-  },
+  resolveButtonText: { color: "#fff", fontWeight: "bold" },
 });
