@@ -33,6 +33,7 @@ const MpshReports = () => {
   const [remarks, setRemarks] = useState("");
   const [selectedReportId, setSelectedReportId] = useState(null);
 
+  //select equipment dropdown box
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(null);
   const [equipmentItems, setEquipmentItems] = useState([
@@ -43,6 +44,7 @@ const MpshReports = () => {
     { label: "Leg Press", value: "Leg Press" },
   ]);
 
+  //select issue type dropdown box 
   const [issueOpen, setIssueOpen] = useState(false);
   const [issueValue, setIssueValue] = useState(null);
   const [issueItems, setIssueItems] = useState([
@@ -57,7 +59,6 @@ const MpshReports = () => {
 
   const reportsRef = collection(db, "mpshReports");
 
-  // Fetch reports from Firestore
   useEffect(() => {
     const fetchReports = async () => {
       try {
@@ -86,8 +87,6 @@ const MpshReports = () => {
       try {
         const docRef = await addDoc(reportsRef, newReport);
         setReports([...reports, { id: docRef.id, ...newReport }]);
-
-        // Reset inputs
         setValue(null);
         setIssueValue(null);
         setRemarks("");

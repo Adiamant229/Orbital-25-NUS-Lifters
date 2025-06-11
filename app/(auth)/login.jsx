@@ -12,7 +12,6 @@ import {
 import { Link, useRouter } from "expo-router";
 
 //themed components
-import { Colors } from "../../constants/colors";
 import ThemedView from "../../components/themedView";
 import ThemedText from "../../components/themedText";
 import ThemedButton from "../../components/themedButton";
@@ -105,7 +104,7 @@ const Login = () => {
         />
 
         <ThemedButton onPress={handleSubmit}>
-          <Text style={{ color: "#f2f2f2", fontWeight: "bold" }}>Login</Text>
+          <ThemedText style={{ color: "#f2f2f2", fontWeight: "bold" }}>Login</ThemedText>
         </ThemedButton>
 
         <Spacer height={spacerHeight} />
@@ -133,16 +132,6 @@ export const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 18,
     marginBottom: 30,
-  },
-
-  btn: {
-    backgroundColor: Colors.primary,
-    padding: 15,
-    borderRadius: 5,
-  },
-
-  pressed: {
-    opacity: 0.8,
   },
 
   img: {
