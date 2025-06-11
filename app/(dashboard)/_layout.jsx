@@ -1,5 +1,8 @@
+//react and expo imports 
 import { Tabs } from "expo-router";
 import { useColorScheme } from "react-native";
+
+//themed imports 
 import { Colors } from "../../constants/colors";
 import {
   Ionicons,

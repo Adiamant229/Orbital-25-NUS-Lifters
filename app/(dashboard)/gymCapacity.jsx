@@ -1,7 +1,7 @@
 //react and expo imports 
 import { StyleSheet, Text } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons/";
-import { Link, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 
 //themed components
 import ThemedText from "../../components/themedText";

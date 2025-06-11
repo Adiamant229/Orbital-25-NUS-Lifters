@@ -1,3 +1,4 @@
+//react and expo imports 
 import { Stack } from "expo-router";
 import { StatusBar } from "react-native";
 

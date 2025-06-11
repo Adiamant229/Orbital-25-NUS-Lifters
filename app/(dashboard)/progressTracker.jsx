@@ -1,3 +1,4 @@
+//react and expo imports 
 import { useState, useEffect } from "react";
 import {
   View,
@@ -8,9 +9,11 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 
+//themed components 
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 
+//firebase imports 
 import { db } from "../../firebaseConfig";
 import {
   collection,
@@ -19,9 +22,7 @@ import {
   onSnapshot,
   doc,
   deleteDoc,
-  Timestamp
 } from "firebase/firestore";
-import { fontSize } from "@mui/system";
 
 const ProgressTracker = () => {
   const router = useRouter();

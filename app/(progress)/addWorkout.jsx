@@ -1,24 +1,26 @@
+//react and expo imports 
 import { useState } from "react";
 import {
   View,
-  Text,
-  ScrollView,
+  Text, 
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Platform } from "react-native";
-
+import DropDownPicker from "react-native-dropdown-picker";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useRouter } from "expo-router";
 
+
+//themed imports 
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import ThemedButton from "../../components/themedButton";
 import Spacer from "../../components/spacer";
 import ThemedTextInput from "../../components/themedTextInput";
-import DropDownPicker from "react-native-dropdown-picker";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
+//firebase imports 
 import { db } from "../../firebaseConfig";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 
@@ -53,6 +55,7 @@ const AddWorkout = () => {
     }
   };
 
+  //select exercise dropdown box 
   const exerciseOptions = [
     { label: "Bench Press", value: "Bench Press" },
     { label: "Deadlift", value: "Deadlift" },
