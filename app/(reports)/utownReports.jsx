@@ -5,6 +5,8 @@ import {
   Text,
   FlatList,
   Modal,
+  TouchableWithoutFeedback,
+  Keyboard,
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
@@ -176,61 +178,65 @@ const UtownReports = () => {
         transparent={true}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add Gym Report</Text>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Add Gym Report</Text>
 
-            <View style={{ zIndex: 3000, marginBottom: open ? 150 : 20 }}>
-              <Text style={{ marginBottom: 5 }}>Select Equipment:</Text>
-              <DropDownPicker
-                open={open}
-                value={value}
-                items={equipmentItems}
-                setOpen={setOpen}
-                setValue={setValue}
-                setItems={setEquipmentItems}
-                placeholder="Select equipment"
-                maxHeight={150}
-                style={styles.dropdown}
-                dropDownContainerStyle={styles.dropdownContainer}
+              <View style={{ zIndex: 3000, marginBottom: open ? 150 : 20 }}>
+                <Text style={{ marginBottom: 5 }}>Select Equipment:</Text>
+                <DropDownPicker
+                  open={open}
+                  value={value}
+                  items={equipmentItems}
+                  setOpen={setOpen}
+                  setValue={setValue}
+                  setItems={setEquipmentItems}
+                  placeholder="Select equipment"
+                  maxHeight={150}
+                  style={styles.dropdown}
+                  dropDownContainerStyle={styles.dropdownContainer}
+                />
+              </View>
+
+              <View
+                style={{ zIndex: 2000, marginBottom: issueOpen ? 150 : 20 }}
+              >
+                <Text style={{ marginBottom: 5 }}>Select Issue Type:</Text>
+                <DropDownPicker
+                  open={issueOpen}
+                  value={issueValue}
+                  items={issueItems}
+                  setOpen={setIssueOpen}
+                  setValue={setIssueValue}
+                  setItems={setIssueItems}
+                  placeholder="Select issue type"
+                  maxHeight={150}
+                  style={styles.dropdown}
+                  dropDownContainerStyle={styles.dropdownContainer}
+                />
+              </View>
+
+              <Text style={{ marginBottom: 5 }}>Remarks (optional):</Text>
+              <ThemedTextInput
+                placeholder="Enter remarks"
+                placeholderTextColor={"grey"}
+                value={remarks}
+                onChangeText={setRemarks}
               />
-            </View>
 
-            <View style={{ zIndex: 2000, marginBottom: issueOpen ? 150 : 20 }}>
-              <Text style={{ marginBottom: 5 }}>Select Issue Type:</Text>
-              <DropDownPicker
-                open={issueOpen}
-                value={issueValue}
-                items={issueItems}
-                setOpen={setIssueOpen}
-                setValue={setIssueValue}
-                setItems={setIssueItems}
-                placeholder="Select issue type"
-                maxHeight={150}
-                style={styles.dropdown}
-                dropDownContainerStyle={styles.dropdownContainer}
-              />
-            </View>
-
-            <Text style={{ marginBottom: 5 }}>Remarks (optional):</Text>
-            <ThemedTextInput
-              placeholder="Enter remarks"
-              placeholderTextColor={"grey"}
-              value={remarks}
-              onChangeText={setRemarks}
-            />
-
-            <View style={styles.buttonRow}>
-              <ThemedButton onPress={handleAddReport}>
-                <ThemedText>Submit</ThemedText>
-              </ThemedButton>
-              <Spacer width="25" />
-              <ThemedButton onPress={() => setModalVisible(false)}>
-                <ThemedText>Cancel</ThemedText>
-              </ThemedButton>
+              <View style={styles.buttonRow}>
+                <ThemedButton onPress={handleAddReport}>
+                  <ThemedText>Submit</ThemedText>
+                </ThemedButton>
+                <Spacer width="25" />
+                <ThemedButton onPress={() => setModalVisible(false)}>
+                  <ThemedText>Cancel</ThemedText>
+                </ThemedButton>
+              </View>
             </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
     </ThemedView>
   );
