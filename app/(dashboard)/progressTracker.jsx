@@ -88,6 +88,12 @@ const ProgressTracker = () => {
         >
           <ThemedText>Gym Info and Guide</ThemedText>
         </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => router.push("/progression")}
+          style={styles.addButton}
+        >
+          <ThemedText>Progression</ThemedText>
+        </TouchableOpacity>
       </View>
 
       <FlatList
@@ -102,13 +108,25 @@ const ProgressTracker = () => {
             >
               <Text style={styles.cardTitle}>{item.name}</Text>
 
+              {(item.createdAt || item.timePeriod) && (
+                <Text style={{ color: "#555", marginTop: 4 }}>
+                  {(item.timePeriod
+                    ? `${item.timePeriod} Workout`
+                    : "Workout") +
+                    (item.createdAt
+                      ? ` on ${item.createdAt
+                          .toDate()
+                          .toLocaleDateString(undefined, {
+                            day: "2-digit",
+                            month: "long",
+                            year: "numeric",
+                          })}`
+                      : "")}
+                </Text>
+              )}
+
               {isSelected && (
                 <View style={{ marginTop: 8 }}>
-                  {item.createdAt && (
-                    <Text style={{ fontStyle: "italic", marginBottom: 8 }}>
-                      Date: {item.createdAt.toDate().toLocaleString()}
-                    </Text>
-                  )}
                   {item.exercises?.map((ex, i) => (
                     <View key={i} style={{ marginBottom: 8 }}>
                       <Text style={{ fontWeight: "bold" }}>{ex.name}</Text>

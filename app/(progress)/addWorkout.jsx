@@ -7,7 +7,7 @@ import {
   StyleSheet,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { Platform } from "react-native";
+
 import DropDownPicker from "react-native-dropdown-picker";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useRouter } from "expo-router";
@@ -26,14 +26,13 @@ import { collection, addDoc, Timestamp } from "firebase/firestore";
 
 const AddWorkout = () => {
   const router = useRouter();
+
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
 
-  const [workoutName, setWorkoutName] = useState("");
-  const [exercises, setExercises] = useState([]);
+  const [workoutTimePeriod, setWorkoutTimePeriod] = useState(null);
+  const [openTimeDropdown, setOpenTimeDropdown] = useState(false);
 
-  const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
   const onChangeDate = (event, selectedDate) => {
     setShowDatePicker(false);
     if (selectedDate) {
@@ -45,15 +44,9 @@ const AddWorkout = () => {
     }
   };
 
-  const onChangeTime = (event, selectedTime) => {
-    setShowTimePicker(false);
-    if (selectedTime) {
-      const newDate = new Date(date);
-      newDate.setHours(selectedTime.getHours());
-      newDate.setMinutes(selectedTime.getMinutes());
-      setDate(newDate);
-    }
-  };
+  const [workoutName, setWorkoutName] = useState("");
+  const [exercises, setExercises] = useState([]);
+  const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
 
   //select exercise dropdown box 
   const exerciseOptions = [
@@ -61,6 +54,7 @@ const AddWorkout = () => {
     { label: "Deadlift", value: "Deadlift" },
     { label: "Squat", value: "Squat" },
     { label: "Pull-up", value: "Pull-up" },
+    { label: "Incline Dumbbell Press ", value: "Incline Dumbbell Press" },
   ];
 
   const handleAddExercise = () => {
@@ -106,12 +100,17 @@ const AddWorkout = () => {
       alert("Add at least one exercise.");
       return;
     }
-
+    if (!workoutTimePeriod) {
+      alert("Please select a workout time period.");
+      return;
+    }
+    
     try {
       await addDoc(collection(db, "workouts"), {
         name: workoutName.trim(),
         exercises,
-        createdAt: Timestamp.fromDate(date), // Use selected date and time here
+        timePeriod: workoutTimePeriod,
+        createdAt: date,
       });
       router.back();
     } catch (error) {
@@ -141,57 +140,54 @@ const AddWorkout = () => {
         keyboardShouldPersistTaps="handled"
       >
         <ThemedText style={styles.title}>Track New Workout</ThemedText>
-
         <ThemedTextInput
           placeholder="Add in workout title"
           value={workoutName}
           onChangeText={setWorkoutName}
           placeholderTextColor="grey"
         />
-        <TouchableOpacity
-          onPress={() => setShowDatePicker(true)}
-          style={{ marginVertical: 10 }}
-        >
-          <ThemedText>Select Date: {date.toLocaleDateString()}</ThemedText>
-        </TouchableOpacity>
-        {showDatePicker && (
-          <DateTimePicker
-            value={date}
-            mode="date"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
-            onChange={onChangeDate}
-          />
-        )}
+        
+        <View style={styles.dateTimeRow}>
+          <TouchableOpacity
+            onPress={() => setShowDatePicker(true)}
+            style={styles.datePickerButton}
+          >
+            <ThemedText>Select Date: {date.toLocaleDateString()}</ThemedText>
+          </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker value={date} mode="date" onChange={onChangeDate} />
+          )}
 
-        <TouchableOpacity
-          onPress={() => setShowTimePicker(true)}
-          style={{ marginVertical: 10 }}
-        >
-          <ThemedText>
-            Select Time:{" "}
-            {date.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </ThemedText>
-        </TouchableOpacity>
-        {showTimePicker && (
-          <DateTimePicker
-            value={date}
-            mode="time"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
-            onChange={onChangeTime}
-          />
-        )}
+          <View style={styles.timeDropdownContainer}>
+            <DropDownPicker
+              open={openTimeDropdown}
+              value={workoutTimePeriod}
+              items={[
+                { label: "Morning", value: "Morning" },
+                { label: "Afternoon", value: "Afternoon" },
+                { label: "Night", value: "Night" },
+              ]}
+              setOpen={setOpenTimeDropdown}
+              setValue={setWorkoutTimePeriod}
+              placeholder="Select Time:"
+              style={styles.timeDropdown}
+              dropDownContainerStyle={{
+                backgroundColor: "#fff",
+                borderColor: "#ccc",
+                zIndex: 9999,
+              }}
+              listMode="SCROLLVIEW"
+              dropDownDirection="BOTTOM"
+            />
+          </View>
+        </View>
 
-        <Spacer />
         <TouchableOpacity
           onPress={handleAddExercise}
           style={styles.addExerciseButton}
         >
           <Text style={styles.addExerciseButtonText}>+ Add Exercise</Text>
         </TouchableOpacity>
-
         {exercises.map((exercise, exerciseIndex) => (
           <View key={exercise.id} style={styles.exerciseCard}>
             <View style={styles.exerciseHeader}>
@@ -318,7 +314,6 @@ const AddWorkout = () => {
             </TouchableOpacity>
           </View>
         ))}
-
         <View style={styles.buttonRow}>
           <ThemedButton onPress={handleSaveWorkout}>
             <ThemedText>Save Workout</ThemedText>
@@ -420,5 +415,25 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     color: "#fff",
     paddingBottom: 10,
+  },
+  dateTimeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 10,
+    zIndex: 5000, // ensure dropdown overlays well
+  },
+
+  datePickerButton: {
+    flex: 1,
+  },
+
+  timeDropdownContainer: {
+    flex: 1,
+    maxWidth: 150, // limit dropdown width
+    marginLeft: 10,
+  },
+
+  timeDropdown: {
+    borderColor: "#ccc",
   },
 });
