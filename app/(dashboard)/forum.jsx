@@ -289,8 +289,7 @@ const Forum = () => {
 
   return (
     <ThemedView style={styles.innerContainer}>
-      <Spacer />
-      <Spacer />
+
       <ThemedText style={styles.title} title={true}>
         Official NUS Lifters Club Forum
       </ThemedText>
@@ -319,8 +318,6 @@ const Forum = () => {
           <Text style={styles.filterText}>+</Text>
         </ThemedButton>
       </View>
-
-      <Spacer size={10} />
 
       {loading ? (
         <Text>Loading threads...</Text>
@@ -380,7 +377,7 @@ const Forum = () => {
       {/* New Thread Modal */}
       <Modal
         visible={modalVisible}
-        animationType="slide"
+        animationType="fade"
         transparent={true}
         onRequestClose={() => setModalVisible(false)}
       >
@@ -451,7 +448,7 @@ const Forum = () => {
       {/* Edit Thread Modal */}
       <Modal
         visible={editModalVisible}
-        animationType="slide"
+        animationType="fade"
         transparent={true}
         onRequestClose={() => setEditModalVisible(false)}
       >
@@ -518,7 +515,7 @@ const Forum = () => {
       {/* Thread Detail Modal */}
       <Modal
         visible={selectedThread !== null}
-        animationType="slide"
+        animationType="fade"
         transparent={true}
         onRequestClose={() => setSelectedThread(null)}
       >
@@ -604,6 +601,7 @@ const styles = StyleSheet.create({
   innerContainer: {
     flex: 1,
     padding: 20,
+    paddingTop: 70
   },
   filterContainer: {
     flexDirection: "row",
@@ -625,7 +623,7 @@ const styles = StyleSheet.create({
   },
   filterText: {
     color: "#000",
-    fontSize: 10, // Optional smaller font size if too wide
+    fontSize: 10, 
   },
   title: {
     fontSize: 24,

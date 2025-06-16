@@ -19,12 +19,8 @@ import {
   getDocs,
   deleteDoc,
   doc,
-  updateDoc,
-  query,
-  where,
 } from "firebase/firestore";
 import { db } from "../../firebaseConfig";
-import { getAuth } from "firebase/auth";
 
 //themed components
 import ThemedText from "../../components/themedText";
@@ -33,16 +29,13 @@ import ThemedButton from "../../components/themedButton";
 import ThemedTextInput from "../../components/themedTextInput";
 import Spacer from "../../components/spacer";
 
-const MpshReports = () => {
-  const auth = getAuth();
-  const currentUser = auth.currentUser;
-
+const UscReports = () => {
   const [reports, setReports] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [remarks, setRemarks] = useState("");
   const [selectedReportId, setSelectedReportId] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
 
+  //select equipment dropdown box
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(null);
   const [equipmentItems, setEquipmentItems] = useState([
@@ -53,6 +46,7 @@ const MpshReports = () => {
     { label: "Leg Press", value: "Leg Press" },
   ]);
 
+  //select issue type dropdown box
   const [issueOpen, setIssueOpen] = useState(false);
   const [issueValue, setIssueValue] = useState(null);
   const [issueItems, setIssueItems] = useState([
@@ -65,9 +59,8 @@ const MpshReports = () => {
     { label: "Cleanliness Issue", value: "Cleanliness Issue" },
   ]);
 
-  const reportsRef = collection(db, "mpshReports");
+  const reportsRef = collection(db, "uscReports");
 
-  // Fetch all reports
   useEffect(() => {
     const fetchReports = async () => {
       try {
@@ -85,67 +78,32 @@ const MpshReports = () => {
     fetchReports();
   }, []);
 
-  const handleSubmitReport = async () => {
-    if (!value || !issueValue) {
-      alert("Please select equipment and issue type.");
-      return;
-    }
+  const handleAddReport = async () => {
+    if (value && issueValue) {
+      const newReport = {
+        equipment: value,
+        issueType: issueValue,
+        remarks: remarks.trim(),
+      };
 
-    const reportData = {
-      equipment: value,
-      issueType: issueValue,
-      remarks: remarks.trim(),
-      userId: currentUser?.uid || null, // Store user id here
-    };
-
-    if (isEditing && selectedReportId) {
-      // Update existing report
       try {
-        const docRef = doc(db, "mpshReports", selectedReportId);
-        await updateDoc(docRef, reportData);
-
-        setReports((prev) =>
-          prev.map((r) =>
-            r.id === selectedReportId ? { ...r, ...reportData } : r
-          )
-        );
-        resetModal();
-      } catch (error) {
-        console.error("Error updating report:", error);
-      }
-    } else {
-      // Add new report
-      try {
-        const docRef = await addDoc(reportsRef, reportData);
-        setReports([...reports, { id: docRef.id, ...reportData }]);
-        resetModal();
+        const docRef = await addDoc(reportsRef, newReport);
+        setReports([...reports, { id: docRef.id, ...newReport }]);
+        setValue(null);
+        setIssueValue(null);
+        setRemarks("");
+        setModalVisible(false);
       } catch (error) {
         console.error("Error adding report:", error);
       }
+    } else {
+      alert("Please select equipment and issue type.");
     }
-  };
-
-  const resetModal = () => {
-    setValue(null);
-    setIssueValue(null);
-    setRemarks("");
-    setSelectedReportId(null);
-    setIsEditing(false);
-    setModalVisible(false);
-  };
-
-  const handleEditReport = (report) => {
-    setSelectedReportId(report.id);
-    setValue(report.equipment);
-    setIssueValue(report.issueType);
-    setRemarks(report.remarks || "");
-    setIsEditing(true);
-    setModalVisible(true);
   };
 
   const handleDeleteReport = async (id) => {
     try {
-      await deleteDoc(doc(db, "mpshReports", id));
+      await deleteDoc(doc(db, "uscReports", id));
       setReports((prev) => prev.filter((r) => r.id !== id));
       if (selectedReportId === id) setSelectedReportId(null);
     } catch (error) {
@@ -156,12 +114,9 @@ const MpshReports = () => {
   return (
     <ThemedView style={styles.container}>
       <View style={styles.header}>
-        <ThemedText style={styles.title}>MPSH Reports</ThemedText>
+        <ThemedText style={styles.title}>USC Reports</ThemedText>
         <TouchableOpacity
-          onPress={() => {
-            resetModal();
-            setModalVisible(true);
-          }}
+          onPress={() => setModalVisible(true)}
           style={styles.addButton}
         >
           <ThemedText style={styles.addButtonText}>+</ThemedText>
@@ -173,8 +128,6 @@ const MpshReports = () => {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => {
           const isSelected = selectedReportId === item.id;
-          const isOwnedByUser = item.userId === currentUser?.uid;
-
           return (
             <TouchableOpacity
               onPress={() =>
@@ -194,23 +147,12 @@ const MpshReports = () => {
                       Remarks: {item.remarks}
                     </Text>
                   ) : null}
-
                   <TouchableOpacity
                     onPress={() => handleDeleteReport(item.id)}
                     style={styles.resolveButton}
                   >
                     <Text style={styles.resolveButtonText}>Resolved</Text>
                   </TouchableOpacity>
-
-                  {/* Show Edit button only if the report belongs to current user */}
-                  {isOwnedByUser && (
-                    <TouchableOpacity
-                      onPress={() => handleEditReport(item)}
-                      style={styles.editButton}
-                    >
-                      <Text style={styles.editButtonText}>Edit</Text>
-                    </TouchableOpacity>
-                  )}
                 </>
               )}
             </TouchableOpacity>
@@ -228,9 +170,7 @@ const MpshReports = () => {
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>
-                {isEditing ? "Edit Gym Report" : "Add Gym Report"}
-              </Text>
+              <Text style={styles.modalTitle}>Add Gym Report</Text>
 
               <View style={{ marginBottom: open ? 150 : 20 }}>
                 <Text style={{ marginBottom: 5 }}>Select Equipment:</Text>
@@ -273,11 +213,11 @@ const MpshReports = () => {
               />
 
               <View style={styles.buttonRow}>
-                <ThemedButton onPress={handleSubmitReport}>
-                  <ThemedText>{isEditing ? "Update" : "Submit"}</ThemedText>
+                <ThemedButton onPress={handleAddReport}>
+                  <ThemedText>Submit</ThemedText>
                 </ThemedButton>
                 <Spacer width="25" />
-                <ThemedButton onPress={resetModal}>
+                <ThemedButton onPress={() => setModalVisible(false)}>
                   <ThemedText>Cancel</ThemedText>
                 </ThemedButton>
               </View>
@@ -289,7 +229,7 @@ const MpshReports = () => {
   );
 };
 
-export default MpshReports;
+export default UscReports;
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingTop: 10 },
@@ -362,14 +302,4 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
   },
   resolveButtonText: { color: "#fff", fontWeight: "bold" },
-  editButton: {
-    marginTop: 10,
-    backgroundColor: "#ffc107",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    alignSelf: "flex-start",
-    marginLeft: 10,
-  },
-  editButtonText: { color: "#000", fontWeight: "bold" },
 });

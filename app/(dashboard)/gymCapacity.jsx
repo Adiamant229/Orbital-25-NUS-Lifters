@@ -37,6 +37,9 @@ const gymCapacity = () => {
           <Spacer />
           <MaterialIcons size={50} name="groups" />
         </ThemedButton>
+        <ThemedButton
+          onPress={() => router.push("/uscReports")} 
+        ></ThemedButton>
       </ThemedView>
     </ThemedView>
   );

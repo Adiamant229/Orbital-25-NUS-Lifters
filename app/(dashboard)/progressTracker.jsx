@@ -1,4 +1,4 @@
-//react and expo imports 
+//react and expo imports
 import { useState, useEffect } from "react";
 import {
   View,
@@ -6,29 +6,88 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
+  TextInput,
+  Modal,
+  Keyboard,
+  TouchableWithoutFeedback,
+  KeyboardAvoidingView,
+  Platform,
+  Dimensions,
+  ScrollView
 } from "react-native";
+import DropDownPicker from "react-native-dropdown-picker";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRouter } from "expo-router";
 
-//themed components 
+//themed components
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
+import ThemedButton from "../../components/themedButton";
 
-//firebase imports 
-import { db } from "../../firebaseConfig";
+//firebase imports
+import { db, auth } from "../../firebaseConfig"; // auth added
 import {
   collection,
   query,
   orderBy,
   onSnapshot,
-  doc,
+  addDoc,
   deleteDoc,
+  doc,
+  serverTimestamp,
 } from "firebase/firestore";
+
+// chart import
+import { LineChart } from "react-native-chart-kit";
+import { Ionicons } from "@expo/vector-icons";
 
 const ProgressTracker = () => {
   const router = useRouter();
+  const screenWidth = Dimensions.get("window").width;
 
+  const [selectedTab, setSelectedTab] = useState("workouts"); // "workouts" | "weight"
   const [workouts, setWorkouts] = useState([]);
   const [openedWorkouts, setOpenedWorkouts] = useState(new Set());
+
+  const [weights, setWeights] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [weightInput, setWeightInput] = useState("");
+  const [date, setDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [openYearDropdown, setOpenYearDropdown] = useState(false);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [yearOptions, setYearOptions] = useState([]);
+
+  const [weightListModalVisible, setWeightListModalVisible] = useState(false);
+  const [editingWeightId, setEditingWeightId] = useState(null);
+
+  const user = auth.currentUser;
+
+  useEffect(() => {
+    const uniqueYears = [
+      ...new Set(
+        weights.map((w) => {
+          const d =
+            typeof w.date === "string"
+              ? new Date(w.date)
+              : w.date.toDate?.() || new Date();
+          return d.getFullYear();
+        })
+      ),
+    ].sort((a, b) => b - a);
+
+    setYearOptions(
+      uniqueYears.map((year) => ({
+        label: year.toString(),
+        value: year,
+      }))
+    );
+
+    // If current selectedYear not in uniqueYears, reset it
+    if (!uniqueYears.includes(selectedYear)) {
+      setSelectedYear(uniqueYears[0] || new Date().getFullYear());
+    }
+  }, [weights]);
 
   useEffect(() => {
     const q = query(collection(db, "workouts"), orderBy("createdAt", "desc"));
@@ -44,10 +103,29 @@ const ProgressTracker = () => {
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    if (!user) {
+      setWeights([]);
+      return;
+    }
+
+    const weightsCollection = collection(db, "users", user.uid, "weights");
+    const q = query(weightsCollection, orderBy("date", "desc"));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const weightsData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setWeights(weightsData);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
   const handleDeleteWorkout = async (id) => {
     try {
       await deleteDoc(doc(db, "workouts", id));
-      // Optionally close the card after deletion
       setOpenedWorkouts((prev) => {
         const newSet = new Set(prev);
         newSet.delete(id);
@@ -71,84 +149,425 @@ const ProgressTracker = () => {
     });
   };
 
+  const handleWeightChange = (text) => {
+    const formatted = text
+      .replace(/[^0-9.]/g, "")
+      .replace(/^(\d*\.\d{0,2}).*$/, "$1");
+    setWeightInput(formatted);
+  };
+
+  const handleSubmitWeight = async () => {
+    if (!weightInput) return;
+
+    if (!user) {
+      alert("You must be logged in to add weights.");
+      return;
+    }
+
+    const newEntry = {
+      date: date.toISOString().split("T")[0],
+      weight: parseFloat(weightInput),
+      createdAt: serverTimestamp(),
+    };
+
+    try {
+      await addDoc(collection(db, "users", user.uid, "weights"), newEntry);
+      setWeightInput("");
+      setDate(new Date());
+      setModalVisible(false);
+    } catch (error) {
+      console.error("Failed to add weight entry:", error);
+      alert("Failed to add weight entry");
+    }
+  };
+
+  const filteredWeights = weights.filter((w) => {
+    const d =
+      typeof w.date === "string"
+        ? new Date(w.date)
+        : w.date.toDate?.() || new Date();
+    return d.getFullYear() === selectedYear;
+  });
+
+  // Sort and normalize filtered weights for chart
+  const sortedFilteredWeights = [...filteredWeights]
+    .map((w) => ({
+      ...w,
+      date:
+        typeof w.date === "string"
+          ? w.date
+          : w.date.toDate?.()?.toISOString()?.split("T")[0] || w.date,
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  // Prepare chart data based on filtered & sorted weights
+  const weightChartData = {
+    labels: sortedFilteredWeights.map((entry) =>
+      new Date(entry.date).toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+      })
+    ),
+    datasets: [
+      {
+        data: sortedFilteredWeights.map((entry) => entry.weight),
+        color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
+        strokeWidth: 2,
+      },
+    ],
+  };
+
+  const chartConfig = {
+    backgroundGradientFrom: "#fff",
+    backgroundGradientTo: "#fff",
+    decimalPlaces: 1,
+    color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
+    labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+    style: {
+      borderRadius: 16,
+    },
+    propsForDots: {
+      r: "5",
+      strokeWidth: "2",
+      stroke: "#1e90ff",
+    },
+  };
+  // delete weight
+  const deleteWeight = async (id) => {
+    try {
+      await deleteDoc(doc(db, "users", user.uid, "weights", id));
+    } catch (error) {
+      console.error("Failed to delete weight:", error);
+      alert("Failed to delete weight");
+    }
+  };
+
+  // open edit modal pre-filled
+  const openEditWeight = (weightEntry) => {
+    setEditingWeightId(weightEntry.id);
+    setWeightInput(weightEntry.weight.toString());
+    setDate(
+      typeof weightEntry.date === "string"
+        ? new Date(weightEntry.date)
+        : weightEntry.date.toDate?.() || new Date()
+    );
+  };
   return (
     <ThemedView style={styles.container}>
+      <ThemedText style={styles.title}>Progress Tracker</ThemedText>
+
       <View style={styles.header}>
-        <ThemedText style={styles.title}>Your Workouts</ThemedText>
         <TouchableOpacity
-          onPress={() => router.push("/addWorkout")}
-          style={styles.addButton}
+          onPress={() => setSelectedTab("workouts")}
+          style={[
+            styles.addButton,
+            selectedTab === "workouts" && styles.selectedTabButton,
+          ]}
         >
-          <ThemedText>+</ThemedText>
+          <ThemedText>Workouts</ThemedText>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setSelectedTab("weight")}
+          style={[
+            styles.addButton,
+            selectedTab === "weight" && styles.selectedTabButton,
+          ]}
+        >
+          <ThemedText>Bodyweight</ThemedText>
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={() => router.push("/exercises")}
           style={styles.addButton}
         >
-          <ThemedText>Gym Info and Guide</ThemedText>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => router.push("/progression")}
-          style={styles.addButton}
-        >
-          <ThemedText>Progression</ThemedText>
+          <ThemedText>📖 Gym Info And Guide</ThemedText>
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={workouts}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => {
-          const isSelected = openedWorkouts.has(item.id);
-          return (
+      {selectedTab === "workouts" && (
+        <>
+          <View style={styles.header2}>
+            <ThemedText style={{ fontSize: 20 }}>Your Workouts</ThemedText>
             <TouchableOpacity
-              onPress={() => toggleWorkout(item.id)}
-              style={styles.card}
+              onPress={() => router.push("/addWorkout")}
+              style={styles.addButton}
             >
-              <Text style={styles.cardTitle}>{item.name}</Text>
+              <ThemedText>+ New Workout</ThemedText>
+            </TouchableOpacity>
 
-              {(item.createdAt || item.timePeriod) && (
-                <Text style={{ color: "#555", marginTop: 4 }}>
-                  {(item.timePeriod
-                    ? `${item.timePeriod} Workout`
-                    : "Workout") +
-                    (item.createdAt
-                      ? ` on ${item.createdAt
-                          .toDate()
-                          .toLocaleDateString(undefined, {
+            <TouchableOpacity
+              onPress={() => router.push("/progression")}
+              style={styles.addButton}
+            >
+              <ThemedText>Progress</ThemedText>
+            </TouchableOpacity>
+          </View>
+
+          <FlatList
+            data={workouts}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => {
+              const isSelected = openedWorkouts.has(item.id);
+              return (
+                <TouchableOpacity
+                  onPress={() => toggleWorkout(item.id)}
+                  style={styles.card}
+                >
+                  <Text style={styles.cardTitle}>{item.name}</Text>
+
+                  {(item.createdAt || item.timePeriod) && (
+                    <Text style={{ color: "#555", marginTop: 4 }}>
+                      {(() => {
+                        if (!item.createdAt) return "";
+
+                        const createdDate = item.createdAt.toDate();
+                        const now = new Date();
+                        const diffTime = Math.abs(now - createdDate);
+                        const diffDays = Math.floor(
+                          diffTime / (1000 * 60 * 60 * 24)
+                        );
+
+                        const dateStr = createdDate.toLocaleDateString(
+                          undefined,
+                          {
                             day: "2-digit",
                             month: "long",
                             year: "numeric",
-                          })}`
-                      : "")}
-                </Text>
-              )}
+                          }
+                        );
 
-              {isSelected && (
-                <View style={{ marginTop: 8 }}>
-                  {item.exercises?.map((ex, i) => (
-                    <View key={i} style={{ marginBottom: 8 }}>
-                      <Text style={{ fontWeight: "bold" }}>{ex.name}</Text>
-                      {ex.sets.map((set, j) => (
-                        <Text key={j} style={{ marginLeft: 10 }}>
-                          Set {j + 1}: {set.reps} reps @ {set.weight} kg
-                        </Text>
+                        const timePeriodStr = item.timePeriod
+                          ? ` ${item.timePeriod} Workout`
+                          : " Workout";
+                        const relativeStr =
+                          diffDays === 0
+                            ? "Today"
+                            : diffDays === 1
+                            ? "1 day ago"
+                            : `${diffDays} days ago`;
+
+                        return `${dateStr}${timePeriodStr} (${relativeStr})`;
+                      })()}
+                    </Text>
+                  )}
+
+                  {isSelected && (
+                    <View style={{ marginTop: 8 }}>
+                      {item.exercises?.map((ex, i) => (
+                        <View key={i} style={{ marginBottom: 8 }}>
+                          <Text style={{ fontWeight: "bold" }}>{ex.name}</Text>
+                          {ex.sets.map((set, j) => (
+                            <Text key={j} style={{ marginLeft: 10 }}>
+                              Set {j + 1}: {set.reps} reps @ {set.weight} kg
+                            </Text>
+                          ))}
+                        </View>
                       ))}
+                      <View style={{ flexDirection: "row", gap: 10 }}>
+                        <TouchableOpacity
+                          onPress={() => {
+                            router.push({
+                              pathname: "/addWorkout",
+                              params: { editWorkoutId: item.id },
+                            });
+                          }}
+                        >
+                          <Ionicons
+                            name="pencil-outline"
+                            size={20}
+                            color="#007AFF"
+                          />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          onPress={() => handleDeleteWorkout(item.id)}
+              
+                        >
+                          <Ionicons
+                            name="trash-outline"
+                            size={20}
+                            color="#ff3b30"
+                          />
+                        </TouchableOpacity>
+                      </View>
                     </View>
-                  ))}
-                  <TouchableOpacity
-                    onPress={() => handleDeleteWorkout(item.id)}
-                    style={styles.deleteButton}
-                  >
-                    <Text style={styles.deleteButtonText}>Delete Workout</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
+                  )}
+                </TouchableOpacity>
+              );
+            }}
+          />
+        </>
+      )}
+
+      {selectedTab === "weight" && (
+        <>
+          <View style={styles.header2}>
+            <ThemedText style={{ fontSize: 20 }}>Your Bodyweights</ThemedText>
+            <TouchableOpacity
+              onPress={() => setModalVisible(true)}
+              style={styles.addButton}
+            >
+              <ThemedText>+ Add New Weight</ThemedText>
             </TouchableOpacity>
-          );
-        }}
-      />
+
+            <DropDownPicker
+              open={openYearDropdown}
+              value={selectedYear}
+              items={yearOptions}
+              setOpen={setOpenYearDropdown}
+              setValue={setSelectedYear}
+              setItems={setYearOptions}
+              containerStyle={{ width: 150 }}
+              placeholder="Select Year"
+            />
+          </View>
+
+          <View style={styles.summaryContainer}>
+            {sortedFilteredWeights.length > 0 ? (
+              <TouchableOpacity onPress={() => setWeightListModalVisible(true)}>
+                <LineChart
+                  data={weightChartData}
+                  width={screenWidth - 30}
+                  height={220}
+                  chartConfig={chartConfig}
+                  bezier
+                  style={{
+                    borderRadius: 16,
+                  }}
+                />
+              </TouchableOpacity>
+            ) : (
+              <Text style={styles.graphPlaceholder}>
+                No weight data for {selectedYear}
+              </Text>
+            )}
+          </View>
+        </>
+      )}
+      <Modal
+        visible={weightListModalVisible}
+        animationType="fade"
+        onRequestClose={() => setWeightListModalVisible(false)}
+        transparent={true}
+      >
+        <TouchableWithoutFeedback
+          onPress={() => setWeightListModalVisible(false)}
+        >
+          <View style={styles.modalOverlay} />
+        </TouchableWithoutFeedback>
+
+        <View style={styles.weightModalContainer}>
+          <ThemedText style={styles.modalTitle}>Weight Entries</ThemedText>
+
+          {weights.length === 0 ? (
+            <ThemedText style={{ color: "#ccc" }}>
+              No weight entries found.
+            </ThemedText>
+          ) : (
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 10 }}
+            >
+              {weights.map((w) => {
+                const wDate =
+                  typeof w.date === "string"
+                    ? w.date
+                    : w.date.toDate?.()?.toISOString()?.split("T")[0] || "";
+
+                return (
+                  <View key={w.id} style={styles.weightEntryRow}>
+                    <ThemedText style={styles.weightEntryText}>
+                      {wDate} - {w.weight} kg
+                    </ThemedText>
+                    <View style={styles.weightEntryButtons}>
+                      <TouchableOpacity
+                        onPress={() => {
+                          openEditWeight(w);
+                          setWeightListModalVisible(false);
+                          setModalVisible(true);
+                        }}
+                      >
+                        <Ionicons
+                          name="pencil-outline"
+                          size={20}
+                          color="#007AFF"
+                        />
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => deleteWeight(w.id)}>
+                        <Ionicons
+                          name="trash-outline"
+                          size={20}
+                          color="#ff3b30"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                );
+              })}
+            </ScrollView>
+          )}
+
+      
+        </View>
+      </Modal>
+
+      {/* Modal for Weight Entry */}
+      <Modal visible={modalVisible} transparent={true} animationType="fade">
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.modalOverlay}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              style={{ width: "100%" }}
+            >
+              <View style={styles.modalContent}>
+                <ThemedText style={styles.modalTitle}>
+                  Add New Weight
+                </ThemedText>
+
+                <TouchableOpacity
+                  onPress={() => setShowDatePicker(true)}
+                  style={styles.datePickerButton}
+                >
+                  <Text style={{ color: "#eee" }}>
+                    Select Date: {date.toLocaleDateString()}
+                  </Text>
+                </TouchableOpacity>
+
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={date}
+                    mode="date"
+                    display="default"
+                    onChange={(event, selectedDate) => {
+                      setShowDatePicker(false);
+                      if (selectedDate) setDate(selectedDate);
+                    }}
+                  />
+                )}
+
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter weight (kg)"
+                  value={weightInput}
+                  onChangeText={handleWeightChange}
+                  keyboardType="numeric"
+                  placeholderTextColor="grey"
+                />
+
+                <View style={styles.modalButtonRow}>
+                  <ThemedButton onPress={handleSubmitWeight}>
+                    <ThemedText>Save</ThemedText>
+                  </ThemedButton>
+
+                  <ThemedButton onPress={() => setModalVisible(false)}>
+                    <ThemedText>Cancel</ThemedText>
+                  </ThemedButton>
+                </View>
+              </View>
+            </KeyboardAvoidingView>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </ThemedView>
   );
 };
@@ -159,26 +578,31 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 15,
-    paddingTop: 80,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 15,
+    paddingTop: 70,
   },
   title: {
     fontSize: 22,
     fontWeight: "bold",
+    alignSelf: "center",
+  },
+  header: {
+    flexDirection: "row",
+    gap: 8,
+    flexWrap: "wrap",
+    marginBottom: 30,
+    marginTop: 15,
+  },
+  header2: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 5,
   },
   addButton: {
     backgroundColor: "#2196f3",
     borderRadius: 20,
     padding: 10,
-  },
-  addButtonText: {
-    color: "white",
-    fontSize: 22,
   },
   card: {
     backgroundColor: "#fff",
@@ -206,4 +630,77 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
   },
+  summaryContainer: {
+    marginTop: 20,
+    alignItems: "center",
+  },
+  graphPlaceholder: {
+    fontSize: 16,
+    marginBottom: 10,
+    textAlign: "center",
+    color: "#888",
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  modalContent: {
+    backgroundColor: "#1c1c1c",
+    padding: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 15,
+  },
+  datePickerButton: {
+    paddingVertical: 10,
+    marginBottom: 10,
+  },
+  input: {
+    backgroundColor: "#fff",
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+    marginBottom: 20,
+  },
+  modalButtonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  selectedTabButton: {
+    backgroundColor: "#7d015c",
+  },
+  weightModalContainer: {
+    backgroundColor: "#1c1c1c",
+    padding: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: "70%",
+  },
+  weightEntryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#2c2c2c",
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  weightEntryText: {
+    color: "#fff",
+    fontSize: 16,
+  },
+  weightEntryButtons: {
+    flexDirection: "row",
+    gap:10
+  },
+
 });

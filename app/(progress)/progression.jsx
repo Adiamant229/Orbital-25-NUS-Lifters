@@ -1,37 +1,50 @@
-import React, { useEffect, useState } from "react";
-import { ScrollView, Dimensions, View } from "react-native";
-import { query, collection, orderBy, onSnapshot } from "firebase/firestore";
-import { db } from "../../firebaseConfig";
-
-import ThemedView from "../../components/themedView";
-import ThemedText from "../../components/themedText";
-
+// react imports
+import { useEffect, useState } from "react";
+import { ScrollView, Dimensions, View, StyleSheet } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import DropDownPicker from "react-native-dropdown-picker";
 
-const screenWidth = Dimensions.get("window").width;
+// themed components
+import ThemedView from "../../components/themedView";
+import ThemedText from "../../components/themedText";
 
-const chartConfig = {
-  backgroundGradientFrom: "#fff",
-  backgroundGradientTo: "#fff",
-  decimalPlaces: 1,
-  color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
-  labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-  style: {
-    borderRadius: 16,
-  },
-  propsForDots: {
-    r: "5",
-    strokeWidth: "2",
-    stroke: "#1e90ff",
-  },
-};
+// firebase imports
+import { query, collection, orderBy, onSnapshot } from "firebase/firestore";
+import { db } from "../../firebaseConfig";
 
 const Progression = () => {
+  const screenWidth = Dimensions.get("window").width;
+
+  const chartConfig = {
+    backgroundGradientFrom: "#fff",
+    backgroundGradientTo: "#fff",
+    decimalPlaces: 1,
+    color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
+    labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+    style: styles.chart,
+    propsForDots: {
+      r: "5",
+      strokeWidth: "2",
+      stroke: "#1e90ff",
+    },
+  };
+
   const [exerciseData, setExerciseData] = useState({});
   const [open, setOpen] = useState(false);
   const [selectedExercises, setSelectedExercises] = useState([]);
   const [items, setItems] = useState([]);
+
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [yearItems, setYearItems] = useState([]);
+  const [yearDropdownOpen, setYearDropdownOpen] = useState(false);
+
+  // Dynamically generate year list
+  useEffect(() => {
+    const currentYear = new Date().getFullYear();
+    const years = [currentYear - 1, currentYear, currentYear + 1];
+    setYearItems(years.map((y) => ({ label: `${y}`, value: y })));
+    setSelectedYear(currentYear);
+  }, []);
 
   useEffect(() => {
     const q = query(collection(db, "workouts"), orderBy("createdAt", "asc"));
@@ -39,33 +52,48 @@ const Progression = () => {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const dataByExercise = {};
       const allExercisesSet = new Set();
+      const yearSet = new Set();
 
       snapshot.docs.forEach((doc) => {
         const workout = doc.data();
-        const dateStr = workout.createdAt
-          ? workout.createdAt.toDate().toLocaleDateString("en-SG", {
+        const dateObj = workout.createdAt?.toDate();
+        const dateStr = dateObj
+          ? dateObj.toLocaleDateString("en-SG", {
               day: "2-digit",
               month: "short",
             })
           : "Unknown";
+        const year = dateObj?.getFullYear();
+        if (year) yearSet.add(year); // ✅ Collect actual workout years
 
         workout.exercises?.forEach((ex) => {
           const name = ex.name.trim();
           allExercisesSet.add(name);
-
           const heaviest = Math.max(...ex.sets.map((s) => s.weight));
+
           if (!dataByExercise[name]) dataByExercise[name] = [];
-          dataByExercise[name].push({ date: dateStr, weight: heaviest });
+          dataByExercise[name].push({
+            date: dateStr,
+            weight: heaviest,
+            year,
+          });
         });
       });
 
-      // If no exercises selected yet, select all by default
+      // ✅ Update the year dropdown with only used years
+      const yearArray = Array.from(yearSet).sort((a, b) => a - b);
+      setYearItems(yearArray.map((y) => ({ label: `${y}`, value: y })));
+
+      // Keep current year selected if still available
+      if (!yearSet.has(selectedYear)) {
+        setSelectedYear(yearArray[yearArray.length - 1]); // fallback to latest
+      }
+
       if (selectedExercises.length === 0) {
         const allExercises = Array.from(allExercisesSet);
         setSelectedExercises(allExercises);
         setItems(allExercises.map((ex) => ({ label: ex, value: ex })));
       } else {
-        // Update dropdown items in case new exercises appear later
         setItems(
           Array.from(allExercisesSet).map((ex) => ({ label: ex, value: ex }))
         );
@@ -76,29 +104,30 @@ const Progression = () => {
 
     return () => unsubscribe();
   }, [selectedExercises]);
+  
 
   const renderChart = (title, data) => {
     if (!data || data.length === 0) return null;
 
-    // Sort data by date for proper chart display
-    const sortedData = data.slice().sort((a, b) => {
-      // Parse date strings "dd MMM"
-      const parseDate = (d) => {
-        const [day, month] = d.date.split(" ");
-        return new Date(`${month} ${day}, ${new Date().getFullYear()}`);
-      };
-      return parseDate(a) - parseDate(b);
+    const filteredData = data.filter((entry) => entry.year === selectedYear);
+    if (filteredData.length === 0) return null;
+
+    const sortedData = filteredData.slice().sort((a, b) => {
+      const [dayA, monthA] = a.date.split(" ");
+      const [dayB, monthB] = b.date.split(" ");
+      return (
+        new Date(`${monthA} ${dayA}, ${selectedYear}`) -
+        new Date(`${monthB} ${dayB}, ${selectedYear}`)
+      );
     });
 
     const labels = sortedData.map((entry) => entry.date);
     const weights = sortedData.map((entry) => entry.weight);
 
     return (
-      <View key={title} style={{ marginVertical: 16 }}>
-        <ThemedText
-          style={{ fontSize: 18, fontWeight: "bold", marginBottom: 8 }}
-        >
-          {title}
+      <View key={title} style={styles.chartContainer}>
+        <ThemedText style={styles.chartTitle}>
+          {title} ({selectedYear})
         </ThemedText>
         <LineChart
           data={{
@@ -109,33 +138,44 @@ const Progression = () => {
           height={220}
           chartConfig={chartConfig}
           bezier
-          style={{ borderRadius: 16 }}
+          style={styles.chart}
         />
       </View>
     );
   };
 
   return (
-    <ThemedView style={{ flex: 1, padding: 15, paddingTop: 80 }}>
-      <ThemedText
-        style={{ fontSize: 22, fontWeight: "bold", marginBottom: 15 }}
-      >
-        Exercise Progression
-      </ThemedText>
+    <ThemedView style={styles.container}>
+      <ThemedText style={styles.pageTitle}>Exercise Progress Charts</ThemedText>
 
-      <DropDownPicker
-        multiple={true}
-        min={1}
-        max={items.length}
-        open={open}
-        value={selectedExercises}
-        items={items}
-        setOpen={setOpen}
-        setValue={setSelectedExercises}
-        setItems={setItems}
-        placeholder="Select exercises to display"
-        containerStyle={{ marginBottom: 20 }}
-      />
+      <View style={styles.dropdownRow}>
+        <View style={styles.exercisePicker}>
+          <DropDownPicker
+         
+            min={1}
+            max={items.length}
+            open={open}
+            value={selectedExercises}
+            items={items}
+            setOpen={setOpen}
+            setValue={setSelectedExercises}
+            setItems={setItems}
+            placeholder="Select Exercise"
+          />
+        </View>
+
+        <View style={styles.yearPicker}>
+          <DropDownPicker
+            open={yearDropdownOpen}
+            value={selectedYear}
+            items={yearItems}
+            setOpen={setYearDropdownOpen}
+            setValue={setSelectedYear}
+            setItems={setYearItems}
+            placeholder="Select Year"
+          />
+        </View>
+      </View>
 
       <ScrollView>
         {Object.entries(exerciseData)
@@ -147,3 +187,38 @@ const Progression = () => {
 };
 
 export default Progression;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 15,
+  },
+  pageTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 15,
+  },
+  dropdownRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10,
+    marginBottom: 20,
+  },
+  exercisePicker: {
+    flex: 1,
+  },
+  yearPicker: {
+    width: 130,
+  },
+  chartContainer: {
+    marginVertical: 16,
+  },
+  chartTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  chart: {
+    borderRadius: 16,
+  },
+});

@@ -7,7 +7,7 @@ import ThemedView from "../../components/themedView";
 import ThemedCard from "../../components/themedCard";
 import Spacer from "../../components/spacer";
 
-const exercises = () => {
+const Exercises = () => {
 
   return (
     <ThemedView style={styles.container}>
@@ -36,7 +36,7 @@ const exercises = () => {
   );
 };
 
-export default exercises;
+export default Exercises;
 
 const styles = StyleSheet.create({
   container: {
