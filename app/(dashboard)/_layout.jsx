@@ -10,7 +10,7 @@ import {
   MaterialIcons,
 } from "@expo/vector-icons";
 
-const dashBoardLayout = () => {
+const DashboardLayout = () => {
   const colorScheme = useColorScheme(); //returns light or dark or null
   const theme = Colors[colorScheme] ?? Colors.light; //defaults to light
 
@@ -99,4 +99,4 @@ const dashBoardLayout = () => {
   );
 };
 
-export default dashBoardLayout;
+export default DashboardLayout;

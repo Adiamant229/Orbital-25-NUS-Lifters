@@ -7,6 +7,7 @@ import {
   TouchableWithoutFeedback,
   Image,
   Platform,
+  KeyboardAvoidingView,
 } from "react-native";
 import { useState } from "react";
 import { Link, useRouter } from "expo-router";
@@ -35,7 +36,6 @@ const Signup = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Platform-specific spacer height
   const spacerHeight = Platform.OS === "ios" ? 10 : 3;
   const logoWidthAndHeight = Platform.OS === "ios" ? 280 : 240;
 
@@ -63,15 +63,13 @@ const Signup = () => {
       );
       const user = userCredential.user;
 
-      // Update displayName in Firebase Auth profile
       await updateProfile(user, {
         displayName: name,
       });
 
-      // Save additional user info to Firestore
       await setDoc(doc(db, "users", user.uid), {
-        name: name,
-        email: email,
+        name,
+        email,
         createdAt: new Date(),
       });
 
@@ -102,65 +100,75 @@ const Signup = () => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <ThemedView style={styles.container}>
-        <Image
-          source={Logo}
-          style={[
-            styles.img,
-            { width: logoWidthAndHeight, height: logoWidthAndHeight },
-          ]}
-        />
-        <ThemedText title={true} style={styles.title}>
-          Create New Account
-        </ThemedText>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+     
+          <ThemedView style={styles.container}>
+            <Image
+              source={Logo}
+              style={[
+                styles.img,
+                { width: logoWidthAndHeight, height: logoWidthAndHeight },
+              ]}
+            />
 
-        <ThemedTextInput
-          placeholder="Username"
-          placeholderTextColor={"grey"}
-          onChangeText={setName}
-          value={name}
-        />
+            <ThemedText title={true} style={styles.title}>
+              Create New Account
+            </ThemedText>
 
-        <ThemedTextInput
-          placeholder="Email"
-          placeholderTextColor={"grey"}
-          keyboardType="email-address"
-          onChangeText={setEmail}
-          value={email}
-        />
+            <ThemedTextInput
+              placeholder="Username"
+              placeholderTextColor={"grey"}
+              onChangeText={setName}
+              value={name}
+            />
 
-        <ThemedTextInput
-          placeholder="Password"
-          placeholderTextColor={"grey"}
-          secureTextEntry
-          onChangeText={setPassword}
-          value={password}
-          textContentType="oneTimeCode"
-          autoComplete="off"
-        />
+            <ThemedTextInput
+              placeholder="Email"
+              placeholderTextColor={"grey"}
+              keyboardType="email-address"
+              onChangeText={setEmail}
+              value={email}
+            />
 
-        <ThemedTextInput
-          placeholder="Confirm Password"
-          placeholderTextColor={"grey"}
-          secureTextEntry
-          onChangeText={setConfirmPassword}
-          value={confirmPassword}
-          textContentType="oneTimeCode"
-          autoComplete="off"
-        />
+            <ThemedTextInput
+              placeholder="Password"
+              placeholderTextColor={"grey"}
+              secureTextEntry
+              onChangeText={setPassword}
+              value={password}
+              textContentType="oneTimeCode"
+              autoComplete="off"
+            />
 
-        <ThemedButton onPress={handleRegister} disabled={loading}>
-          <Text style={{ color: "#f2f2f2", fontWeight: "bold" }}>
-            {loading ? "Creating..." : "Create"}
-          </Text>
-        </ThemedButton>
+            <ThemedTextInput
+              placeholder="Confirm Password"
+              placeholderTextColor={"grey"}
+              secureTextEntry
+              onChangeText={setConfirmPassword}
+              value={confirmPassword}
+              textContentType="oneTimeCode"
+              autoComplete="off"
+            />
 
-        <Spacer height={spacerHeight} />
+            <ThemedButton onPress={handleRegister} disabled={loading}>
+              <Text style={{ color: "#f2f2f2", fontWeight: "bold" }}>
+                {loading ? "Creating..." : "Create"}
+              </Text>
+            </ThemedButton>
 
-        <Link href="/login">
-          <ThemedText style={{ textAlign: "center" }}>Login instead</ThemedText>
-        </Link>
-      </ThemedView>
+            <Spacer height={spacerHeight} />
+
+            <Link href="/">
+              <ThemedText style={{ textAlign: "center" }}>
+                Login instead
+              </ThemedText>
+            </Link>
+          </ThemedView>
+      
+      </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );
 };
@@ -168,18 +176,20 @@ const Signup = () => {
 export default Signup;
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+  },
   container: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    paddingVertical: 20,
   },
-
   title: {
     textAlign: "center",
     fontSize: 18,
     marginBottom: 20,
   },
-
   img: {
     resizeMode: "contain",
     borderRadius: 20,

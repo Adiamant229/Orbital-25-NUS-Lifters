@@ -1,5 +1,5 @@
 //react and expo imports 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   View,
   Text, 
@@ -7,22 +7,20 @@ import {
   StyleSheet,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-
 import DropDownPicker from "react-native-dropdown-picker";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 
-
-//themed imports 
+//themed components 
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import ThemedButton from "../../components/themedButton";
-import Spacer from "../../components/spacer";
 import ThemedTextInput from "../../components/themedTextInput";
 
 //firebase imports 
 import { db } from "../../firebaseConfig";
-import { collection, addDoc, Timestamp } from "firebase/firestore";
+import { collection, addDoc, doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { Ionicons } from "@expo/vector-icons";
 
 const AddWorkout = () => {
   const router = useRouter();
@@ -47,6 +45,35 @@ const AddWorkout = () => {
   const [workoutName, setWorkoutName] = useState("");
   const [exercises, setExercises] = useState([]);
   const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
+  
+  const { editWorkoutId } = useLocalSearchParams();
+
+  useEffect(() => {
+    if (editWorkoutId) {
+      const fetchWorkout = async () => {
+        try {
+          const docRef = doc(db, "workouts", editWorkoutId);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            setWorkoutName(data.name || "");
+            setExercises(data.exercises || []);
+            setWorkoutTimePeriod(data.timePeriod || null);
+            setDate(
+              data.createdAt?.toDate ? data.createdAt.toDate() : new Date()
+            );
+          } else {
+            alert("Workout not found.");
+            router.back();
+          }
+        } catch (error) {
+          console.error("Error fetching workout:", error);
+          alert("Failed to fetch workout data.");
+        }
+      };
+      fetchWorkout();
+    }
+  }, [editWorkoutId]);
 
   //select exercise dropdown box 
   const exerciseOptions = [
@@ -104,20 +131,32 @@ const AddWorkout = () => {
       alert("Please select a workout time period.");
       return;
     }
-    
+
     try {
-      await addDoc(collection(db, "workouts"), {
-        name: workoutName.trim(),
-        exercises,
-        timePeriod: workoutTimePeriod,
-        createdAt: date,
-      });
+      if (editWorkoutId) {
+        // Update existing workout
+        await updateDoc(doc(db, "workouts", editWorkoutId), {
+          name: workoutName.trim(),
+          exercises,
+          timePeriod: workoutTimePeriod,
+          createdAt: date,
+        });
+      } else {
+        // Add new workout
+        await addDoc(collection(db, "workouts"), {
+          name: workoutName.trim(),
+          exercises,
+          timePeriod: workoutTimePeriod,
+          createdAt: serverTimestamp(),
+        });
+      }
       router.back();
     } catch (error) {
       console.error("Error saving workout:", error);
       alert("Failed to save workout.");
     }
   };
+
   
   const handleDeleteExercise = (index) => {
     const updated = [...exercises];
@@ -131,6 +170,7 @@ const AddWorkout = () => {
     setExercises(updated);
   };
 
+
   return (
     <ThemedView style={styles.container}>
       <KeyboardAwareScrollView
@@ -139,14 +179,16 @@ const AddWorkout = () => {
         extraScrollHeight={100}
         keyboardShouldPersistTaps="handled"
       >
-        <ThemedText style={styles.title}>Track New Workout</ThemedText>
+        <ThemedText style={styles.title}>
+          {editWorkoutId ? "Edit Workout" : "Track New Workout"}
+        </ThemedText>
         <ThemedTextInput
           placeholder="Add in workout title"
           value={workoutName}
           onChangeText={setWorkoutName}
           placeholderTextColor="grey"
         />
-        
+
         <View style={styles.dateTimeRow}>
           <TouchableOpacity
             onPress={() => setShowDatePicker(true)}
@@ -169,12 +211,11 @@ const AddWorkout = () => {
               ]}
               setOpen={setOpenTimeDropdown}
               setValue={setWorkoutTimePeriod}
-              placeholder="Select Time:"
+              placeholder="Select Time Period:"
               style={styles.timeDropdown}
               dropDownContainerStyle={{
                 backgroundColor: "#fff",
                 borderColor: "#ccc",
-                zIndex: 9999,
               }}
               listMode="SCROLLVIEW"
               dropDownDirection="BOTTOM"
@@ -191,7 +232,7 @@ const AddWorkout = () => {
         {exercises.map((exercise, exerciseIndex) => (
           <View key={exercise.id} style={styles.exerciseCard}>
             <View style={styles.exerciseHeader}>
-              <View style={{ flex: 1, zIndex: 3000 - exerciseIndex * 10 }}>
+              <View style={{ flex: 1 }}>
                 <DropDownPicker
                   open={openDropdownIndex === exerciseIndex}
                   value={exercise.name}
@@ -208,7 +249,6 @@ const AddWorkout = () => {
                   dropDownContainerStyle={{
                     backgroundColor: "#fff",
                     borderColor: "#ccc",
-                    zIndex: 9999,
                   }}
                   listMode="SCROLLVIEW"
                   dropDownDirection="BOTTOM"
@@ -219,7 +259,7 @@ const AddWorkout = () => {
                 onPress={() => handleDeleteExercise(exerciseIndex)}
                 style={styles.deleteExerciseButton}
               >
-                <Text style={styles.deleteExerciseButtonText}>🗑️</Text>
+                <Ionicons name="trash-outline" size={20} color="#ff3b30" />
               </TouchableOpacity>
             </View>
 
@@ -231,7 +271,6 @@ const AddWorkout = () => {
                   style={{
                     flex: 1,
                     marginRight: 5,
-                    zIndex: 2000 - setIndex * 2,
                   }}
                 >
                   <DropDownPicker
@@ -255,7 +294,6 @@ const AddWorkout = () => {
                     dropDownContainerStyle={{
                       backgroundColor: "#fff",
                       borderColor: "#ccc",
-                      zIndex: 9999,
                     }}
                     listMode="SCROLLVIEW"
                     dropDownDirection="BOTTOM"
@@ -266,7 +304,6 @@ const AddWorkout = () => {
                   style={{
                     flex: 1,
                     marginRight: 5,
-                    zIndex: 1900 - setIndex * 2,
                   }}
                 >
                   <DropDownPicker
@@ -290,7 +327,6 @@ const AddWorkout = () => {
                     dropDownContainerStyle={{
                       backgroundColor: "#fff",
                       borderColor: "#ccc",
-                      zIndex: 9999,
                     }}
                     listMode="SCROLLVIEW"
                     dropDownDirection="BOTTOM"
@@ -301,7 +337,7 @@ const AddWorkout = () => {
                   onPress={() => handleDeleteSet(exerciseIndex, setIndex)}
                   style={styles.deleteSetButton}
                 >
-                  <Text style={styles.deleteSetButtonText}>❌</Text>
+                  <Ionicons name="trash-outline" size={20} color="#ff3b30" />
                 </TouchableOpacity>
               </View>
             ))}
@@ -316,7 +352,7 @@ const AddWorkout = () => {
         ))}
         <View style={styles.buttonRow}>
           <ThemedButton onPress={handleSaveWorkout}>
-            <ThemedText>Save Workout</ThemedText>
+            <ThemedText>Save</ThemedText>
           </ThemedButton>
           <ThemedButton onPress={() => router.back()}>
             <ThemedText>Cancel</ThemedText>
@@ -420,7 +456,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginVertical: 10,
-    zIndex: 5000, // ensure dropdown overlays well
+ 
   },
 
   datePickerButton: {

@@ -9,8 +9,10 @@ import {
   Keyboard,
   TouchableOpacity,
   StyleSheet,
+  Image
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
+import * as ImagePicker from "expo-image-picker";
 
 //firebase imports
 import {
@@ -19,8 +21,12 @@ import {
   getDocs,
   deleteDoc,
   doc,
+  updateDoc,
 } from "firebase/firestore";
-import { db } from "../../firebaseConfig";
+import { db, storage } from "../../firebaseConfig";
+import { getAuth } from "firebase/auth";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import uuid from "react-native-uuid";
 
 //themed components
 import ThemedText from "../../components/themedText";
@@ -28,15 +34,22 @@ import ThemedView from "../../components/themedView";
 import ThemedButton from "../../components/themedButton";
 import ThemedTextInput from "../../components/themedTextInput";
 import Spacer from "../../components/spacer";
+import { Ionicons } from "@expo/vector-icons";
 
 const UtownReports = () => {
+  // Firebase Auth current user
+  const auth = getAuth();
+  const currentUser = auth.currentUser;
+  const currentUserId = currentUser ? currentUser.uid : null;
+
+  // State for reports and modal
   const [reports, setReports] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
-  const [remarks, setRemarks] = useState("");
-  const [selectedReportId, setSelectedReportId] = useState(null);
 
-  const [open, setOpen] = useState(false);
+  // Form states
+  const [remarks, setRemarks] = useState("");
   const [value, setValue] = useState(null);
+  const [open, setOpen] = useState(false);
   const [equipmentItems, setEquipmentItems] = useState([
     { label: "Bench Press", value: "Bench Press" },
     { label: "Incline Bench Press", value: "Incline Bench Press" },
@@ -54,6 +67,10 @@ const UtownReports = () => {
     { label: "Leg Extensions Machine", value: "Leg Extensions Machine" },
   ]);
 
+  const [expandedReportId, setExpandedReportId] = useState(null);
+  
+  const [imageUri, setImageUri] = useState(null);
+
   const [issueOpen, setIssueOpen] = useState(false);
   const [issueValue, setIssueValue] = useState(null);
   const [issueItems, setIssueItems] = useState([
@@ -66,10 +83,13 @@ const UtownReports = () => {
     { label: "Cleanliness Issue", value: "Cleanliness Issue" },
   ]);
 
+  // Track if we're editing an existing report or adding new
+  const [editingReportId, setEditingReportId] = useState(null);
+
   // Reference to the Firestore collection
   const reportsRef = collection(db, "utownReports");
 
-  // Fetch reports from Firestore
+  // Fetch reports on mount
   useEffect(() => {
     const fetchReports = async () => {
       try {
@@ -87,103 +107,246 @@ const UtownReports = () => {
     fetchReports();
   }, []);
 
-  const handleAddReport = async () => {
-    if (value && issueValue) {
-      const newReport = {
-        equipment: value,
-        issueType: issueValue,
-        remarks: remarks.trim(),
-      };
+  // Open modal for adding new report (reset all fields)
+  const openAddModal = () => {
+    setEditingReportId(null);
+    setValue(null);
+    setIssueValue(null);
+    setRemarks("");
+    setImageUri(null); 
+    setModalVisible(true);
+  };
 
-      try {
+  // Open modal for editing report with prefilled data
+  const openEditModal = (report) => {
+    setEditingReportId(report.id);
+    setValue(report.equipment);
+    setIssueValue(report.issueType);
+    setRemarks(report.remarks || "");
+    setImageUri(report.imageUrl || null);
+    setModalVisible(true);
+  };
+
+  // Add new or update existing report on submit
+  const handleSubmit = async () => {
+    if (!value || !issueValue) {
+      alert("Please select equipment and issue type.");
+      return;
+    }
+
+    try {
+      let imageUrl = null;
+
+      if (imageUri) {
+
+        const response = await fetch(imageUri);
+        const blob = await response.blob();
+
+        const imageRef = ref(storage, `utownReports/${uuid.v4()}`);
+
+        await uploadBytes(imageRef, blob);
+
+        imageUrl = await getDownloadURL(imageRef);
+      }
+
+      if (editingReportId) {
+        const docRef = doc(db, "utownReports", editingReportId);
+        await updateDoc(docRef, {
+          equipment: value,
+          issueType: issueValue,
+          remarks: remarks.trim(),
+          ...(imageUrl && { imageUrl }),
+        });
+
+        setReports((prev) =>
+          prev.map((r) =>
+            r.id === editingReportId
+              ? {
+                  ...r,
+                  equipment: value,
+                  issueType: issueValue,
+                  remarks: remarks.trim(),
+                  ...(imageUrl && { imageUrl }),
+                }
+              : r
+          )
+        );
+      } else {
+        const newReport = {
+          equipment: value,
+          issueType: issueValue,
+          remarks: remarks.trim(),
+          userId: currentUserId,
+          ...(imageUrl && { imageUrl }),
+        };
+
         const docRef = await addDoc(reportsRef, newReport);
         setReports([...reports, { id: docRef.id, ...newReport }]);
-
-        // Reset inputs
-        setValue(null);
-        setIssueValue(null);
-        setRemarks("");
-        setModalVisible(false);
-      } catch (error) {
-        console.error("Error adding report:", error);
       }
-    } else {
-      alert("Please select equipment and issue type.");
+
+      // Reset states
+      setModalVisible(false);
+      setEditingReportId(null);
+      setValue(null);
+      setIssueValue(null);
+      setRemarks("");
+      setImageUri(null);
+    } catch (error) {
+      console.error("Error submitting report:", error);
+      alert("Failed to submit report.");
     }
+  };
+  
+  const getStoragePathFromUrl = (url) => {
+    const start = url.indexOf("/o/") + 3;
+    const end = url.indexOf("?");
+    const fullPathEncoded = url.substring(start, end);
+    return decodeURIComponent(fullPathEncoded); 
   };
 
   const handleDeleteReport = async (id) => {
     try {
+   
+      const reportToDelete = reports.find((r) => r.id === id);
+
+      if (reportToDelete?.imageUrl) {
+        const imagePath = getStoragePathFromUrl(reportToDelete.imageUrl);
+        const imageRef = ref(storage, imagePath);
+        await deleteObject(imageRef);
+      }
+
       await deleteDoc(doc(db, "utownReports", id));
+
       setReports((prev) => prev.filter((r) => r.id !== id));
-      if (selectedReportId === id) setSelectedReportId(null);
+      if (editingReportId === id) setEditingReportId(null);
     } catch (error) {
       console.error("Error deleting report:", error);
     }
   };
+  const pickImage = async () => {
+    
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permissionResult.granted) {
+      alert("Permission to access media library is required!");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.Images, 
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+    
+      setImageUri(result.assets[0].uri);
+    } else {
+      console.log("User cancelled image picker");
+    }
+  };
+const takePhoto = async () => {
+  let permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+  if (permissionResult.granted === false) {
+    alert("Permission to access camera is required!");
+    return;
+  }
+
+  let result = await ImagePicker.launchCameraAsync({
+    quality: 0.7,
+  });
+
+  if (!result.canceled) {
+    setImageUri(result.assets[0].uri);
+  }
+};
 
   return (
     <ThemedView style={styles.container}>
       <View style={styles.header}>
         <ThemedText style={styles.title}>UTown Reports</ThemedText>
-        <TouchableOpacity
-          onPress={() => setModalVisible(true)}
-          style={styles.addButton}
-        >
+        <TouchableOpacity onPress={openAddModal} style={styles.addButton}>
           <ThemedText style={styles.addButtonText}>+</ThemedText>
         </TouchableOpacity>
       </View>
-
       <FlatList
         data={reports}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => {
-          const isSelected = selectedReportId === item.id;
+          const isCurrentUser = item.userId === currentUserId;
+          const isExpanded = expandedReportId === item.id;
+
           return (
             <TouchableOpacity
-              onPress={() =>
-                setSelectedReportId((prev) =>
-                  prev === item.id ? null : item.id
-                )
-              }
-              style={styles.card}
+              activeOpacity={0.7}
+              onPress={() => setExpandedReportId(isExpanded ? null : item.id)}
             >
-              <Text style={styles.cardTitle}>
-                {item.equipment} - {item.issueType}
-              </Text>
-              {isSelected && (
-                <>
-                  {item.remarks ? (
-                    <Text style={styles.cardRemarks}>
-                      Remarks: {item.remarks}
-                    </Text>
-                  ) : null}
-                  <TouchableOpacity
-                    onPress={() => handleDeleteReport(item.id)}
-                    style={styles.resolveButton}
-                  >
-                    <Text style={styles.resolveButtonText}>Resolved</Text>
-                  </TouchableOpacity>
-                </>
-              )}
+              <View style={styles.card}>
+                <View style={styles.cardTitleRow}>
+                  <Text style={styles.cardTitle}>
+                    {item.equipment} - {item.issueType}
+                  </Text>
+                  {isExpanded && isCurrentUser && (
+                    <TouchableOpacity onPress={() => openEditModal(item)}>
+                      <Ionicons
+                        name="pencil-outline"
+                        size={20}
+                        color="#007AFF"
+                      />
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                {/* Show details if expanded */}
+                {isExpanded && (
+                  <>
+                    {item.remarks ? (
+                      <Text style={styles.cardRemarks}>
+                        Remarks: {item.remarks}
+                      </Text>
+                    ) : null}
+
+                    {/* Display image if exists */}
+                    {item.imageUrl && (
+                      <Image
+                        source={{ uri: item.imageUrl }}
+                        style={styles.reportImage}
+                        resizeMode="cover"
+                      />
+                    )}
+
+                    <TouchableOpacity
+                      onPress={() => handleDeleteReport(item.id)}
+                      style={styles.resolveButton}
+                    >
+                      <Text style={styles.resolveButtonText}>Resolved</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
             </TouchableOpacity>
           );
         }}
       />
 
-      {/* Modal */}
+      {/* Modal for Add/Edit */}
       <Modal
         visible={modalVisible}
-        animationType="slide"
+        animationType="fade"
         transparent={true}
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={() => {
+          setModalVisible(false);
+          setEditingReportId(null);
+        }}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Add Gym Report</Text>
+              <Text style={styles.modalTitle}>
+                {editingReportId ? "Edit Gym Report" : "Add Gym Report"}
+              </Text>
 
-              <View style={{ zIndex: 3000, marginBottom: open ? 150 : 20 }}>
+              <View style={{ marginBottom: open ? 150 : 20 }}>
                 <Text style={{ marginBottom: 5 }}>Select Equipment:</Text>
                 <DropDownPicker
                   open={open}
@@ -199,9 +362,7 @@ const UtownReports = () => {
                 />
               </View>
 
-              <View
-                style={{ zIndex: 2000, marginBottom: issueOpen ? 150 : 20 }}
-              >
+              <View style={{ marginBottom: issueOpen ? 150 : 20 }}>
                 <Text style={{ marginBottom: 5 }}>Select Issue Type:</Text>
                 <DropDownPicker
                   open={issueOpen}
@@ -217,6 +378,44 @@ const UtownReports = () => {
                 />
               </View>
 
+              <View style={{ marginBottom: 20 }}>
+                <Text style={{ marginBottom: 5 }}>
+                  Attach Photo (optional):
+                </Text>
+
+                <View style={{ flexDirection: "row", gap: 10 }}>
+                  <ThemedButton onPress={pickImage}>
+                    <ThemedText>Pick from Gallery</ThemedText>
+                  </ThemedButton>
+
+                  <ThemedButton onPress={takePhoto}>
+                    <ThemedText>Take Photo</ThemedText>
+                  </ThemedButton>
+                </View>
+
+                {imageUri && (
+                  <>
+                    <Image
+                      source={{ uri: imageUri }}
+                      style={{
+                        width: "100%",
+                        height: 150,
+                        marginTop: 10,
+                        marginBottom: 10,
+                        borderRadius: 8,
+                      }}
+                    />
+                    <TouchableOpacity onPress={() => setImageUri(null)}>
+                      <Ionicons
+                        name="trash-outline"
+                        size={20}
+                        color="#ff3b30"
+                      />
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
+
               <Text style={{ marginBottom: 5 }}>Remarks (optional):</Text>
               <ThemedTextInput
                 placeholder="Enter remarks"
@@ -225,12 +424,17 @@ const UtownReports = () => {
                 onChangeText={setRemarks}
               />
 
-              <View style={styles.buttonRow}>
-                <ThemedButton onPress={handleAddReport}>
-                  <ThemedText>Submit</ThemedText>
+              <View style={styles.modalbuttonRow}>
+                <ThemedButton onPress={handleSubmit}>
+                  <ThemedText>{editingReportId ? "Save" : "Submit"}</ThemedText>
                 </ThemedButton>
                 <Spacer width="25" />
-                <ThemedButton onPress={() => setModalVisible(false)}>
+                <ThemedButton
+                  onPress={() => {
+                    setModalVisible(false);
+                    setEditingReportId(null);
+                  }}
+                >
                   <ThemedText>Cancel</ThemedText>
                 </ThemedButton>
               </View>
@@ -272,7 +476,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 12,
     padding: 20,
-    zIndex: 1000,
   },
   modalTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 16 },
   dropdown: {
@@ -288,10 +491,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: "#fff",
   },
-  buttonRow: {
+  modalbuttonRow: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: 20,
   },
   card: {
     marginHorizontal: 20,
@@ -305,7 +507,20 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  cardTitle: { fontSize: 16, fontWeight: "bold" },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    flexShrink: 1, // allows text to shrink if needed
+    marginRight: 10, // spacing from icon
+  },
+  cardTitleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 10,
+    flexWrap: "nowrap",
+  },
+
   cardRemarks: { marginTop: 8, color: "#555" },
   resolveButton: {
     marginTop: 10,
@@ -316,4 +531,10 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
   },
   resolveButtonText: { color: "#fff", fontWeight: "bold" },
+  reportImage: {
+    width: "100%",
+    height: 150,
+    marginTop: 10,
+    borderRadius: 8,
+  },
 });
