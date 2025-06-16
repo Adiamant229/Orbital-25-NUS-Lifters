@@ -9,7 +9,7 @@ import {
   Keyboard,
   TouchableOpacity,
   StyleSheet,
-  Image
+  Image,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import * as ImagePicker from "expo-image-picker";
@@ -22,10 +22,16 @@ import {
   deleteDoc,
   doc,
   updateDoc,
+  deleteField,
 } from "firebase/firestore";
 import { db, storage } from "../../firebaseConfig";
 import { getAuth } from "firebase/auth";
-import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+} from "firebase/storage";
 import uuid from "react-native-uuid";
 
 //themed components
@@ -68,7 +74,9 @@ const UtownReports = () => {
   ]);
 
   const [expandedReportId, setExpandedReportId] = useState(null);
-  
+
+  const [imageDeletedLocally, setImageDeletedLocally] = useState(false);
+
   const [imageUri, setImageUri] = useState(null);
 
   const [issueOpen, setIssueOpen] = useState(false);
@@ -113,7 +121,7 @@ const UtownReports = () => {
     setValue(null);
     setIssueValue(null);
     setRemarks("");
-    setImageUri(null); 
+    setImageUri(null);
     setModalVisible(true);
   };
 
@@ -136,26 +144,63 @@ const UtownReports = () => {
 
     try {
       let imageUrl = null;
+      let oldImageUrl = null;
 
-      if (imageUri) {
+      if (editingReportId) {
+        const docRef = doc(db, "utownReports", editingReportId);
+        const reportSnapshot = await getDocs(reportsRef);
+        const report = reportSnapshot.docs
+          .find((doc) => doc.id === editingReportId)
+          ?.data();
+        oldImageUrl = report?.imageUrl || null;
+      }
 
+      // Case 1: New image picked (local URI, not firebase URL)
+      if (imageUri && !imageUri.startsWith("https://")) {
         const response = await fetch(imageUri);
         const blob = await response.blob();
 
         const imageRef = ref(storage, `utownReports/${uuid.v4()}`);
-
         await uploadBytes(imageRef, blob);
-
         imageUrl = await getDownloadURL(imageRef);
+
+        // Delete old image after new upload
+        if (oldImageUrl) {
+          try {
+            const oldPath = getStoragePathFromUrl(oldImageUrl);
+            await deleteObject(ref(storage, oldPath));
+            console.log("Old image deleted:", oldPath);
+          } catch (e) {
+            console.warn("Failed to delete old image:", e);
+          }
+        }
+      }
+      // Case 2: Image was deleted locally (clear) but no new image picked
+      else if (imageDeletedLocally && !imageUri) {
+        if (oldImageUrl) {
+          try {
+            const oldPath = getStoragePathFromUrl(oldImageUrl);
+            await deleteObject(ref(storage, oldPath));
+            console.log("Deleted old image due to removal");
+          } catch (e) {
+            console.warn("Failed to delete old image:", e);
+          }
+        }
+        imageUrl = null; // clear imageUrl in firestore below
+      }
+      // Case 3: Image unchanged (existing firebase URL)
+      else if (imageUri?.startsWith("https://")) {
+        imageUrl = imageUri;
       }
 
+      // Update Firestore
       if (editingReportId) {
         const docRef = doc(db, "utownReports", editingReportId);
         await updateDoc(docRef, {
           equipment: value,
           issueType: issueValue,
           remarks: remarks.trim(),
-          ...(imageUrl && { imageUrl }),
+          ...(imageUrl !== null ? { imageUrl } : { imageUrl: deleteField() }),
         });
 
         setReports((prev) =>
@@ -166,12 +211,13 @@ const UtownReports = () => {
                   equipment: value,
                   issueType: issueValue,
                   remarks: remarks.trim(),
-                  ...(imageUrl && { imageUrl }),
+                  ...(imageUrl !== null ? { imageUrl } : { imageUrl: null }),
                 }
               : r
           )
         );
       } else {
+        // Adding new report
         const newReport = {
           equipment: value,
           issueType: issueValue,
@@ -184,29 +230,33 @@ const UtownReports = () => {
         setReports([...reports, { id: docRef.id, ...newReport }]);
       }
 
-      // Reset states
+      // Reset states after submit
       setModalVisible(false);
       setEditingReportId(null);
       setValue(null);
       setIssueValue(null);
       setRemarks("");
       setImageUri(null);
+      setImageDeletedLocally(false); // reset this flag here
     } catch (error) {
       console.error("Error submitting report:", error);
       alert("Failed to submit report.");
     }
   };
-  
+
   const getStoragePathFromUrl = (url) => {
-    const start = url.indexOf("/o/") + 3;
-    const end = url.indexOf("?");
-    const fullPathEncoded = url.substring(start, end);
-    return decodeURIComponent(fullPathEncoded); 
+    // Works for both gs:// and https://firebasestorage.googleapis.com/... urls
+    try {
+      const decodePath = decodeURIComponent(url.split("/o/")[1].split("?")[0]);
+      return decodePath;
+    } catch (err) {
+      console.error("Error parsing storage path:", err);
+      return null;
+    }
   };
 
   const handleDeleteReport = async (id) => {
     try {
-   
       const reportToDelete = reports.find((r) => r.id === id);
 
       if (reportToDelete?.imageUrl) {
@@ -224,7 +274,6 @@ const UtownReports = () => {
     }
   };
   const pickImage = async () => {
-    
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
 
@@ -234,32 +283,36 @@ const UtownReports = () => {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.Images, 
+      mediaTypes: ImagePicker.Images,
       quality: 0.7,
     });
 
     if (!result.canceled) {
-    
       setImageUri(result.assets[0].uri);
     } else {
       console.log("User cancelled image picker");
     }
   };
-const takePhoto = async () => {
-  let permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-  if (permissionResult.granted === false) {
-    alert("Permission to access camera is required!");
-    return;
-  }
+  const takePhoto = async () => {
+    let permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+    if (permissionResult.granted === false) {
+      alert("Permission to access camera is required!");
+      return;
+    }
 
-  let result = await ImagePicker.launchCameraAsync({
-    quality: 0.7,
-  });
+    let result = await ImagePicker.launchCameraAsync({
+      quality: 0.7,
+    });
 
-  if (!result.canceled) {
-    setImageUri(result.assets[0].uri);
-  }
-};
+    if (!result.canceled) {
+      setImageUri(result.assets[0].uri);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageUri(null);
+    setImageDeletedLocally(true); // mark image as deleted locally but NOT deleting storage yet
+  };
 
   return (
     <ThemedView style={styles.container}>
@@ -378,6 +431,13 @@ const takePhoto = async () => {
                 />
               </View>
 
+              <Text style={{ marginBottom: 5 }}>Remarks (optional):</Text>
+              <ThemedTextInput
+                placeholder="Enter remarks"
+                placeholderTextColor={"grey"}
+                value={remarks}
+                onChangeText={setRemarks}
+              />
               <View style={{ marginBottom: 20 }}>
                 <Text style={{ marginBottom: 5 }}>
                   Attach Photo (optional):
@@ -405,7 +465,7 @@ const takePhoto = async () => {
                         borderRadius: 8,
                       }}
                     />
-                    <TouchableOpacity onPress={() => setImageUri(null)}>
+                    <TouchableOpacity onPress={handleRemoveImage}>
                       <Ionicons
                         name="trash-outline"
                         size={20}
@@ -415,14 +475,6 @@ const takePhoto = async () => {
                   </>
                 )}
               </View>
-
-              <Text style={{ marginBottom: 5 }}>Remarks (optional):</Text>
-              <ThemedTextInput
-                placeholder="Enter remarks"
-                placeholderTextColor={"grey"}
-                value={remarks}
-                onChangeText={setRemarks}
-              />
 
               <View style={styles.modalbuttonRow}>
                 <ThemedButton onPress={handleSubmit}>
