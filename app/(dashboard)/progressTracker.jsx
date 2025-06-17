@@ -34,7 +34,8 @@ import {
   addDoc,
   deleteDoc,
   doc,
-  serverTimestamp,
+  updateDoc,
+  getDocs
 } from "firebase/firestore";
 
 // chart import
@@ -60,7 +61,7 @@ const ProgressTracker = () => {
 
   const [weightListModalVisible, setWeightListModalVisible] = useState(false);
   const [editingWeightId, setEditingWeightId] = useState(null);
-
+  const [editingWeight, setEditingWeight] = useState(null);
   const user = auth.currentUser;
 
   useEffect(() => {
@@ -159,25 +160,52 @@ const ProgressTracker = () => {
   const handleSubmitWeight = async () => {
     if (!weightInput) return;
 
-    if (!user) {
-      alert("You must be logged in to add weights.");
-      return;
-    }
-
-    const newEntry = {
-      date: date.toISOString().split("T")[0],
-      weight: parseFloat(weightInput),
-      createdAt: serverTimestamp(),
-    };
+    const weightValue = parseFloat(weightInput);
+    if (isNaN(weightValue)) return;
 
     try {
-      await addDoc(collection(db, "users", user.uid, "weights"), newEntry);
-      setWeightInput("");
-      setDate(new Date());
+      const userDocRef = doc(db, "users", user.uid);
+
+      if (editingWeight) {
+        // Update existing weight
+        const weightDocRef = doc(userDocRef, "weights", editingWeight.id);
+        await updateDoc(weightDocRef, {
+          weight: weightValue,
+          date: date,
+        });
+      } else {
+        // Add new weight
+        const weightsCollectionRef = collection(userDocRef, "weights");
+        await addDoc(weightsCollectionRef, {
+          weight: weightValue,
+          date: date,
+        });
+      }
+
+      // Reset modal
       setModalVisible(false);
+      setWeightInput("");
+      setEditingWeight(null);
+      fetchWeights(); // Refresh the list
     } catch (error) {
-      console.error("Failed to add weight entry:", error);
-      alert("Failed to add weight entry");
+      console.error("Error submitting weight:", error);
+    }
+  };
+  
+  const fetchWeights = async () => {
+    try {
+      const userDocRef = doc(db, "users", user.uid);
+      const weightsCollectionRef = collection(userDocRef, "weights");
+      const snapshot = await getDocs(weightsCollectionRef);
+
+      const weightList = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setWeights(weightList); // assumes you have: const [weights, setWeights] = useState([]);
+    } catch (error) {
+      console.error("Error fetching weights:", error);
     }
   };
 
@@ -243,15 +271,14 @@ const ProgressTracker = () => {
   };
 
   // open edit modal pre-filled
-  const openEditWeight = (weightEntry) => {
-    setEditingWeightId(weightEntry.id);
-    setWeightInput(weightEntry.weight.toString());
-    setDate(
-      typeof weightEntry.date === "string"
-        ? new Date(weightEntry.date)
-        : weightEntry.date.toDate?.() || new Date()
-    );
+  const openEditWeight = (w) => {
+    setEditingWeight(w); // set the weight to be edited
+    setDate(typeof w.date === "string" ? new Date(w.date) : w.date.toDate());
+    setWeightInput(w.weight.toString());
+    setModalVisible(true);
   };
+
+
   return (
     <ThemedView style={styles.container}>
       <ThemedText style={styles.title}>Progress Tracker</ThemedText>
@@ -280,7 +307,7 @@ const ProgressTracker = () => {
           onPress={() => router.push("/exercises")}
           style={styles.addButton}
         >
-          <ThemedText>📖 Gym Info And Guide</ThemedText>
+          <ThemedText>📖 Guide</ThemedText>
         </TouchableOpacity>
       </View>
 
@@ -381,7 +408,6 @@ const ProgressTracker = () => {
 
                         <TouchableOpacity
                           onPress={() => handleDeleteWorkout(item.id)}
-              
                         >
                           <Ionicons
                             name="trash-outline"
@@ -401,13 +427,13 @@ const ProgressTracker = () => {
 
       {selectedTab === "weight" && (
         <>
-          <View style={styles.header2}>
+          <View style={styles.header3}>
             <ThemedText style={{ fontSize: 20 }}>Your Bodyweights</ThemedText>
             <TouchableOpacity
               onPress={() => setModalVisible(true)}
               style={styles.addButton}
             >
-              <ThemedText>+ Add New Weight</ThemedText>
+              <ThemedText>+ New Weight</ThemedText>
             </TouchableOpacity>
 
             <DropDownPicker
@@ -506,8 +532,6 @@ const ProgressTracker = () => {
               })}
             </ScrollView>
           )}
-
-      
         </View>
       </Modal>
 
@@ -521,7 +545,7 @@ const ProgressTracker = () => {
             >
               <View style={styles.modalContent}>
                 <ThemedText style={styles.modalTitle}>
-                  Add New Weight
+                  {editingWeight ? "Edit Weight Entry" : "Add New Weight"}
                 </ThemedText>
 
                 <TouchableOpacity
@@ -559,7 +583,13 @@ const ProgressTracker = () => {
                     <ThemedText>Save</ThemedText>
                   </ThemedButton>
 
-                  <ThemedButton onPress={() => setModalVisible(false)}>
+                  <ThemedButton
+                    onPress={() => {
+                      setModalVisible(false);
+                      setEditingWeight(null); // reset editing state
+                      setWeightInput("");
+                    }}
+                  >
                     <ThemedText>Cancel</ThemedText>
                   </ThemedButton>
                 </View>
@@ -594,9 +624,15 @@ const styles = StyleSheet.create({
   },
   header2: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
+    gap: 5,
     alignItems: "center",
+    marginBottom: 5,
+  },
+  header3: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: 10,
     marginBottom: 5,
   },
   addButton: {
@@ -672,7 +708,8 @@ const styles = StyleSheet.create({
   },
   modalButtonRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
+    gap: 20,
   },
   selectedTabButton: {
     backgroundColor: "#7d015c",
@@ -700,7 +737,6 @@ const styles = StyleSheet.create({
   },
   weightEntryButtons: {
     flexDirection: "row",
-    gap:10
+    gap: 10,
   },
-
 });
