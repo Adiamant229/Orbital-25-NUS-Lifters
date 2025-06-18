@@ -1,4 +1,3 @@
-//react and expo imports
 import { useState, useEffect } from "react";
 import {
   View,
@@ -7,19 +6,17 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   ScrollView,
-  Platform, // Import Platform for conditional logic
+  Platform,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import DropDownPicker from "react-native-dropdown-picker";
 import { useRouter, useLocalSearchParams } from "expo-router";
 
-//themed components
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import ThemedButton from "../../components/themedButton";
 import ThemedTextInput from "../../components/themedTextInput";
 
-//firebase imports
 import { db } from "../../firebaseConfig";
 import {
   collection,
@@ -52,6 +49,7 @@ const AddWorkout = () => {
   };
 
   const [workoutName, setWorkoutName] = useState("");
+  const [workoutNotes, setWorkoutNotes] = useState("");
   const [exercises, setExercises] = useState([]);
   const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
 
@@ -66,6 +64,7 @@ const AddWorkout = () => {
           if (docSnap.exists()) {
             const data = docSnap.data();
             setWorkoutName(data.name || "");
+            setWorkoutNotes(data.workoutNotes || "");
             setExercises(data.exercises || []);
             setWorkoutTimePeriod(data.timePeriod || null);
             setDate(
@@ -90,6 +89,25 @@ const AddWorkout = () => {
     { label: "Squat", value: "Squat" },
     { label: "Pull-up", value: "Pull-up" },
     { label: "Incline Dumbbell Press ", value: "Incline Dumbbell Press" },
+    { label: "Incline Bench", value: "Incline Bench" },
+    { label: "Dumbbell Lateral Raises", value: "Dumbbell Lateral Raises" },
+    {
+      label: "Overhead Triceps Cable Extensions",
+      value: "Overhead Triceps Cable Extensions",
+    },
+    { label: "Cable Pullovers", value: "Cable PullOvers" },
+    { label: "Lat Pulldown", value: "Lat Pulldown" },
+    { label: "Barbell Bent-over Rows", value: "Barbell Bent-over Rows" },
+    { label: "Barbell Shrugs", value: "Barbell Shrugs" },
+    { label: "Dumbbell Curls", value: "Dumbbell Curls" },
+    { label: "Preacher Curls", value: "Preacher Curls" },
+    { label: "Hammer Curls", value: "Hammer Curls" },
+    { label: "Barbell Back Squat", value: "Barbell Back Squat" },
+    { label: "Seated Hamstring Curls", value: "Seated Hamstring Curls" },
+    { label: "Leg Press", value: "Leg Press" },
+    { label: "Dumbbell RDLs", value: "Dumbbell RDLs" },
+    { label: "Standing Calf Raises", value: "Standing Calf Raises" },
+    { label: "Leg Extensions", value: "Leg Extensions" },
   ];
 
   const handleAddExercise = () => {
@@ -145,6 +163,7 @@ const AddWorkout = () => {
         // Update existing workout
         await updateDoc(doc(db, "workouts", editWorkoutId), {
           name: workoutName.trim(),
+          workoutNotes,
           exercises,
           timePeriod: workoutTimePeriod,
           createdAt: date,
@@ -153,6 +172,7 @@ const AddWorkout = () => {
         // Add new workout
         await addDoc(collection(db, "workouts"), {
           name: workoutName.trim(),
+          workoutNotes,
           exercises,
           timePeriod: workoutTimePeriod,
           createdAt: serverTimestamp(),
@@ -177,9 +197,7 @@ const AddWorkout = () => {
     setExercises(updated);
   };
 
-  // Define the list mode based on the platform
-  // Android will use MODAL, iOS will use SCROLLVIEW
-  const dropdownListMode = Platform.OS === 'android' ? 'MODAL' : 'SCROLLVIEW';
+  const dropdownListMode = Platform.OS === "android" ? "MODAL" : "SCROLLVIEW";
 
   return (
     <ThemedView style={styles.container}>
@@ -236,22 +254,32 @@ const AddWorkout = () => {
                   borderColor: "#ccc",
                   zIndex: 3000,
                 }}
-                listMode="SCROLLVIEW" // Apply conditional listMode
+                listMode="SCROLLVIEW"
                 dropDownDirection="BOTTOM"
-                // No modalProps, modalContentContainerStyle, or modalTitleStyle here
               />
             </View>
           </View>
 
-          <TouchableOpacity
-            onPress={handleAddExercise}
-            style={styles.addExerciseButton}
-          >
-            <Text style={styles.addExerciseButtonText}>+ Add Exercise</Text>
-          </TouchableOpacity>
+          <ThemedText style={{ marginBottom: 10, marginTop: 10 }}>
+            Notes:
+          </ThemedText>
+
+          <ThemedTextInput
+            placeholder="(optional)"
+            value={workoutNotes}
+            onChangeText={setWorkoutNotes}
+            placeholderTextColor="grey"
+          />
+
           {exercises.map((exercise, exerciseIndex) => (
+ <View key={exercise.id}>
+ <ThemedText>
+ Exercise {exerciseIndex + 1}
+</ThemedText>
+
+
             <View
-              key={exercise.id}
+              
               style={[
                 styles.exerciseCard,
                 { zIndex: openDropdownIndex === exerciseIndex ? 2000 : 1000 },
@@ -277,9 +305,8 @@ const AddWorkout = () => {
                       borderColor: "#ccc",
                       zIndex: 2000,
                     }}
-                    listMode="SCROLLVIEW" // Apply conditional listMode
+                    listMode="SCROLLVIEW"
                     dropDownDirection="BOTTOM"
-                    // No modalProps, modalContentContainerStyle, or modalTitleStyle here
                   />
                 </View>
 
@@ -332,9 +359,8 @@ const AddWorkout = () => {
                           styles.dropDownContainer,
                           { zIndex: set.openReps ? 1500 : 500 },
                         ]}
-                        listMode={dropdownListMode} // Apply conditional listMode
+                        listMode={dropdownListMode}
                         dropDownDirection="BOTTOM"
-                        // No modalProps, modalContentContainerStyle, or modalTitleStyle here
                       />
                     </View>
 
@@ -367,9 +393,8 @@ const AddWorkout = () => {
                           styles.dropDownContainer,
                           { zIndex: set.openWeight ? 1500 : 500 },
                         ]}
-                        listMode={dropdownListMode} // Apply conditional listMode
+                        listMode={dropdownListMode}
                         dropDownDirection="BOTTOM"
-                        // No modalProps, modalContentContainerStyle, or modalTitleStyle here
                       />
                     </View>
 
@@ -394,7 +419,14 @@ const AddWorkout = () => {
                 <Text style={styles.addSetButtonText}>+ Add Set</Text>
               </TouchableOpacity>
             </View>
-          ))}
+ </View>))}
+          <TouchableOpacity
+            onPress={handleAddExercise}
+            style={styles.addExerciseButton}
+          >
+          <Text style={styles.addExerciseButtonText}>+ Add Exercise</Text>
+          </TouchableOpacity>
+
           <View style={styles.buttonRow}>
             <ThemedButton onPress={handleSaveWorkout}>
               <ThemedText>Save</ThemedText>
@@ -432,13 +464,15 @@ const styles = StyleSheet.create({
   addExerciseButton: {
     alignSelf: "flex-start",
     marginBottom: 20,
+    marginTop: 10,
   },
   addExerciseButtonText: {
     color: "#007bff",
     fontWeight: "bold",
   },
   exerciseCard: {
-    marginBottom: 30,
+    marginTop: 10,
+    marginBottom: 20,
     padding: 15,
     borderWidth: 1,
     borderColor: "#ccc",
@@ -474,7 +508,7 @@ const styles = StyleSheet.create({
   buttonRow: {
     flexDirection: "row",
     justifyContent: "center",
-    gap:10
+    gap: 10,
   },
   exerciseHeader: {
     flexDirection: "row",
