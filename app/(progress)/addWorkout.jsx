@@ -175,7 +175,7 @@ const AddWorkout = () => {
           workoutNotes,
           exercises,
           timePeriod: workoutTimePeriod,
-          createdAt: serverTimestamp(),
+          createdAt: date,
         });
       }
       router.back();
@@ -272,159 +272,160 @@ const AddWorkout = () => {
           />
 
           {exercises.map((exercise, exerciseIndex) => (
- <View key={exercise.id}>
- <ThemedText>
- Exercise {exerciseIndex + 1}
-</ThemedText>
+            <View key={exercise.id}>
+              <ThemedText style={styles.exerciseNumberText}>
+                Exercise {exerciseIndex + 1}
+              </ThemedText>
 
+              <View
+                style={[
+                  styles.exerciseCard,
+                  { zIndex: openDropdownIndex === exerciseIndex ? 2000 : 1000 },
+                ]}
+              >
+                <View style={styles.exerciseHeader}>
+                  <View style={{ flex: 1 }}>
+                    <DropDownPicker
+                      open={openDropdownIndex === exerciseIndex}
+                      value={exercise.name}
+                      items={exerciseOptions}
+                      setOpen={(isOpen) =>
+                        setOpenDropdownIndex(isOpen ? exerciseIndex : null)
+                      }
+                      setValue={(callback) => {
+                        const value = callback(exercise.name);
+                        handleChangeExerciseName(exerciseIndex, value);
+                      }}
+                      placeholder="Select exercise"
+                      style={styles.dropdown}
+                      dropDownContainerStyle={{
+                        backgroundColor: "#fff",
+                        borderColor: "#ccc",
+                        zIndex: 2000,
+                      }}
+                      listMode="SCROLLVIEW"
+                      dropDownDirection="BOTTOM"
+                    />
+                  </View>
 
-            <View
-              
-              style={[
-                styles.exerciseCard,
-                { zIndex: openDropdownIndex === exerciseIndex ? 2000 : 1000 },
-              ]}
-            >
-              <View style={styles.exerciseHeader}>
-                <View style={{ flex: 1 }}>
-                  <DropDownPicker
-                    open={openDropdownIndex === exerciseIndex}
-                    value={exercise.name}
-                    items={exerciseOptions}
-                    setOpen={(isOpen) =>
-                      setOpenDropdownIndex(isOpen ? exerciseIndex : null)
-                    }
-                    setValue={(callback) => {
-                      const value = callback(exercise.name);
-                      handleChangeExerciseName(exerciseIndex, value);
-                    }}
-                    placeholder="Select exercise"
-                    style={styles.dropdown}
-                    dropDownContainerStyle={{
-                      backgroundColor: "#fff",
-                      borderColor: "#ccc",
-                      zIndex: 2000,
-                    }}
-                    listMode="SCROLLVIEW"
-                    dropDownDirection="BOTTOM"
-                  />
+                  <TouchableOpacity
+                    onPress={() => handleDeleteExercise(exerciseIndex)}
+                    style={styles.deleteExerciseButton}
+                  >
+                    <Ionicons name="trash-outline" size={20} color="#ff3b30" />
+                  </TouchableOpacity>
                 </View>
 
+                {exercise.sets.map((set, setIndex) => {
+                  const setDropdownZIndex =
+                    exercises[exerciseIndex].sets[setIndex].openReps ||
+                    exercises[exerciseIndex].sets[setIndex].openWeight
+                      ? 1500
+                      : 500;
+                  return (
+                    <View
+                      key={setIndex}
+                      style={[styles.setRow, { zIndex: setDropdownZIndex }]}
+                    >
+                      <Text style={styles.setLabel}>Set {setIndex + 1}</Text>
+
+                      <View style={{ flex: 1, marginRight: 5 }}>
+                        <DropDownPicker
+                          open={set.openReps}
+                          value={set.reps}
+                          items={[...Array(40)].map((_, i) => ({
+                            label: `${i + 1} reps`,
+                            value: `${i + 1}`,
+                          }))}
+                          setOpen={(open) => {
+                            const updated = [...exercises];
+                            updated[exerciseIndex].sets[setIndex].openReps =
+                              open;
+                            setExercises(updated);
+                          }}
+                          setValue={(callback) => {
+                            const value = callback(set.reps);
+                            handleChangeSet(
+                              exerciseIndex,
+                              setIndex,
+                              "reps",
+                              value
+                            );
+                          }}
+                          placeholder="Reps"
+                          style={styles.dropdown}
+                          dropDownContainerStyle={[
+                            styles.dropDownContainer,
+                            { zIndex: set.openReps ? 1500 : 500 },
+                          ]}
+                          listMode={dropdownListMode}
+                          dropDownDirection="BOTTOM"
+                        />
+                      </View>
+
+                      <View style={{ flex: 1, marginRight: 5 }}>
+                        <DropDownPicker
+                          open={set.openWeight}
+                          value={set.weight}
+                          items={[...Array(201)].map((_, i) => {
+                            const val = (i * 2.5).toFixed(1);
+                            return { label: `${val} kg`, value: val };
+                          })}
+                          setOpen={(open) => {
+                            const updated = [...exercises];
+                            updated[exerciseIndex].sets[setIndex].openWeight =
+                              open;
+                            setExercises(updated);
+                          }}
+                          setValue={(callback) => {
+                            const value = callback(set.weight);
+                            handleChangeSet(
+                              exerciseIndex,
+                              setIndex,
+                              "weight",
+                              value
+                            );
+                          }}
+                          placeholder="Weight (kg)"
+                          style={styles.dropdown}
+                          dropDownContainerStyle={[
+                            styles.dropDownContainer,
+                            { zIndex: set.openWeight ? 1500 : 500 },
+                          ]}
+                          listMode={dropdownListMode}
+                          dropDownDirection="BOTTOM"
+                        />
+                      </View>
+
+                      <TouchableOpacity
+                        onPress={() => handleDeleteSet(exerciseIndex, setIndex)}
+                        style={styles.deleteSetButton}
+                      >
+                        <Ionicons
+                          name="trash-outline"
+                          size={20}
+                          color="#ff3b30"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })}
+
                 <TouchableOpacity
-                  onPress={() => handleDeleteExercise(exerciseIndex)}
-                  style={styles.deleteExerciseButton}
+                  onPress={() => handleAddSetToExercise(exerciseIndex)}
+                  style={styles.addSetButton}
                 >
-                  <Ionicons name="trash-outline" size={20} color="#ff3b30" />
+                  <Text style={styles.addSetButtonText}>+ Add Set</Text>
                 </TouchableOpacity>
               </View>
-
-              {exercise.sets.map((set, setIndex) => {
-                const setDropdownZIndex =
-                  exercises[exerciseIndex].sets[setIndex].openReps ||
-                  exercises[exerciseIndex].sets[setIndex].openWeight
-                    ? 1500
-                    : 500;
-                return (
-                  <View
-                    key={setIndex}
-                    style={[styles.setRow, { zIndex: setDropdownZIndex }]}
-                  >
-                    <Text style={styles.setLabel}>Set {setIndex + 1}</Text>
-
-                    <View style={{ flex: 1, marginRight: 5 }}>
-                      <DropDownPicker
-                        open={set.openReps}
-                        value={set.reps}
-                        items={[...Array(40)].map((_, i) => ({
-                          label: `${i + 1} reps`,
-                          value: `${i + 1}`,
-                        }))}
-                        setOpen={(open) => {
-                          const updated = [...exercises];
-                          updated[exerciseIndex].sets[setIndex].openReps = open;
-                          setExercises(updated);
-                        }}
-                        setValue={(callback) => {
-                          const value = callback(set.reps);
-                          handleChangeSet(
-                            exerciseIndex,
-                            setIndex,
-                            "reps",
-                            value
-                          );
-                        }}
-                        placeholder="Reps"
-                        style={styles.dropdown}
-                        dropDownContainerStyle={[
-                          styles.dropDownContainer,
-                          { zIndex: set.openReps ? 1500 : 500 },
-                        ]}
-                        listMode={dropdownListMode}
-                        dropDownDirection="BOTTOM"
-                      />
-                    </View>
-
-                    <View style={{ flex: 1, marginRight: 5 }}>
-                      <DropDownPicker
-                        open={set.openWeight}
-                        value={set.weight}
-                        items={[...Array(201)].map((_, i) => {
-                          const val = (i * 2.5).toFixed(1);
-                          return { label: `${val} kg`, value: val };
-                        })}
-                        setOpen={(open) => {
-                          const updated = [...exercises];
-                          updated[exerciseIndex].sets[setIndex].openWeight =
-                            open;
-                          setExercises(updated);
-                        }}
-                        setValue={(callback) => {
-                          const value = callback(set.weight);
-                          handleChangeSet(
-                            exerciseIndex,
-                            setIndex,
-                            "weight",
-                            value
-                          );
-                        }}
-                        placeholder="Weight (kg)"
-                        style={styles.dropdown}
-                        dropDownContainerStyle={[
-                          styles.dropDownContainer,
-                          { zIndex: set.openWeight ? 1500 : 500 },
-                        ]}
-                        listMode={dropdownListMode}
-                        dropDownDirection="BOTTOM"
-                      />
-                    </View>
-
-                    <TouchableOpacity
-                      onPress={() => handleDeleteSet(exerciseIndex, setIndex)}
-                      style={styles.deleteSetButton}
-                    >
-                      <Ionicons
-                        name="trash-outline"
-                        size={20}
-                        color="#ff3b30"
-                      />
-                    </TouchableOpacity>
-                  </View>
-                );
-              })}
-
-              <TouchableOpacity
-                onPress={() => handleAddSetToExercise(exerciseIndex)}
-                style={styles.addSetButton}
-              >
-                <Text style={styles.addSetButtonText}>+ Add Set</Text>
-              </TouchableOpacity>
             </View>
- </View>))}
+          ))}
+
           <TouchableOpacity
             onPress={handleAddExercise}
             style={styles.addExerciseButton}
           >
-          <Text style={styles.addExerciseButtonText}>+ Add Exercise</Text>
+            <Text style={styles.addExerciseButtonText}>+ Add Exercise</Text>
           </TouchableOpacity>
 
           <View style={styles.buttonRow}>
