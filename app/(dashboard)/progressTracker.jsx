@@ -41,7 +41,6 @@ import {
 // chart import
 import { LineChart } from "react-native-chart-kit";
 import { Ionicons } from "@expo/vector-icons";
-import { Bold } from "lucide-react-native";
 
 const ProgressTracker = () => {
   const router = useRouter();
