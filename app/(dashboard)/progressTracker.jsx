@@ -41,6 +41,7 @@ import {
 // chart import
 import { LineChart } from "react-native-chart-kit";
 import { Ionicons } from "@expo/vector-icons";
+import { Bold } from "lucide-react-native";
 
 const ProgressTracker = () => {
   const router = useRouter();
@@ -380,6 +381,17 @@ const ProgressTracker = () => {
 
                   {isSelected && (
                     <View style={{ marginTop: 8 }}>
+                      {item.workoutNotes && item.workoutNotes.trim() !== "" && (
+                        <View style={{ marginBottom: 8 }}>
+                          <Text style={{ fontWeight: "bold" }}>
+                            Notes:
+                          </Text>
+                          <Text style={styles.notesText}>
+                            {item.workoutNotes}
+                          </Text>
+                        </View>
+                      )}
+
                       {item.exercises?.map((ex, i) => (
                         <View key={i} style={{ marginBottom: 8 }}>
                           <Text style={{ fontWeight: "bold" }}>{ex.name}</Text>
