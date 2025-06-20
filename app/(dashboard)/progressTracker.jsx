@@ -15,9 +15,13 @@ import {
   Dimensions,
   ScrollView
 } from "react-native";
+import { useRouter } from "expo-router";
 import DropDownPicker from "react-native-dropdown-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useRouter } from "expo-router";
+import { LineChart } from "react-native-chart-kit";
+import { Ionicons } from "@expo/vector-icons";
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 
 //themed components
 import ThemedText from "../../components/themedText";
@@ -25,7 +29,7 @@ import ThemedView from "../../components/themedView";
 import ThemedButton from "../../components/themedButton";
 
 //firebase imports
-import { db, auth } from "../../firebaseConfig"; // auth added
+import { db, auth } from "../../firebaseConfig"; 
 import {
   collection,
   query,
@@ -38,15 +42,13 @@ import {
   getDocs
 } from "firebase/firestore";
 
-// chart import
-import { LineChart } from "react-native-chart-kit";
-import { Ionicons } from "@expo/vector-icons";
+
 
 const ProgressTracker = () => {
   const router = useRouter();
   const screenWidth = Dimensions.get("window").width;
 
-  const [selectedTab, setSelectedTab] = useState("workouts"); // "workouts" | "weight"
+  const [selectedTab, setSelectedTab] = useState("workouts");
   const [workouts, setWorkouts] = useState([]);
   const [openedWorkouts, setOpenedWorkouts] = useState(new Set());
 
@@ -59,8 +61,7 @@ const ProgressTracker = () => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [yearOptions, setYearOptions] = useState([]);
 
-  const [weightListModalVisible, setWeightListModalVisible] = useState(false);
-  const [editingWeightId, setEditingWeightId] = useState(null);
+  const [weightListModalVisible, setWeightListModalVisible] = useState(false);;
   const [editingWeight, setEditingWeight] = useState(null);
   const user = auth.currentUser;
 
@@ -84,7 +85,6 @@ const ProgressTracker = () => {
       }))
     );
 
-    // If current selectedYear not in uniqueYears, reset it
     if (!uniqueYears.includes(selectedYear)) {
       setSelectedYear(uniqueYears[0] || new Date().getFullYear());
     }
@@ -167,14 +167,12 @@ const ProgressTracker = () => {
       const userDocRef = doc(db, "users", user.uid);
 
       if (editingWeight) {
-        // Update existing weight
         const weightDocRef = doc(userDocRef, "weights", editingWeight.id);
         await updateDoc(weightDocRef, {
           weight: weightValue,
           date: date,
         });
       } else {
-        // Add new weight
         const weightsCollectionRef = collection(userDocRef, "weights");
         await addDoc(weightsCollectionRef, {
           weight: weightValue,
@@ -182,11 +180,10 @@ const ProgressTracker = () => {
         });
       }
 
-      // Reset modal
       setModalVisible(false);
       setWeightInput("");
       setEditingWeight(null);
-      fetchWeights(); // Refresh the list
+      fetchWeights();
     } catch (error) {
       console.error("Error submitting weight:", error);
     }
@@ -203,7 +200,7 @@ const ProgressTracker = () => {
         ...doc.data(),
       }));
 
-      setWeights(weightList); // assumes you have: const [weights, setWeights] = useState([]);
+      setWeights(weightList); 
     } catch (error) {
       console.error("Error fetching weights:", error);
     }
@@ -217,7 +214,6 @@ const ProgressTracker = () => {
     return d.getFullYear() === selectedYear;
   });
 
-  // Sort and normalize filtered weights for chart
   const sortedFilteredWeights = [...filteredWeights]
     .map((w) => ({
       ...w,
@@ -228,7 +224,6 @@ const ProgressTracker = () => {
     }))
     .sort((a, b) => a.date.localeCompare(b.date));
 
-  // Prepare chart data based on filtered & sorted weights
   const weightChartData = {
     labels: sortedFilteredWeights.map((entry) =>
       new Date(entry.date).toLocaleDateString(undefined, {
@@ -260,7 +255,7 @@ const ProgressTracker = () => {
       stroke: "#1e90ff",
     },
   };
-  // delete weight
+
   const deleteWeight = async (id) => {
     try {
       await deleteDoc(doc(db, "users", user.uid, "weights", id));
@@ -270,9 +265,8 @@ const ProgressTracker = () => {
     }
   };
 
-  // open edit modal pre-filled
   const openEditWeight = (w) => {
-    setEditingWeight(w); // set the weight to be edited
+    setEditingWeight(w); 
     setDate(typeof w.date === "string" ? new Date(w.date) : w.date.toDate());
     setWeightInput(w.weight.toString());
     setModalVisible(true);
@@ -291,7 +285,10 @@ const ProgressTracker = () => {
             selectedTab === "workouts" && styles.selectedTabButton,
           ]}
         >
-          <ThemedText>Workouts</ThemedText>
+          <View style={styles.buttonicons}>
+            <FontAwesome6 name="dumbbell" size={20} color="white" />
+            <ThemedText>Workouts</ThemedText>
+          </View>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => setSelectedTab("weight")}
@@ -300,14 +297,17 @@ const ProgressTracker = () => {
             selectedTab === "weight" && styles.selectedTabButton,
           ]}
         >
-          <ThemedText>Bodyweight</ThemedText>
+          <View style={styles.buttonicons}>
+            <Ionicons name="body" size={20} color="white" />
+            <ThemedText>Bodyweight</ThemedText>
+          </View>
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={() => router.push("/exercises")}
           style={styles.addButton}
         >
-          <ThemedText>📖 Guide</ThemedText>
+          <FontAwesome5 name="book-open" size={20} color="white" />
         </TouchableOpacity>
       </View>
 
@@ -326,7 +326,7 @@ const ProgressTracker = () => {
               onPress={() => router.push("/progression")}
               style={styles.addButton}
             >
-              <ThemedText>Progress</ThemedText>
+              <Ionicons name="bar-chart" size={18} color="white" />
             </TouchableOpacity>
           </View>
 
@@ -382,9 +382,7 @@ const ProgressTracker = () => {
                     <View style={{ marginTop: 8 }}>
                       {item.workoutNotes && item.workoutNotes.trim() !== "" && (
                         <View style={{ marginBottom: 8 }}>
-                          <Text style={{ fontWeight: "bold" }}>
-                            Notes:
-                          </Text>
+                          <Text style={{ fontWeight: "bold" }}>Notes:</Text>
                           <Text style={styles.notesText}>
                             {item.workoutNotes}
                           </Text>
@@ -546,7 +544,6 @@ const ProgressTracker = () => {
         </View>
       </Modal>
 
-      {/* Modal for Weight Entry */}
       <Modal visible={modalVisible} transparent={true} animationType="fade">
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.modalOverlay}>
@@ -645,6 +642,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
     marginBottom: 5,
+  },
+  buttonicons: {
+    flexDirection: "row",
+    gap: 3,
+    alignItems: "center",
   },
   addButton: {
     backgroundColor: "#2196f3",
