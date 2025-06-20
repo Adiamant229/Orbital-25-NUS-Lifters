@@ -1,3 +1,4 @@
+//react and expo import s
 import { useState, useEffect } from "react";
 import {
   View,
@@ -11,22 +12,24 @@ import {
 import DateTimePicker from "@react-native-community/datetimepicker";
 import DropDownPicker from "react-native-dropdown-picker";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
+//themed components 
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import ThemedButton from "../../components/themedButton";
 import ThemedTextInput from "../../components/themedTextInput";
 
+//firebase imports 
 import { db } from "../../firebaseConfig";
 import {
   collection,
   addDoc,
   doc,
   getDoc,
-  updateDoc,
-  serverTimestamp,
+  updateDoc
 } from "firebase/firestore";
-import { Ionicons } from "@expo/vector-icons";
+
 
 const AddWorkout = () => {
   const router = useRouter();
@@ -55,6 +58,34 @@ const AddWorkout = () => {
 
   const { editWorkoutId } = useLocalSearchParams();
 
+  //exercise dropdown box
+  const exerciseOptions = [
+    { label: "Bench Press", value: "Bench Press" },
+    { label: "Deadlift", value: "Deadlift" },
+    { label: "Squat", value: "Squat" },
+    { label: "Pull-up", value: "Pull-up" },
+    { label: "Incline Dumbbell Press ", value: "Incline Dumbbell Press" },
+    { label: "Incline Bench", value: "Incline Bench" },
+    { label: "Dumbbell Lateral Raises", value: "Dumbbell Lateral Raises" },
+    {
+      label: "Overhead Triceps Cable Extensions",
+      value: "Overhead Triceps Cable Extensions",
+    },
+    { label: "Cable Pullovers", value: "Cable PullOvers" },
+    { label: "Lat Pulldown", value: "Lat Pulldown" },
+    { label: "Barbell Bent-over Rows", value: "Barbell Bent-over Rows" },
+    { label: "Barbell Shrugs", value: "Barbell Shrugs" },
+    { label: "Dumbbell Curls", value: "Dumbbell Curls" },
+    { label: "Preacher Curls", value: "Preacher Curls" },
+    { label: "Hammer Curls", value: "Hammer Curls" },
+    { label: "Barbell Back Squat", value: "Barbell Back Squat" },
+    { label: "Seated Hamstring Curls", value: "Seated Hamstring Curls" },
+    { label: "Leg Press", value: "Leg Press" },
+    { label: "Dumbbell RDLs", value: "Dumbbell RDLs" },
+    { label: "Standing Calf Raises", value: "Standing Calf Raises" },
+    { label: "Leg Extensions", value: "Leg Extensions" },
+  ];
+
   useEffect(() => {
     if (editWorkoutId) {
       const fetchWorkout = async () => {
@@ -82,33 +113,6 @@ const AddWorkout = () => {
       fetchWorkout();
     }
   }, [editWorkoutId]);
-
-  const exerciseOptions = [
-    { label: "Bench Press", value: "Bench Press" },
-    { label: "Deadlift", value: "Deadlift" },
-    { label: "Squat", value: "Squat" },
-    { label: "Pull-up", value: "Pull-up" },
-    { label: "Incline Dumbbell Press ", value: "Incline Dumbbell Press" },
-    { label: "Incline Bench", value: "Incline Bench" },
-    { label: "Dumbbell Lateral Raises", value: "Dumbbell Lateral Raises" },
-    {
-      label: "Overhead Triceps Cable Extensions",
-      value: "Overhead Triceps Cable Extensions",
-    },
-    { label: "Cable Pullovers", value: "Cable PullOvers" },
-    { label: "Lat Pulldown", value: "Lat Pulldown" },
-    { label: "Barbell Bent-over Rows", value: "Barbell Bent-over Rows" },
-    { label: "Barbell Shrugs", value: "Barbell Shrugs" },
-    { label: "Dumbbell Curls", value: "Dumbbell Curls" },
-    { label: "Preacher Curls", value: "Preacher Curls" },
-    { label: "Hammer Curls", value: "Hammer Curls" },
-    { label: "Barbell Back Squat", value: "Barbell Back Squat" },
-    { label: "Seated Hamstring Curls", value: "Seated Hamstring Curls" },
-    { label: "Leg Press", value: "Leg Press" },
-    { label: "Dumbbell RDLs", value: "Dumbbell RDLs" },
-    { label: "Standing Calf Raises", value: "Standing Calf Raises" },
-    { label: "Leg Extensions", value: "Leg Extensions" },
-  ];
 
   const handleAddExercise = () => {
     setExercises([
@@ -160,7 +164,6 @@ const AddWorkout = () => {
 
     try {
       if (editWorkoutId) {
-        // Update existing workout
         await updateDoc(doc(db, "workouts", editWorkoutId), {
           name: workoutName.trim(),
           workoutNotes,
@@ -169,7 +172,6 @@ const AddWorkout = () => {
           createdAt: date,
         });
       } else {
-        // Add new workout
         await addDoc(collection(db, "workouts"), {
           name: workoutName.trim(),
           workoutNotes,
@@ -415,7 +417,7 @@ const AddWorkout = () => {
                   onPress={() => handleAddSetToExercise(exerciseIndex)}
                   style={styles.addSetButton}
                 >
-                  <Text style={styles.addSetButtonText}>+ Add Set</Text>
+                  <ThemedText style={{ color: "#007bff" }}>+ Add Set</ThemedText>
                 </TouchableOpacity>
               </View>
             </View>
@@ -425,7 +427,7 @@ const AddWorkout = () => {
             onPress={handleAddExercise}
             style={styles.addExerciseButton}
           >
-            <Text style={styles.addExerciseButtonText}>+ Add Exercise</Text>
+            <ThemedText style={{ color: "#28a745" }}>+ Add Exercise</ThemedText>
           </TouchableOpacity>
 
           <View style={styles.buttonRow}>
@@ -449,27 +451,21 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 10,
     paddingHorizontal: 20,
-    paddingBottom: 100,
+    paddingBottom: 100
   },
-
   scrollContainer: {
     paddingBottom: 100,
-    overflow: "visible", // Ensures dropdowns are not clipped
+    overflow: "visible" 
   },
-
   title: {
     fontSize: 22,
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: 10
   },
   addExerciseButton: {
     alignSelf: "flex-start",
     marginBottom: 20,
-    marginTop: 10,
-  },
-  addExerciseButtonText: {
-    color: "#007bff",
-    fontWeight: "bold",
+    marginTop: 10
   },
   exerciseCard: {
     marginTop: 10,
@@ -479,32 +475,27 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     borderRadius: 10,
     backgroundColor: "#1c1c1c",
-    overflow: "visible", // Ensures dropdowns are not clipped
+    overflow: "visible"
   },
   dropdown: {
     marginBottom: 10,
     borderColor: "#ccc",
-    zIndex: 1, // Default zIndex when closed
+    zIndex: 1
   },
   dropDownContainer: {
     backgroundColor: "#fff",
-    borderColor: "#ccc",
-    // Z-index dynamically set in component for stacking context
+    borderColor: "#ccc"
   },
   setRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 10,
-    overflow: "visible", // Ensures dropdowns are not clipped
-    zIndex: 500, // Base zIndex for set rows
+    overflow: "visible",
+    zIndex: 500
   },
   addSetButton: {
     alignSelf: "flex-start",
-    marginTop: 5,
-  },
-  addSetButtonText: {
-    color: "#28a745",
-    fontWeight: "bold",
+    marginTop: 5
   },
   buttonRow: {
     flexDirection: "row",
@@ -515,44 +506,41 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 10,
-    overflow: "visible", // Ensures dropdowns are not clipped
+    overflow: "visible"
   },
   deleteExerciseButton: {
     marginLeft: 10,
-    paddingHorizontal: 6,
+    paddingHorizontal: 6
   },
   deleteSetButton: {
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 6,
+    paddingHorizontal: 6
   },
   setLabel: {
     width: 60,
     fontWeight: "bold",
     alignSelf: "center",
     color: "#fff",
-    paddingBottom: 10,
+    paddingBottom: 10
   },
   dateTimeRow: {
     flexDirection: "row",
     alignItems: "center",
     marginVertical: 10,
-    overflow: "visible", // Ensures dropdowns are not clipped
+    overflow: "visible"
   },
-
   datePickerButton: {
     flex: 1,
   },
-
   timeDropdownContainer: {
     flex: 1,
     maxWidth: 150,
     marginLeft: 10,
-    overflow: "visible", // Ensures dropdowns are not clipped
+    overflow: "visible"
   },
-
   timeDropdown: {
     borderColor: "#ccc",
-    zIndex: 1, // Default zIndex when closed
+    zIndex: 1
   },
 });

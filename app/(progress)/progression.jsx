@@ -38,7 +38,6 @@ const Progression = () => {
   const [yearItems, setYearItems] = useState([]);
   const [yearDropdownOpen, setYearDropdownOpen] = useState(false);
 
-  // Dynamically generate year list
   useEffect(() => {
     const currentYear = new Date().getFullYear();
     const years = [currentYear - 1, currentYear, currentYear + 1];
@@ -64,7 +63,7 @@ const Progression = () => {
             })
           : "Unknown";
         const year = dateObj?.getFullYear();
-        if (year) yearSet.add(year); // ✅ Collect actual workout years
+        if (year) yearSet.add(year); 
 
         workout.exercises?.forEach((ex) => {
           const name = ex.name.trim();
@@ -80,13 +79,11 @@ const Progression = () => {
         });
       });
 
-      // ✅ Update the year dropdown with only used years
       const yearArray = Array.from(yearSet).sort((a, b) => a - b);
       setYearItems(yearArray.map((y) => ({ label: `${y}`, value: y })));
 
-      // Keep current year selected if still available
       if (!yearSet.has(selectedYear)) {
-        setSelectedYear(yearArray[yearArray.length - 1]); // fallback to latest
+        setSelectedYear(yearArray[yearArray.length - 1]); 
       }
 
       if (selectedExercises.length === 0) {

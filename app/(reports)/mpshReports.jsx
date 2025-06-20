@@ -1,4 +1,4 @@
-//react imports
+//react and expo imports
 import { useState, useEffect } from "react";
 import {
   View,
@@ -13,6 +13,9 @@ import {
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import * as ImagePicker from "expo-image-picker";
+import uuid from "react-native-uuid";
+import { Ionicons } from "@expo/vector-icons";
+import Entypo from "@expo/vector-icons/Entypo";
 
 //firebase imports
 import {
@@ -32,7 +35,7 @@ import {
   getDownloadURL,
   deleteObject,
 } from "firebase/storage";
-import uuid from "react-native-uuid";
+
 
 //themed components
 import ThemedText from "../../components/themedText";
@@ -40,22 +43,34 @@ import ThemedView from "../../components/themedView";
 import ThemedButton from "../../components/themedButton";
 import ThemedTextInput from "../../components/themedTextInput";
 import Spacer from "../../components/spacer";
-import { Ionicons } from "@expo/vector-icons";
+
 
 const MpshReports = () => {
-  // Firebase Auth current user
   const auth = getAuth();
   const currentUser = auth.currentUser;
   const currentUserId = currentUser ? currentUser.uid : null;
 
-  // State for reports and modal
   const [reports, setReports] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
-
-  // Form states
+  
   const [remarks, setRemarks] = useState("");
+
   const [value, setValue] = useState(null);
   const [open, setOpen] = useState(false);
+
+  const [expandedReportId, setExpandedReportId] = useState(null);
+
+  const [imageDeletedLocally, setImageDeletedLocally] = useState(false);
+  const [imageUri, setImageUri] = useState(null);
+
+  const [issueOpen, setIssueOpen] = useState(false);
+  const [issueValue, setIssueValue] = useState(null);
+
+  const [editingReportId, setEditingReportId] = useState(null);
+
+  const reportsRef = collection(db, "mpshReports");
+
+  //equipment dropdown box
   const [equipmentItems, setEquipmentItems] = useState([
     { label: "Bench Press", value: "Bench Press" },
     { label: "Incline Bench Press", value: "Incline Bench Press" },
@@ -73,31 +88,14 @@ const MpshReports = () => {
     { label: "Leg Extensions Machine", value: "Leg Extensions Machine" },
   ]);
 
-  const [expandedReportId, setExpandedReportId] = useState(null);
-
-  const [imageDeletedLocally, setImageDeletedLocally] = useState(false);
-
-  const [imageUri, setImageUri] = useState(null);
-
-  const [issueOpen, setIssueOpen] = useState(false);
-  const [issueValue, setIssueValue] = useState(null);
+  //issue dropdown box
   const [issueItems, setIssueItems] = useState([
     { label: "Damaged", value: "Damaged" },
     { label: "Missing", value: "Missing" },
-    {
-      label: "Under Maintenance",
-      value: "Under Maintenance",
-    },
+    { label: "Under Maintenance", value: "Under Maintenance" },
     { label: "Cleanliness Issue", value: "Cleanliness Issue" },
   ]);
 
-  // Track if we're editing an existing report or adding new
-  const [editingReportId, setEditingReportId] = useState(null);
-
-  // Reference to the Firestore collection
-  const reportsRef = collection(db, "mpshReports");
-
-  // Fetch reports on mount
   useEffect(() => {
     const fetchReports = async () => {
       try {
@@ -115,7 +113,6 @@ const MpshReports = () => {
     fetchReports();
   }, []);
 
-  // Open modal for adding new report (reset all fields)
   const openAddModal = () => {
     setEditingReportId(null);
     setValue(null);
@@ -125,7 +122,6 @@ const MpshReports = () => {
     setModalVisible(true);
   };
 
-  // Open modal for editing report with prefilled data
   const openEditModal = (report) => {
     setEditingReportId(report.id);
     setValue(report.equipment);
@@ -135,7 +131,6 @@ const MpshReports = () => {
     setModalVisible(true);
   };
 
-  // Add new or update existing report on submit
   const handleSubmit = async () => {
     if (!value || !issueValue) {
       alert("Please select equipment and issue type.");
@@ -155,7 +150,6 @@ const MpshReports = () => {
         oldImageUrl = report?.imageUrl || null;
       }
 
-      // Case 1: New image picked (local URI, not firebase URL)
       if (imageUri && !imageUri.startsWith("https://")) {
         const response = await fetch(imageUri);
         const blob = await response.blob();
@@ -164,7 +158,6 @@ const MpshReports = () => {
         await uploadBytes(imageRef, blob);
         imageUrl = await getDownloadURL(imageRef);
 
-        // Delete old image after new upload
         if (oldImageUrl) {
           try {
             const oldPath = getStoragePathFromUrl(oldImageUrl);
@@ -174,9 +167,7 @@ const MpshReports = () => {
             console.warn("Failed to delete old image:", e);
           }
         }
-      }
-      // Case 2: Image was deleted locally (clear) but no new image picked
-      else if (imageDeletedLocally && !imageUri) {
+      } else if (imageDeletedLocally && !imageUri) {
         if (oldImageUrl) {
           try {
             const oldPath = getStoragePathFromUrl(oldImageUrl);
@@ -186,14 +177,11 @@ const MpshReports = () => {
             console.warn("Failed to delete old image:", e);
           }
         }
-        imageUrl = null; // clear imageUrl in firestore below
-      }
-      // Case 3: Image unchanged (existing firebase URL)
-      else if (imageUri?.startsWith("https://")) {
+        imageUrl = null;
+      } else if (imageUri?.startsWith("https://")) {
         imageUrl = imageUri;
       }
 
-      // Update Firestore
       if (editingReportId) {
         const docRef = doc(db, "mpshReports", editingReportId);
         await updateDoc(docRef, {
@@ -217,7 +205,6 @@ const MpshReports = () => {
           )
         );
       } else {
-        // Adding new report
         const newReport = {
           equipment: value,
           issueType: issueValue,
@@ -230,14 +217,13 @@ const MpshReports = () => {
         setReports([...reports, { id: docRef.id, ...newReport }]);
       }
 
-      // Reset states after submit
       setModalVisible(false);
       setEditingReportId(null);
       setValue(null);
       setIssueValue(null);
       setRemarks("");
       setImageUri(null);
-      setImageDeletedLocally(false); // reset this flag here
+      setImageDeletedLocally(false);
     } catch (error) {
       console.error("Error submitting report:", error);
       alert("Failed to submit report.");
@@ -245,7 +231,6 @@ const MpshReports = () => {
   };
 
   const getStoragePathFromUrl = (url) => {
-    // Works for both gs:// and https://firebasestorage.googleapis.com/... urls
     try {
       const decodePath = decodeURIComponent(url.split("/o/")[1].split("?")[0]);
       return decodePath;
@@ -273,6 +258,7 @@ const MpshReports = () => {
       console.error("Error deleting report:", error);
     }
   };
+
   const pickImage = async () => {
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -289,10 +275,9 @@ const MpshReports = () => {
 
     if (!result.canceled) {
       setImageUri(result.assets[0].uri);
-    } else {
-      console.log("User cancelled image picker");
     }
   };
+
   const takePhoto = async () => {
     let permissionResult = await ImagePicker.requestCameraPermissionsAsync();
     if (permissionResult.granted === false) {
@@ -311,7 +296,7 @@ const MpshReports = () => {
 
   const handleRemoveImage = () => {
     setImageUri(null);
-    setImageDeletedLocally(true); // mark image as deleted locally but NOT deleting storage yet
+    setImageDeletedLocally(true);
   };
 
   return (
@@ -319,7 +304,7 @@ const MpshReports = () => {
       <View style={styles.header}>
         <ThemedText style={styles.title}>MPSH Reports</ThemedText>
         <TouchableOpacity onPress={openAddModal} style={styles.addButton}>
-          <ThemedText style={styles.addButtonText}>+</ThemedText>
+          <ThemedText style={{color: "#fff"}}>+</ThemedText>
         </TouchableOpacity>
       </View>
       <FlatList
@@ -350,7 +335,6 @@ const MpshReports = () => {
                   )}
                 </View>
 
-                {/* Show details if expanded */}
                 {isExpanded && (
                   <>
                     {item.remarks ? (
@@ -359,7 +343,6 @@ const MpshReports = () => {
                       </Text>
                     ) : null}
 
-                    {/* Display image if exists */}
                     {item.imageUrl && (
                       <Image
                         source={{ uri: item.imageUrl }}
@@ -372,7 +355,11 @@ const MpshReports = () => {
                       onPress={() => handleDeleteReport(item.id)}
                       style={styles.resolveButton}
                     >
-                      <Text style={styles.resolveButtonText}>Resolved</Text>
+                      <View style={styles.buttonicons}>
+                        <Entypo name="tools" size={20} color="white" />
+                        <ThemedText style={{ color: "fff"}}>Resolved</ThemedText>
+                      </View>
+
                     </TouchableOpacity>
                   </>
                 )}
@@ -382,7 +369,6 @@ const MpshReports = () => {
         }}
       />
 
-      {/* Modal for Add/Edit */}
       <Modal
         visible={modalVisible}
         animationType="fade"
@@ -517,7 +503,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 8,
   },
-  addButtonText: { color: "#fff", fontWeight: "bold" },
   modalOverlay: {
     flex: 1,
     backgroundColor: "#00000088",
@@ -563,8 +548,8 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: "bold",
-    flexShrink: 1, // allows text to shrink if needed
-    marginRight: 10, // spacing from icon
+    flexShrink: 1,
+    marginRight: 10,
   },
   cardTitleRow: {
     flexDirection: "row",
@@ -573,7 +558,6 @@ const styles = StyleSheet.create({
     gap: 10,
     flexWrap: "nowrap",
   },
-
   cardRemarks: { marginTop: 8, color: "#555" },
   resolveButton: {
     marginTop: 10,
@@ -583,7 +567,11 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     alignSelf: "flex-start",
   },
-  resolveButtonText: { color: "#fff", fontWeight: "bold" },
+  buttonicons: {
+    flexDirection: "row",
+    gap: 6,
+    alignItems: "center",
+  },
   reportImage: {
     width: "100%",
     height: 150,
