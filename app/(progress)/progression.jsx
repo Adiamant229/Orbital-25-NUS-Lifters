@@ -16,17 +16,35 @@ const Progression = () => {
   const screenWidth = Dimensions.get("window").width;
 
   const chartConfig = {
-    backgroundGradientFrom: "#fff",
-    backgroundGradientTo: "#fff",
+    backgroundGradientFrom: "#2c2c2c", 
+    backgroundGradientTo: "#1c1c1c", 
     decimalPlaces: 1,
-    color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
-    labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-    style: styles.chart,
-    propsForDots: {
-      r: "5",
-      strokeWidth: "2",
-      stroke: "#1e90ff",
+    color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`, 
+    labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`, 
+    style: {
+      borderRadius: 16,
     },
+    propsForDots: {
+      r: "6",
+      strokeWidth: "2",
+      stroke: "#007AFF",
+      fill: "#FFFFFF",
+    },
+    propsForVerticalLabels: {
+      fontSize: 10,
+      fontWeight: "bold",
+    },
+    propsForHorizontalLabels: {
+      fontSize: 10,
+      fontWeight: "bold",
+    },
+    strokeWidth: 2,
+    propsForBackgroundLines: {
+      strokeDasharray: "0",
+      stroke: "#444444",
+    },
+    barPercentage: 0,
+    categoryPercentage: 0,
   };
 
   const [exerciseData, setExerciseData] = useState({});
@@ -134,7 +152,6 @@ const Progression = () => {
           width={screenWidth - 30}
           height={220}
           chartConfig={chartConfig}
-          bezier
           style={styles.chart}
         />
       </View>
