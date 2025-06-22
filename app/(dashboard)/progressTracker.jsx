@@ -13,7 +13,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Dimensions,
-  ScrollView
+  ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
 import DropDownPicker from "react-native-dropdown-picker";
@@ -29,7 +29,7 @@ import ThemedView from "../../components/themedView";
 import ThemedButton from "../../components/themedButton";
 
 //firebase imports
-import { db, auth } from "../../firebaseConfig"; 
+import { db, auth } from "../../firebaseConfig";
 import {
   collection,
   query,
@@ -39,10 +39,8 @@ import {
   deleteDoc,
   doc,
   updateDoc,
-  getDocs
+  getDocs,
 } from "firebase/firestore";
-
-
 
 const ProgressTracker = () => {
   const router = useRouter();
@@ -61,7 +59,7 @@ const ProgressTracker = () => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [yearOptions, setYearOptions] = useState([]);
 
-  const [weightListModalVisible, setWeightListModalVisible] = useState(false);;
+  const [weightListModalVisible, setWeightListModalVisible] = useState(false);
   const [editingWeight, setEditingWeight] = useState(null);
   const user = auth.currentUser;
 
@@ -111,6 +109,7 @@ const ProgressTracker = () => {
     }
 
     const weightsCollection = collection(db, "users", user.uid, "weights");
+    
     const q = query(weightsCollection, orderBy("date", "desc"));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -158,10 +157,17 @@ const ProgressTracker = () => {
   };
 
   const handleSubmitWeight = async () => {
-    if (!weightInput) return;
+    if (!weightInput) {
+      alert("Please enter your weight");
+      return;
+    }
 
     const weightValue = parseFloat(weightInput);
-    if (isNaN(weightValue)) return;
+
+    if (isNaN(weightValue)) {
+      alert("Enter a numerical weight");
+      return;
+    }
 
     try {
       const userDocRef = doc(db, "users", user.uid);
@@ -182,27 +188,11 @@ const ProgressTracker = () => {
 
       setModalVisible(false);
       setWeightInput("");
+      setDate(new Date()); 
       setEditingWeight(null);
-      fetchWeights();
+ 
     } catch (error) {
       console.error("Error submitting weight:", error);
-    }
-  };
-  
-  const fetchWeights = async () => {
-    try {
-      const userDocRef = doc(db, "users", user.uid);
-      const weightsCollectionRef = collection(userDocRef, "weights");
-      const snapshot = await getDocs(weightsCollectionRef);
-
-      const weightList = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      setWeights(weightList); 
-    } catch (error) {
-      console.error("Error fetching weights:", error);
     }
   };
 
@@ -214,7 +204,7 @@ const ProgressTracker = () => {
     return d.getFullYear() === selectedYear;
   });
 
-  const sortedFilteredWeights = [...filteredWeights]
+  const sortedFilteredWeightsForChart = [...filteredWeights]
     .map((w) => ({
       ...w,
       date:
@@ -222,10 +212,20 @@ const ProgressTracker = () => {
           ? w.date
           : w.date.toDate?.()?.toISOString()?.split("T")[0] || w.date,
     }))
-    .sort((a, b) => a.date.localeCompare(b.date));
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  const sortedFilteredWeightsForList = [...filteredWeights]
+    .map((w) => ({
+      ...w,
+      date:
+        typeof w.date === "string"
+          ? w.date
+          : w.date.toDate?.()?.toISOString()?.split("T")[0] || w.date,
+    }))
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); 
 
   const weightChartData = {
-    labels: sortedFilteredWeights.map((entry) =>
+    labels: sortedFilteredWeightsForChart.map((entry) =>
       new Date(entry.date).toLocaleDateString(undefined, {
         month: "short",
         day: "numeric",
@@ -233,7 +233,7 @@ const ProgressTracker = () => {
     ),
     datasets: [
       {
-        data: sortedFilteredWeights.map((entry) => entry.weight),
+        data: sortedFilteredWeightsForChart.map((entry) => entry.weight),
         color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
         strokeWidth: 2,
       },
@@ -241,19 +241,35 @@ const ProgressTracker = () => {
   };
 
   const chartConfig = {
-    backgroundGradientFrom: "#fff",
-    backgroundGradientTo: "#fff",
+    backgroundGradientFrom: "#2c2c2c", // Dark background start
+    backgroundGradientTo: "#1c1c1c", // Dark background end
     decimalPlaces: 1,
-    color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
-    labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+    color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`, // Vibrant blue line
+    labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`, // White labels
     style: {
       borderRadius: 16,
     },
     propsForDots: {
-      r: "5",
+      r: "6", 
       strokeWidth: "2",
-      stroke: "#1e90ff",
+      stroke: "#007AFF", 
+      fill: "#FFFFFF"
     },
+    propsForVerticalLabels: {
+      fontSize: 10,
+      fontWeight: "bold",
+    },
+    propsForHorizontalLabels: {
+      fontSize: 10,
+      fontWeight: "bold",
+    },
+    strokeWidth: 2, 
+    propsForBackgroundLines: {
+      strokeDasharray: "0", 
+      stroke: "#444444", 
+    },
+    barPercentage: 0, 
+    categoryPercentage: 0,
   };
 
   const deleteWeight = async (id) => {
@@ -266,12 +282,11 @@ const ProgressTracker = () => {
   };
 
   const openEditWeight = (w) => {
-    setEditingWeight(w); 
+    setEditingWeight(w);
     setDate(typeof w.date === "string" ? new Date(w.date) : w.date.toDate());
     setWeightInput(w.weight.toString());
     setModalVisible(true);
   };
-
 
   return (
     <ThemedView style={styles.container}>
@@ -439,7 +454,12 @@ const ProgressTracker = () => {
           <View style={styles.header3}>
             <ThemedText style={{ fontSize: 20 }}>Your Bodyweights</ThemedText>
             <TouchableOpacity
-              onPress={() => setModalVisible(true)}
+              onPress={() => {
+                setModalVisible(true);
+                setEditingWeight(null); 
+                setWeightInput(""); 
+                setDate(new Date()); 
+              }}
               style={styles.addButton}
             >
               <ThemedText>+ New Weight</ThemedText>
@@ -458,14 +478,13 @@ const ProgressTracker = () => {
           </View>
 
           <View style={styles.summaryContainer}>
-            {sortedFilteredWeights.length > 0 ? (
+            {sortedFilteredWeightsForChart.length > 0 ? (
               <TouchableOpacity onPress={() => setWeightListModalVisible(true)}>
                 <LineChart
                   data={weightChartData}
                   width={screenWidth - 30}
                   height={220}
                   chartConfig={chartConfig}
-                  bezier
                   style={{
                     borderRadius: 16,
                   }}
@@ -494,20 +513,21 @@ const ProgressTracker = () => {
         <View style={styles.weightModalContainer}>
           <ThemedText style={styles.modalTitle}>Weight Entries</ThemedText>
 
-          {weights.length === 0 ? (
+          {sortedFilteredWeightsForList.length === 0 ? (
             <ThemedText style={{ color: "#ccc" }}>
-              No weight entries found.
+              No weight entries found for {selectedYear}.
             </ThemedText>
           ) : (
             <ScrollView
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 10 }}
             >
-              {weights.map((w) => {
-                const wDate =
-                  typeof w.date === "string"
-                    ? w.date
-                    : w.date.toDate?.()?.toISOString()?.split("T")[0] || "";
+              {sortedFilteredWeightsForList.map((w) => {
+                const wDate = new Date(w.date).toLocaleDateString(undefined, {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                });
 
                 return (
                   <View key={w.id} style={styles.weightEntryRow}>
@@ -594,8 +614,9 @@ const ProgressTracker = () => {
                   <ThemedButton
                     onPress={() => {
                       setModalVisible(false);
-                      setEditingWeight(null); // reset editing state
+                      setEditingWeight(null); 
                       setWeightInput("");
+                      setDate(new Date()); 
                     }}
                   >
                     <ThemedText>Cancel</ThemedText>

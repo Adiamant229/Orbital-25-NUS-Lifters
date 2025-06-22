@@ -52,6 +52,10 @@ const Profile = () => {
   }, []);
 
   const handleSave = async () => {
+    if (inputName.trim() === "") {
+      alert("Please enter a new name.");
+      return;
+    }
     try {
       const user = auth.currentUser;
       if (user) {
@@ -59,7 +63,6 @@ const Profile = () => {
         await updateDoc(docRef, { name: inputName });
         setUserName(inputName);
         setEditMode(false);
-        console.log("Username updated to:", inputName);
       }
     } catch (error) {
       console.error("Error saving user name:", error);
