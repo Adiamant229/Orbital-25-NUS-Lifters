@@ -41,7 +41,7 @@ const Index = () => {
       }
     });
 
-    return unsubscribe;
+    return () => unsubscribe();
   }, []);
 
   const handleSubmit = async () => {
