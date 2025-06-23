@@ -15,22 +15,15 @@ import DropDownPicker from "react-native-dropdown-picker";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
-//themed components 
+//themed components
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import ThemedButton from "../../components/themedButton";
 import ThemedTextInput from "../../components/themedTextInput";
 
-//firebase imports 
-import { db } from "../../firebaseConfig";
-import {
-  collection,
-  addDoc,
-  doc,
-  getDoc,
-  updateDoc
-} from "firebase/firestore";
-
+//firebase imports
+import { db, auth } from "../../firebaseConfig"; // Import auth
+import { collection, addDoc, doc, getDoc, updateDoc } from "firebase/firestore";
 
 const AddWorkout = () => {
   const router = useRouter();
@@ -163,6 +156,14 @@ const AddWorkout = () => {
       return;
     }
 
+    // Get the current user's UID
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      Alert.alert("You must be logged in to save a workout.");
+      return;
+    }
+    const userId = currentUser.uid;
+
     const save = async () => {
       try {
         if (editWorkoutId) {
@@ -172,6 +173,7 @@ const AddWorkout = () => {
             exercises,
             timePeriod: workoutTimePeriod,
             createdAt: date,
+            userId: userId, // Ensure userId is updated if it wasn't there before
           });
         } else {
           await addDoc(collection(db, "workouts"), {
@@ -180,32 +182,30 @@ const AddWorkout = () => {
             exercises,
             timePeriod: workoutTimePeriod,
             createdAt: date,
+            userId: userId, // Add userId when creating a new workout
           });
         }
-        router.back();
+        Alert.alert(
+          "Success",
+          editWorkoutId ? "Workout updated!" : "Workout added!",
+          [{ text: "OK", onPress: () => router.back() }]
+        );
       } catch (error) {
         console.error("Error saving workout:", error);
         Alert.alert("Failed to save workout.");
       }
     };
-
     Alert.alert(
-      editWorkoutId ? "Update Workout" : "Track Workout",
+      editWorkoutId ? "Update Workout" : "Save Workout",
       editWorkoutId
         ? "Are you sure you want to update this workout?"
-        : "Are you sure you want to track this workout?",
+        : "Are you sure you want to save this workout?",
       [
         { text: "Cancel", style: "cancel" },
-        {
-          text: editWorkoutId ? "Update" : "Track",
-          style: "cancel",
-          onPress: save,
-        },
+        { text: editWorkoutId ? "Update" : "Save", onPress: save },
       ]
     );
   };
-  
-  
 
   const handleDeleteExercise = (index) => {
     const updated = [...exercises];
@@ -454,9 +454,7 @@ const AddWorkout = () => {
 
           <View style={styles.buttonRow}>
             <ThemedButton onPress={handleSaveWorkout}>
-              <ThemedText>
-                {editWorkoutId ? "Save" : "Submit"}
-              </ThemedText>
+              <ThemedText>{editWorkoutId ? "Save" : "Submit"}</ThemedText>
             </ThemedButton>
             <ThemedButton onPress={() => router.back()}>
               <ThemedText>Cancel</ThemedText>
@@ -475,21 +473,21 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 10,
     paddingHorizontal: 20,
-    paddingBottom: 100
+    paddingBottom: 100,
   },
   scrollContainer: {
     paddingBottom: 100,
-    overflow: "visible" 
+    overflow: "visible",
   },
   title: {
     fontSize: 22,
     fontWeight: "bold",
-    marginBottom: 10
+    marginBottom: 10,
   },
   addExerciseButton: {
     alignSelf: "flex-start",
     marginBottom: 20,
-    marginTop: 10
+    marginTop: 10,
   },
   exerciseCard: {
     marginTop: 10,
@@ -499,27 +497,27 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     borderRadius: 10,
     backgroundColor: "#1c1c1c",
-    overflow: "visible"
+    overflow: "visible",
   },
   dropdown: {
     marginBottom: 10,
     borderColor: "#ccc",
-    zIndex: 1
+    zIndex: 1,
   },
   dropDownContainer: {
     backgroundColor: "#fff",
-    borderColor: "#ccc"
+    borderColor: "#ccc",
   },
   setRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 10,
     overflow: "visible",
-    zIndex: 500
+    zIndex: 500,
   },
   addSetButton: {
     alignSelf: "flex-start",
-    marginTop: 5
+    marginTop: 5,
   },
   buttonRow: {
     flexDirection: "row",
@@ -530,29 +528,29 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 10,
-    overflow: "visible"
+    overflow: "visible",
   },
   deleteExerciseButton: {
     marginLeft: 10,
-    paddingHorizontal: 6
+    paddingHorizontal: 6,
   },
   deleteSetButton: {
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 6
+    paddingHorizontal: 6,
   },
   setLabel: {
     width: 60,
     fontWeight: "bold",
     alignSelf: "center",
     color: "#fff",
-    paddingBottom: 10
+    paddingBottom: 10,
   },
   dateTimeRow: {
     flexDirection: "row",
     alignItems: "center",
     marginVertical: 10,
-    overflow: "visible"
+    overflow: "visible",
   },
   datePickerButton: {
     flex: 1,
@@ -561,10 +559,10 @@ const styles = StyleSheet.create({
     flex: 1,
     maxWidth: 150,
     marginLeft: 10,
-    overflow: "visible"
+    overflow: "visible",
   },
   timeDropdown: {
     borderColor: "#ccc",
-    zIndex: 1
+    zIndex: 1,
   },
 });
