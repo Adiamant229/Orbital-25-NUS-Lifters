@@ -63,7 +63,7 @@ const ProgressTracker = () => {
 
   const [weightListModalVisible, setWeightListModalVisible] = useState(false);
   const [editingWeight, setEditingWeight] = useState(null);
-  const user = auth.currentUser;
+  const user = auth.currentUser; // Get the current user
 
   useEffect(() => {
     const uniqueYears = [
@@ -97,6 +97,7 @@ const ProgressTracker = () => {
       return;
     }
 
+    // Modify the query to filter by userId
     const q = query(
       collection(db, "workouts"),
       where("userId", "==", user.uid), // Filter by the current user's ID
@@ -112,7 +113,7 @@ const ProgressTracker = () => {
     });
 
     return () => unsubscribe();
-  }, [user]); // Add user to the dependency array
+  }, [user]); // Re-run effect when user changes
 
   useEffect(() => {
     if (!user) {
@@ -146,12 +147,17 @@ const ProgressTracker = () => {
           style: "destructive",
           onPress: async () => {
             try {
-              await deleteDoc(doc(db, "workouts", id));
-              setOpenedWorkouts((prev) => {
-                const newSet = new Set(prev);
-                newSet.delete(id);
-                return newSet;
-              });
+              // Ensure that only the user's own workout can be deleted
+              if (user) {
+                await deleteDoc(doc(db, "workouts", id));
+                setOpenedWorkouts((prev) => {
+                  const newSet = new Set(prev);
+                  newSet.delete(id);
+                  return newSet;
+                });
+              } else {
+                alert("You must be logged in to delete workouts.");
+              }
             } catch (error) {
               console.error("Failed to delete workout:", error);
               alert("Failed to delete workout");
