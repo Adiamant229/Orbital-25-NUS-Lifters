@@ -1,6 +1,7 @@
 //react and expo import s
 import { useState, useEffect } from "react";
 import {
+  Alert,
   View,
   Text,
   TouchableOpacity,
@@ -102,12 +103,12 @@ const AddWorkout = () => {
               data.createdAt?.toDate ? data.createdAt.toDate() : new Date()
             );
           } else {
-            alert("Workout not found.");
+            Alert.alert("Workout not found.");
             router.back();
           }
         } catch (error) {
           console.error("Error fetching workout:", error);
-          alert("Failed to fetch workout data.");
+          Alert.alert("Failed to fetch workout data.");
         }
       };
       fetchWorkout();
@@ -150,42 +151,61 @@ const AddWorkout = () => {
 
   const handleSaveWorkout = async () => {
     if (!workoutName.trim()) {
-      alert("Please enter a workout name.");
+      Alert.alert("Please enter a workout name.");
       return;
     }
     if (exercises.length === 0) {
-      alert("Add at least one exercise.");
+      Alert.alert("Add at least one exercise.");
       return;
     }
     if (!workoutTimePeriod) {
-      alert("Please select a workout time period.");
+      Alert.alert("Please select a workout time period.");
       return;
     }
 
-    try {
-      if (editWorkoutId) {
-        await updateDoc(doc(db, "workouts", editWorkoutId), {
-          name: workoutName.trim(),
-          workoutNotes,
-          exercises,
-          timePeriod: workoutTimePeriod,
-          createdAt: date,
-        });
-      } else {
-        await addDoc(collection(db, "workouts"), {
-          name: workoutName.trim(),
-          workoutNotes,
-          exercises,
-          timePeriod: workoutTimePeriod,
-          createdAt: date,
-        });
+    const save = async () => {
+      try {
+        if (editWorkoutId) {
+          await updateDoc(doc(db, "workouts", editWorkoutId), {
+            name: workoutName.trim(),
+            workoutNotes,
+            exercises,
+            timePeriod: workoutTimePeriod,
+            createdAt: date,
+          });
+        } else {
+          await addDoc(collection(db, "workouts"), {
+            name: workoutName.trim(),
+            workoutNotes,
+            exercises,
+            timePeriod: workoutTimePeriod,
+            createdAt: date,
+          });
+        }
+        router.back();
+      } catch (error) {
+        console.error("Error saving workout:", error);
+        Alert.alert("Failed to save workout.");
       }
-      router.back();
-    } catch (error) {
-      console.error("Error saving workout:", error);
-      alert("Failed to save workout.");
-    }
+    };
+
+    Alert.alert(
+      editWorkoutId ? "Update Workout" : "Track Workout",
+      editWorkoutId
+        ? "Are you sure you want to update this workout?"
+        : "Are you sure you want to track this workout?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: editWorkoutId ? "Update" : "Track",
+          style: "cancel",
+          onPress: save,
+        },
+      ]
+    );
   };
+  
+  
 
   const handleDeleteExercise = (index) => {
     const updated = [...exercises];
@@ -417,7 +437,9 @@ const AddWorkout = () => {
                   onPress={() => handleAddSetToExercise(exerciseIndex)}
                   style={styles.addSetButton}
                 >
-                  <ThemedText style={{ color: "#007bff" }}>+ Add Set</ThemedText>
+                  <ThemedText style={{ color: "#007bff" }}>
+                    + Add Set
+                  </ThemedText>
                 </TouchableOpacity>
               </View>
             </View>
@@ -432,7 +454,9 @@ const AddWorkout = () => {
 
           <View style={styles.buttonRow}>
             <ThemedButton onPress={handleSaveWorkout}>
-              <ThemedText>Save</ThemedText>
+              <ThemedText>
+                {editWorkoutId ? "Save" : "Submit"}
+              </ThemedText>
             </ThemedButton>
             <ThemedButton onPress={() => router.back()}>
               <ThemedText>Cancel</ThemedText>

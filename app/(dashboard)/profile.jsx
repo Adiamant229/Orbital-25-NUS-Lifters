@@ -1,6 +1,7 @@
 // react and expo imports
 import { useEffect, useState } from "react";
 import {
+  Alert,
   StyleSheet,
   TouchableOpacity,
   View,
@@ -51,40 +52,60 @@ const Profile = () => {
     fetchUserData();
   }, []);
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (inputName.trim() === "") {
       alert("Please enter a new name.");
       return;
     }
-    try {
-      const user = auth.currentUser;
-      if (user) {
-        const docRef = doc(db, "users", user.uid);
-        await updateDoc(docRef, { name: inputName });
-        setUserName(inputName);
-        setEditMode(false);
-      }
-    } catch (error) {
-      console.error("Error saving user name:", error);
-    }
-  };
 
+    Alert.alert("Save Name", "Are you sure you want to update your name?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Save",
+        style: "cancel",
+        onPress: async () => {
+          try {
+            const user = auth.currentUser;
+            if (user) {
+              const docRef = doc(db, "users", user.uid);
+              await updateDoc(docRef, { name: inputName });
+              setUserName(inputName);
+              setEditMode(false);
+            }
+          } catch (error) {
+            console.error("Error saving user name:", error);
+          }
+        },
+      },
+    ]);
+  };
+  
   const handleCancel = () => {
     setInputName(userName);
     setEditMode(false);
   };
 
   const handleLogout = async () => {
-    try {
-      const user = auth.currentUser;
-      await signOut(auth);
-      console.log("User signed out:", user?.uid);
-      router.replace("/");
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
+    Alert.alert("Logout", "Are you sure you want to logout?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Logout",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            const user = auth.currentUser;
+            await signOut(auth);
+            console.log("User signed out:", user?.uid);
+            router.replace("/");
+          } catch (error) {
+            console.error("Logout error:", error);
+            Alert.alert("Error", "Failed to logout. Please try again.");
+          }
+        },
+      },
+    ]);
   };
-
+  
   return (
     <ThemedView style={styles.container}>
       <ThemedText style={styles.title} title={true}>

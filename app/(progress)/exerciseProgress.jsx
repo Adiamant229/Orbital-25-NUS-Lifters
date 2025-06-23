@@ -12,7 +12,7 @@ import ThemedText from "../../components/themedText";
 import { query, collection, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../../firebaseConfig";
 
-const Progression = () => {
+const ExerciseProgress = () => {
   const screenWidth = Dimensions.get("window").width;
 
   const chartConfig = {
@@ -160,7 +160,7 @@ const Progression = () => {
 
   return (
     <ThemedView style={styles.container}>
-      <ThemedText style={styles.pageTitle}>Exercise Progress Charts</ThemedText>
+      <ThemedText style={styles.pageTitle}>Exercise Progress</ThemedText>
 
       <View style={styles.dropdownRow}>
         <View style={styles.exercisePicker}>
@@ -200,7 +200,7 @@ const Progression = () => {
   );
 };
 
-export default Progression;
+export default ExerciseProgress;
 
 const styles = StyleSheet.create({
   container: {
