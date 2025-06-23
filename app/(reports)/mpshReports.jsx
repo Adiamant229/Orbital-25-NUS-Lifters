@@ -1,6 +1,7 @@
 //react and expo imports
 import { useState, useEffect } from "react";
 import {
+  Alert,
   View,
   Text,
   FlatList,
@@ -133,102 +134,127 @@ const MpshReports = () => {
 
   const handleSubmit = async () => {
     if (!value || !issueValue) {
-      alert("Please select equipment and issue type.");
+      Alert.alert(
+        "Submission Error",
+        "Please select equipment and issue type."
+      );
+
       return;
     }
 
-    try {
-      let imageUrl = null;
-      let oldImageUrl = null;
+    Alert.alert(
+      editingReportId ? "Update Report" : "Submit Report",
 
-      if (editingReportId) {
-        const docRef = doc(db, "mpshReports", editingReportId);
-        const reportSnapshot = await getDocs(reportsRef);
-        const report = reportSnapshot.docs
-          .find((doc) => doc.id === editingReportId)
-          ?.data();
-        oldImageUrl = report?.imageUrl || null;
-      }
+      editingReportId
+        ? "Are you sure you want to update this report?"
+        : "Are you sure you want to submit this report?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: editingReportId ? "Update" : "Submit",
+          style: "cancel",
+          onPress: async () => {
+            try {
+              let imageUrl = null;
+              let oldImageUrl = null;
 
-      if (imageUri && !imageUri.startsWith("https://")) {
-        const response = await fetch(imageUri);
-        const blob = await response.blob();
+              if (editingReportId) {
+                const docRef = doc(db, "mpshReports", editingReportId);
+                const reportSnapshot = await getDocs(reportsRef);
+                const report = reportSnapshot.docs
+                  .find((doc) => doc.id === editingReportId)
+                  ?.data();
+                oldImageUrl = report?.imageUrl || null;
+              }
 
-        const imageRef = ref(storage, `mpshReports/${uuid.v4()}`);
-        await uploadBytes(imageRef, blob);
-        imageUrl = await getDownloadURL(imageRef);
+              if (imageUri && !imageUri.startsWith("https://")) {
+                const response = await fetch(imageUri);
+                const blob = await response.blob();
 
-        if (oldImageUrl) {
-          try {
-            const oldPath = getStoragePathFromUrl(oldImageUrl);
-            await deleteObject(ref(storage, oldPath));
-            console.log("Old image deleted:", oldPath);
-          } catch (e) {
-            console.warn("Failed to delete old image:", e);
-          }
-        }
-      } else if (imageDeletedLocally && !imageUri) {
-        if (oldImageUrl) {
-          try {
-            const oldPath = getStoragePathFromUrl(oldImageUrl);
-            await deleteObject(ref(storage, oldPath));
-            console.log("Deleted old image due to removal");
-          } catch (e) {
-            console.warn("Failed to delete old image:", e);
-          }
-        }
-        imageUrl = null;
-      } else if (imageUri?.startsWith("https://")) {
-        imageUrl = imageUri;
-      }
+                const imageRef = ref(storage, `mpshReports/${uuid.v4()}`);
+                await uploadBytes(imageRef, blob);
+                imageUrl = await getDownloadURL(imageRef);
 
-      if (editingReportId) {
-        const docRef = doc(db, "mpshReports", editingReportId);
-        await updateDoc(docRef, {
-          equipment: value,
-          issueType: issueValue,
-          remarks: remarks.trim(),
-          ...(imageUrl !== null ? { imageUrl } : { imageUrl: deleteField() }),
-        });
+                if (oldImageUrl) {
+                  try {
+                    const oldPath = getStoragePathFromUrl(oldImageUrl);
+                    await deleteObject(ref(storage, oldPath));
+                    console.log("Old image deleted:", oldPath);
+                  } catch (e) {
+                    console.warn("Failed to delete old image:", e);
+                  }
+                }
+              } else if (imageDeletedLocally && !imageUri) {
+                if (oldImageUrl) {
+                  try {
+                    const oldPath = getStoragePathFromUrl(oldImageUrl);
+                    await deleteObject(ref(storage, oldPath));
+                    console.log("Deleted old image due to removal");
+                  } catch (e) {
+                    console.warn("Failed to delete old image:", e);
+                  }
+                }
+                imageUrl = null;
+              } else if (imageUri?.startsWith("https://")) {
+                imageUrl = imageUri;
+              }
 
-        setReports((prev) =>
-          prev.map((r) =>
-            r.id === editingReportId
-              ? {
-                  ...r,
+              if (editingReportId) {
+                const docRef = doc(db, "mpshReports", editingReportId);
+                await updateDoc(docRef, {
                   equipment: value,
                   issueType: issueValue,
                   remarks: remarks.trim(),
-                  ...(imageUrl !== null ? { imageUrl } : { imageUrl: null }),
-                }
-              : r
-          )
-        );
-      } else {
-        const newReport = {
-          equipment: value,
-          issueType: issueValue,
-          remarks: remarks.trim(),
-          userId: currentUserId,
-          ...(imageUrl && { imageUrl }),
-        };
+                  ...(imageUrl !== null
+                    ? { imageUrl }
+                    : { imageUrl: deleteField() }),
+                });
 
-        const docRef = await addDoc(reportsRef, newReport);
-        setReports([...reports, { id: docRef.id, ...newReport }]);
-      }
+                setReports((prev) =>
+                  prev.map((r) =>
+                    r.id === editingReportId
+                      ? {
+                          ...r,
+                          equipment: value,
+                          issueType: issueValue,
+                          remarks: remarks.trim(),
+                          ...(imageUrl !== null
+                            ? { imageUrl }
+                            : { imageUrl: null }),
+                        }
+                      : r
+                  )
+                );
+              } else {
+                const newReport = {
+                  equipment: value,
+                  issueType: issueValue,
+                  remarks: remarks.trim(),
+                  userId: currentUserId,
+                  ...(imageUrl && { imageUrl }),
+                };
 
-      setModalVisible(false);
-      setEditingReportId(null);
-      setValue(null);
-      setIssueValue(null);
-      setRemarks("");
-      setImageUri(null);
-      setImageDeletedLocally(false);
-    } catch (error) {
-      console.error("Error submitting report:", error);
-      alert("Failed to submit report.");
-    }
+                const docRef = await addDoc(reportsRef, newReport);
+                setReports([...reports, { id: docRef.id, ...newReport }]);
+              }
+
+              setModalVisible(false);
+              setEditingReportId(null);
+              setValue(null);
+              setIssueValue(null);
+              setRemarks("");
+              setImageUri(null);
+              setImageDeletedLocally(false);
+            } catch (error) {
+              console.error("Error submitting report:", error);
+              Alert.alert("Failed to submit report.");
+            }
+          },
+        },
+      ]
+    );
   };
+  
 
   const getStoragePathFromUrl = (url) => {
     try {
@@ -240,31 +266,48 @@ const MpshReports = () => {
     }
   };
 
-  const handleDeleteReport = async (id) => {
-    try {
-      const reportToDelete = reports.find((r) => r.id === id);
+  const handleDeleteReport = (id) => {
+    Alert.alert(
+      "Resolve Report",
+      "Are you sure you want to mark this report as resolved?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Resolve",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const reportToDelete = reports.find((r) => r.id === id);
 
-      if (reportToDelete?.imageUrl) {
-        const imagePath = getStoragePathFromUrl(reportToDelete.imageUrl);
-        const imageRef = ref(storage, imagePath);
-        await deleteObject(imageRef);
-      }
+              if (reportToDelete?.imageUrl) {
+                const imagePath = getStoragePathFromUrl(
+                  reportToDelete.imageUrl
+                );
+                const imageRef = ref(storage, imagePath);
+                await deleteObject(imageRef);
+              }
 
-      await deleteDoc(doc(db, "mpshReports", id));
+              await deleteDoc(doc(db, "mpshReports", id));
 
-      setReports((prev) => prev.filter((r) => r.id !== id));
-      if (editingReportId === id) setEditingReportId(null);
-    } catch (error) {
-      console.error("Error deleting report:", error);
-    }
+              setReports((prev) => prev.filter((r) => r.id !== id));
+              if (editingReportId === id) setEditingReportId(null);
+            } catch (error) {
+              console.error("Error deleting report:", error);
+              Alert.alert("Error", "Could not delete the report.");
+            }
+          },
+        },
+      ]
+    );
   };
+  
 
   const pickImage = async () => {
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (!permissionResult.granted) {
-      alert("Permission to access media library is required!");
+      Alert.alert("Permission to access media library is required!");
       return;
     }
 
@@ -281,7 +324,7 @@ const MpshReports = () => {
   const takePhoto = async () => {
     let permissionResult = await ImagePicker.requestCameraPermissionsAsync();
     if (permissionResult.granted === false) {
-      alert("Permission to access camera is required!");
+      Alert.alert("Permission to access camera is required!");
       return;
     }
 
@@ -304,7 +347,7 @@ const MpshReports = () => {
       <View style={styles.header}>
         <ThemedText style={styles.title}>MPSH Reports</ThemedText>
         <TouchableOpacity onPress={openAddModal} style={styles.addButton}>
-          <ThemedText style={{color: "#fff"}}>+</ThemedText>
+          <ThemedText style={{ color: "#fff" }}>+</ThemedText>
         </TouchableOpacity>
       </View>
       <FlatList
@@ -325,7 +368,10 @@ const MpshReports = () => {
                     {item.equipment} - {item.issueType}
                   </Text>
                   {isExpanded && isCurrentUser && (
-                    <TouchableOpacity onPress={() => openEditModal(item)}>
+                    <TouchableOpacity
+                      onPress={() => openEditModal(item)}
+                      testID={`edit-icon-${item.id}`}
+                    >
                       <Ionicons
                         name="pencil-outline"
                         size={20}
@@ -357,9 +403,10 @@ const MpshReports = () => {
                     >
                       <View style={styles.buttonicons}>
                         <Entypo name="tools" size={20} color="white" />
-                        <ThemedText style={{ color: "fff"}}>Resolved</ThemedText>
+                        <ThemedText style={{ color: "fff" }}>
+                          Resolved
+                        </ThemedText>
                       </View>
-
                     </TouchableOpacity>
                   </>
                 )}

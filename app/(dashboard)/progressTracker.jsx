@@ -1,6 +1,7 @@
 //react and expo imports
 import { useState, useEffect } from "react";
 import {
+  Alert,
   View,
   Text,
   FlatList,
@@ -22,6 +23,7 @@ import { LineChart } from "react-native-chart-kit";
 import { Ionicons } from "@expo/vector-icons";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 //themed components
 import ThemedText from "../../components/themedText";
@@ -39,7 +41,7 @@ import {
   deleteDoc,
   doc,
   updateDoc,
-  getDocs,
+  where, // Import where for filtering
 } from "firebase/firestore";
 
 const ProgressTracker = () => {
@@ -89,7 +91,17 @@ const ProgressTracker = () => {
   }, [weights]);
 
   useEffect(() => {
-    const q = query(collection(db, "workouts"), orderBy("createdAt", "desc"));
+    // Only fetch workouts if a user is logged in
+    if (!user) {
+      setWorkouts([]); // Clear workouts if no user is logged in
+      return;
+    }
+
+    const q = query(
+      collection(db, "workouts"),
+      where("userId", "==", user.uid), // Filter by the current user's ID
+      orderBy("createdAt", "desc")
+    );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const workoutsData = snapshot.docs.map((doc) => ({
@@ -100,7 +112,7 @@ const ProgressTracker = () => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [user]); // Add user to the dependency array
 
   useEffect(() => {
     if (!user) {
@@ -109,7 +121,7 @@ const ProgressTracker = () => {
     }
 
     const weightsCollection = collection(db, "users", user.uid, "weights");
-    
+
     const q = query(weightsCollection, orderBy("date", "desc"));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -123,18 +135,31 @@ const ProgressTracker = () => {
     return () => unsubscribe();
   }, [user]);
 
-  const handleDeleteWorkout = async (id) => {
-    try {
-      await deleteDoc(doc(db, "workouts", id));
-      setOpenedWorkouts((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(id);
-        return newSet;
-      });
-    } catch (error) {
-      console.error("Failed to delete workout:", error);
-      alert("Failed to delete workout");
-    }
+  const handleDeleteWorkout = (id) => {
+    Alert.alert(
+      "Delete Workout",
+      "Are you sure you want to delete this workout?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteDoc(doc(db, "workouts", id));
+              setOpenedWorkouts((prev) => {
+                const newSet = new Set(prev);
+                newSet.delete(id);
+                return newSet;
+              });
+            } catch (error) {
+              console.error("Failed to delete workout:", error);
+              alert("Failed to delete workout");
+            }
+          },
+        },
+      ]
+    );
   };
 
   const toggleWorkout = (id) => {
@@ -169,31 +194,48 @@ const ProgressTracker = () => {
       return;
     }
 
-    try {
-      const userDocRef = doc(db, "users", user.uid);
+    const submit = async () => {
+      try {
+        const userDocRef = doc(db, "users", user.uid);
 
-      if (editingWeight) {
-        const weightDocRef = doc(userDocRef, "weights", editingWeight.id);
-        await updateDoc(weightDocRef, {
-          weight: weightValue,
-          date: date,
-        });
-      } else {
-        const weightsCollectionRef = collection(userDocRef, "weights");
-        await addDoc(weightsCollectionRef, {
-          weight: weightValue,
-          date: date,
-        });
+        if (editingWeight) {
+          const weightDocRef = doc(userDocRef, "weights", editingWeight.id);
+          await updateDoc(weightDocRef, {
+            weight: weightValue,
+            date: date,
+          });
+        } else {
+          const weightsCollectionRef = collection(userDocRef, "weights");
+          await addDoc(weightsCollectionRef, {
+            weight: weightValue,
+            date: date,
+          });
+        }
+
+        setModalVisible(false);
+        setWeightInput("");
+        setDate(new Date());
+        setEditingWeight(null);
+      } catch (error) {
+        console.error("Error submitting weight:", error);
+        alert("Failed to submit weight.");
       }
+    };
 
-      setModalVisible(false);
-      setWeightInput("");
-      setDate(new Date()); 
-      setEditingWeight(null);
- 
-    } catch (error) {
-      console.error("Error submitting weight:", error);
-    }
+    Alert.alert(
+      editingWeight ? "Update Weight" : "Submit Weight",
+      editingWeight
+        ? "Are you sure you want to update this weight entry?"
+        : "Are you sure you want to submit this weight entry?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: editingWeight ? "Update" : "Submit",
+          style: "cancel",
+          onPress: submit,
+        },
+      ]
+    );
   };
 
   const filteredWeights = weights.filter((w) => {
@@ -222,7 +264,7 @@ const ProgressTracker = () => {
           ? w.date
           : w.date.toDate?.()?.toISOString()?.split("T")[0] || w.date,
     }))
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); 
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const weightChartData = {
     labels: sortedFilteredWeightsForChart.map((entry) =>
@@ -250,10 +292,10 @@ const ProgressTracker = () => {
       borderRadius: 16,
     },
     propsForDots: {
-      r: "6", 
+      r: "6",
       strokeWidth: "2",
-      stroke: "#007AFF", 
-      fill: "#FFFFFF"
+      stroke: "#007AFF",
+      fill: "#FFFFFF",
     },
     propsForVerticalLabels: {
       fontSize: 10,
@@ -263,22 +305,35 @@ const ProgressTracker = () => {
       fontSize: 10,
       fontWeight: "bold",
     },
-    strokeWidth: 2, 
+    strokeWidth: 2,
     propsForBackgroundLines: {
-      strokeDasharray: "0", 
-      stroke: "#444444", 
+      strokeDasharray: "0",
+      stroke: "#444444",
     },
-    barPercentage: 0, 
+    barPercentage: 0,
     categoryPercentage: 0,
   };
 
-  const deleteWeight = async (id) => {
-    try {
-      await deleteDoc(doc(db, "users", user.uid, "weights", id));
-    } catch (error) {
-      console.error("Failed to delete weight:", error);
-      alert("Failed to delete weight");
-    }
+  const handleDeleteWeight = (id) => {
+    Alert.alert(
+      "Delete Weight",
+      "Are you sure you want to delete this weight entry?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteDoc(doc(db, "users", user.uid, "weights", id));
+            } catch (error) {
+              console.error("Failed to delete weight:", error);
+              alert("Failed to delete weight");
+            }
+          },
+        },
+      ]
+    );
   };
 
   const openEditWeight = (w) => {
@@ -319,10 +374,20 @@ const ProgressTracker = () => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => router.push("/exercises")}
-          style={styles.addButton}
+          onPress={() => setSelectedTab("diet")}
+          style={[
+            styles.addButton,
+            selectedTab === "diet" && styles.selectedTabButton,
+          ]}
         >
-          <FontAwesome5 name="book-open" size={20} color="white" />
+          <View style={styles.buttonicons}>
+            <MaterialCommunityIcons
+              name="silverware-fork-knife"
+              size={24}
+              color="white"
+            />
+            <ThemedText>Diet</ThemedText>
+          </View>
         </TouchableOpacity>
       </View>
 
@@ -332,16 +397,23 @@ const ProgressTracker = () => {
             <ThemedText style={{ fontSize: 20 }}>Your Workouts</ThemedText>
             <TouchableOpacity
               onPress={() => router.push("/addWorkout")}
-              style={styles.addButton}
+              style={styles.addButton2}
             >
               <ThemedText>+ New Workout</ThemedText>
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => router.push("/progression")}
-              style={styles.addButton}
+              onPress={() => router.push("/exerciseProgress")}
+              style={styles.addButton2}
             >
               <Ionicons name="bar-chart" size={18} color="white" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => router.push("/exercises")}
+              style={styles.addButton2}
+            >
+              <FontAwesome5 name="book-open" size={20} color="white" />
             </TouchableOpacity>
           </View>
 
@@ -449,6 +521,34 @@ const ProgressTracker = () => {
         </>
       )}
 
+      {selectedTab === "diet" && (
+        <>
+          <View style={styles.header2}>
+            <ThemedText style={{ fontSize: 20 }}>Your Meals</ThemedText>
+            <TouchableOpacity
+              onPress={() => router.push("/macro")}
+              style={styles.addButton2}
+            >
+              <ThemedText>+ New Meal</ThemedText>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => router.push("/progression")}
+              style={styles.addButton2}
+            >
+              <Ionicons name="bar-chart" size={18} color="white" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => router.push("/exercises")}
+              style={styles.addButton2}
+            >
+              <FontAwesome5 name="book-open" size={20} color="white" />
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
+
       {selectedTab === "weight" && (
         <>
           <View style={styles.header3}>
@@ -456,13 +556,20 @@ const ProgressTracker = () => {
             <TouchableOpacity
               onPress={() => {
                 setModalVisible(true);
-                setEditingWeight(null); 
-                setWeightInput(""); 
-                setDate(new Date()); 
+                setEditingWeight(null);
+                setWeightInput("");
+                setDate(new Date());
               }}
-              style={styles.addButton}
+              style={styles.addButton2}
             >
               <ThemedText>+ New Weight</ThemedText>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => router.push("/exercises")}
+              style={styles.addButton2}
+            >
+              <FontAwesome5 name="book-open" size={20} color="white" />
             </TouchableOpacity>
 
             <DropDownPicker
@@ -498,6 +605,7 @@ const ProgressTracker = () => {
           </View>
         </>
       )}
+
       <Modal
         visible={weightListModalVisible}
         animationType="fade"
@@ -548,7 +656,9 @@ const ProgressTracker = () => {
                           color="#007AFF"
                         />
                       </TouchableOpacity>
-                      <TouchableOpacity onPress={() => deleteWeight(w.id)}>
+                      <TouchableOpacity
+                        onPress={() => handleDeleteWeight(w.id)}
+                      >
                         <Ionicons
                           name="trash-outline"
                           size={20}
@@ -608,15 +718,15 @@ const ProgressTracker = () => {
 
                 <View style={styles.modalButtonRow}>
                   <ThemedButton onPress={handleSubmitWeight}>
-                    <ThemedText>Save</ThemedText>
+                    <ThemedText>{editingWeight ? "Save" : "Submit"}</ThemedText>
                   </ThemedButton>
 
                   <ThemedButton
                     onPress={() => {
                       setModalVisible(false);
-                      setEditingWeight(null); 
+                      setEditingWeight(null);
                       setWeightInput("");
-                      setDate(new Date()); 
+                      setDate(new Date());
                     }}
                   >
                     <ThemedText>Cancel</ThemedText>
@@ -670,6 +780,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   addButton: {
+    backgroundColor: "#2196f3",
+    borderRadius: 20,
+    padding: 10,
+    width: 115,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  addButton2: {
     backgroundColor: "#2196f3",
     borderRadius: 20,
     padding: 10,

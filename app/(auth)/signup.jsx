@@ -81,7 +81,7 @@ const Signup = () => {
 
       router.replace("/gymCapacity");
     } catch (error) {
-      const errorCode = error.code;
+      const errorCode = error?.code ?? "unknown_error"; 
       console.error("Sign-up error:", errorCode);
 
       let userFacingMessage = "An error occurred during sign up.";
@@ -96,6 +96,7 @@ const Signup = () => {
     } finally {
       setLoading(false);
     }
+    
   };
 
   return (
