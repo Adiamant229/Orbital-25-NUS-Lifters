@@ -1,15 +1,15 @@
-import { render, fireEvent, act } from "@testing-library/react-native";
+import { render, fireEvent, act, waitFor } from "@testing-library/react-native";
 import { Alert } from "react-native";
 
 const mockReplace = jest.fn();
 
 jest.mock("expo-router", () => {
-  const React = require("react"); // require React inside the factory
+  const React = require("react");
 
   return {
     Link: ({ children, href }) =>
       React.createElement(
-        "Text", // just string "Text", no external reference
+        "Text",
         { onPress: () => mockReplace(href) },
         children
       ),
@@ -19,13 +19,11 @@ jest.mock("expo-router", () => {
   };
 });
 
-// Mock firebaseConfig to avoid loading real Firebase SDK
 jest.mock("../../firebaseConfig", () => ({
   auth: {},
   db: {},
 }));
 
-// Mock Firebase Auth methods
 const mockCreateUserWithEmailAndPassword = jest.fn(() =>
   Promise.resolve({ user: { uid: "test-uid" } })
 );
@@ -37,7 +35,6 @@ jest.mock("firebase/auth", () => ({
   updateProfile: (...args) => mockUpdateProfile(...args),
 }));
 
-// Mock Firestore methods
 const mockDoc = jest.fn(() => ({}));
 const mockSetDoc = jest.fn(() => Promise.resolve());
 
@@ -55,26 +52,32 @@ describe("Signup Component", () => {
     jest.clearAllMocks();
   });
 
-  test("shows alert if username is empty", () => {
+  test("shows alert if username is empty", async () => {
     const { getByText } = render(<Signup />);
     fireEvent.press(getByText("Create"));
-    expect(Alert.alert).toHaveBeenCalledWith(
-      "Error",
-      "Please enter your username."
+
+    await waitFor(() =>
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Error",
+        "Please enter your username."
+      )
     );
   });
 
-  test("shows alert if email or password is empty", () => {
+  test("shows alert if email or password is empty", async () => {
     const { getByPlaceholderText, getByText } = render(<Signup />);
     fireEvent.changeText(getByPlaceholderText("Username"), "testuser");
     fireEvent.press(getByText("Create"));
-    expect(Alert.alert).toHaveBeenCalledWith(
-      "Error",
-      "Please enter both email and password."
+
+    await waitFor(() =>
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Error",
+        "Please enter both email and password."
+      )
     );
   });
 
-  test("shows alert if passwords do not match", () => {
+  test("shows alert if passwords do not match", async () => {
     const { getByPlaceholderText, getByText } = render(<Signup />);
     fireEvent.changeText(getByPlaceholderText("Username"), "testuser");
     fireEvent.changeText(getByPlaceholderText("Email"), "test@example.com");
@@ -84,9 +87,12 @@ describe("Signup Component", () => {
       "different123"
     );
     fireEvent.press(getByText("Create"));
-    expect(Alert.alert).toHaveBeenCalledWith(
-      "Error",
-      "Passwords do not match."
+
+    await waitFor(() =>
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Error",
+        "Passwords do not match."
+      )
     );
   });
 
@@ -102,25 +108,26 @@ describe("Signup Component", () => {
 
     await act(async () => {
       fireEvent.press(getByText("Create"));
-      await Promise.resolve();
     });
 
-    expect(mockCreateUserWithEmailAndPassword).toHaveBeenCalledWith(
-      expect.anything(),
-      "test@example.com",
-      "password123"
-    );
-    expect(mockUpdateProfile).toHaveBeenCalledWith(
-      { uid: "test-uid" },
-      { displayName: "testuser" }
-    );
-    expect(mockDoc).toHaveBeenCalledWith(
-      expect.anything(),
-      "users",
-      "test-uid"
-    );
-    expect(mockSetDoc).toHaveBeenCalled();
-    expect(Alert.alert).toHaveBeenCalledWith("Success", "Account created!");
+    await waitFor(() => {
+      expect(mockCreateUserWithEmailAndPassword).toHaveBeenCalledWith(
+        expect.anything(),
+        "test@example.com",
+        "password123"
+      );
+      expect(mockUpdateProfile).toHaveBeenCalledWith(
+        { uid: "test-uid" },
+        { displayName: "testuser" }
+      );
+      expect(mockDoc).toHaveBeenCalledWith(
+        expect.anything(),
+        "users",
+        "test-uid"
+      );
+      expect(mockSetDoc).toHaveBeenCalled();
+      expect(Alert.alert).toHaveBeenCalledWith("Success", "Account created!");
+    });
   });
 
   test("handles Firebase signup error correctly", async () => {
@@ -138,13 +145,14 @@ describe("Signup Component", () => {
 
     await act(async () => {
       fireEvent.press(getByText("Create"));
-      await Promise.resolve();
     });
 
-    expect(Alert.alert).toHaveBeenCalledWith(
-      "Sign Up Failed",
-      "This email address is already in use."
-    );
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Sign Up Failed",
+        "This email address is already in use."
+      );
+    });
   });
 
   test("handles unknown Firebase error gracefully", async () => {
@@ -162,18 +170,22 @@ describe("Signup Component", () => {
 
     await act(async () => {
       fireEvent.press(getByText("Create"));
-      await Promise.resolve();
     });
 
-    expect(Alert.alert).toHaveBeenCalledWith(
-      "Sign Up Failed",
-      "An error occurred during sign up."
-    );
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Sign Up Failed",
+        "An error occurred during sign up."
+      );
+    });
   });
 
-  test("clicking 'Login instead' redirects to the home page", () => {
+  test("clicking 'Login instead' redirects to the home page", async () => {
     const { getByText } = render(<Signup />);
     fireEvent.press(getByText("Login instead"));
-    expect(mockReplace).toHaveBeenCalledWith("/");
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith("/");
+    });
   });
 });

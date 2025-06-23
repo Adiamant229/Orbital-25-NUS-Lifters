@@ -23,7 +23,6 @@ jest.mock("firebase/firestore", () => ({
             userId: "user1",
             imageUrl: null,
           }),
-          id: "1",
         },
       ],
     })
@@ -48,6 +47,21 @@ jest.mock("firebase/auth", () => ({
   }),
 }));
 
+jest.mock("expo-image-picker", () => ({
+  launchImageLibraryAsync: jest.fn(() =>
+    Promise.resolve({ canceled: false, assets: [{ uri: "mock-image-uri" }] })
+  ),
+  launchCameraAsync: jest.fn(() =>
+    Promise.resolve({ canceled: false, assets: [{ uri: "mock-camera-uri" }] })
+  ),
+  requestCameraPermissionsAsync: jest.fn(() =>
+    Promise.resolve({ granted: true })
+  ),
+  requestMediaLibraryPermissionsAsync: jest.fn(() =>
+    Promise.resolve({ granted: true })
+  ),
+}));
+
 jest.mock("react-native-dropdown-picker", () => {
   const React = require("react");
   const { TouchableOpacity, Text, View } = require("react-native");
@@ -68,7 +82,7 @@ jest.mock("react-native-dropdown-picker", () => {
       )
     );
 });
-  
+
 jest.spyOn(Alert, "alert").mockImplementation((title, message, buttons) => {
   if (buttons) {
     const positiveButton = buttons.find(
@@ -80,7 +94,7 @@ jest.spyOn(Alert, "alert").mockImplementation((title, message, buttons) => {
   }
 });
 
-import UtownReports from "../../app/(reports)/utownReports"; 
+import UtownReports from "../../app/(reports)/utownReports";
 
 describe("UtownReports component", () => {
   beforeEach(() => {
@@ -94,10 +108,20 @@ describe("UtownReports component", () => {
     );
   });
 
+  test("shows empty message when there are no reports", async () => {
+    const emptyMock = jest.fn(() => Promise.resolve({ docs: [] }));
+    require("firebase/firestore").getDocs.mockImplementationOnce(emptyMock);
+
+    const { getByText } = render(<UtownReports />);
+    await waitFor(() =>
+      expect(getByText("No reports yet. Tap + to add one.")).toBeTruthy()
+    );
+  });
+
   test("alerts when equipment or issue type missing on submit", async () => {
     const { getByText } = render(<UtownReports />);
     act(() => {
-      fireEvent.press(getByText("+")); // open modal for add
+      fireEvent.press(getByText("+"));
     });
 
     await act(async () => {
@@ -112,23 +136,10 @@ describe("UtownReports component", () => {
 
   test("selects Bench Press in equipment dropdown", async () => {
     const { getByTestId, getByText } = render(<UtownReports />);
+    fireEvent.press(getByText("+"));
+    fireEvent.press(getByTestId("select-bench-press"));
+    fireEvent.press(getByTestId("select-damaged"));
 
-    // Open the add modal
-    act(() => {
-      fireEvent.press(getByText("+"));
-    });
-
-    // Select equipment by pressing mocked dropdown option
-    act(() => {
-      fireEvent.press(getByTestId("select-bench-press"));
-    });
-
-    // Select issue type similarly
-    act(() => {
-      fireEvent.press(getByTestId("select-damaged"));
-    });
-
-    // Submit form
     await act(async () => {
       fireEvent.press(getByText("Submit"));
     });
@@ -142,33 +153,17 @@ describe("UtownReports component", () => {
 
   test("shows confirmation alert on submit for editing report", async () => {
     const { getByText, getByTestId } = render(<UtownReports />);
-
     await waitFor(() => getByText("Bench Press - Damaged"));
 
-    // Expand the report item by pressing its title
     act(() => {
       fireEvent.press(getByText("Bench Press - Damaged"));
     });
 
-    // Wait for the edit icon to appear (only visible when expanded)
     const editIcon = await waitFor(() => getByTestId("edit-icon-1"));
+    fireEvent.press(editIcon);
+    fireEvent.press(getByTestId("select-bench-press"));
+    fireEvent.press(getByTestId("select-damaged"));
 
-    // Press the edit icon to open the edit modal
-    act(() => {
-      fireEvent.press(editIcon);
-    });
-
-    // Select equipment by pressing mocked dropdown option in edit modal
-    act(() => {
-      fireEvent.press(getByTestId("select-bench-press"));
-    });
-
-    // Select issue type similarly
-    act(() => {
-      fireEvent.press(getByTestId("select-damaged"));
-    });
-
-    // Press Save to submit edit
     await act(async () => {
       fireEvent.press(getByText("Save"));
     });
@@ -184,12 +179,7 @@ describe("UtownReports component", () => {
     const { getByText } = render(<UtownReports />);
     await waitFor(() => getByText("Bench Press - Damaged"));
 
-    // Expand report
-    act(() => {
-      fireEvent.press(getByText("Bench Press - Damaged"));
-    });
-
-    // Press Resolve button to delete with alert confirmation
+    fireEvent.press(getByText("Bench Press - Damaged"));
     await act(async () => {
       fireEvent.press(getByText("Resolved"));
     });
@@ -199,5 +189,14 @@ describe("UtownReports component", () => {
       "Are you sure you want to mark this report as resolved?",
       expect.any(Array)
     );
+  });
+
+  test("image picker adds imageUri to state", async () => {
+    const { getByText } = render(<UtownReports />);
+    fireEvent.press(getByText("+"));
+    await act(async () => {
+      fireEvent.press(getByText("Pick from Gallery"));
+    });
+    expect(getByText("Take Photo")).toBeTruthy();
   });
 });

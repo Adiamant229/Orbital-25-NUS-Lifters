@@ -28,6 +28,8 @@ const Profile = () => {
   const [editMode, setEditMode] = useState(false);
   const [inputName, setInputName] = useState("");
 
+  const [saving, setSaving] = useState(false);
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -54,7 +56,7 @@ const Profile = () => {
 
   const handleSave = () => {
     if (inputName.trim() === "") {
-      alert("Please enter a new name.");
+      Alert.alert("Error", "Please enter a new name.");
       return;
     }
 
@@ -62,8 +64,8 @@ const Profile = () => {
       { text: "Cancel", style: "cancel" },
       {
         text: "Save",
-        style: "cancel",
         onPress: async () => {
+          setSaving(true);
           try {
             const user = auth.currentUser;
             if (user) {
@@ -74,12 +76,15 @@ const Profile = () => {
             }
           } catch (error) {
             console.error("Error saving user name:", error);
+            Alert.alert("Error", "Failed to save your name. Please try again.");
+          } finally {
+            setSaving(false);
           }
         },
       },
     ]);
   };
-  
+
   const handleCancel = () => {
     setInputName(userName);
     setEditMode(false);
@@ -120,6 +125,7 @@ const Profile = () => {
           <TouchableOpacity
             onPress={() => setEditMode(true)}
             style={styles.editIconOnAvatar}
+            testID="editButton"
           >
             <MaterialIcons name="edit" size={20} color="#f2f2f2" />
           </TouchableOpacity>
@@ -137,12 +143,22 @@ const Profile = () => {
               placeholder="Enter new name"
             />
             <View style={styles.editIconsRow}>
-              <TouchableOpacity onPress={handleSave} style={styles.iconButton}>
-                <MaterialIcons name="check" size={22} color="#2a9d8f" />
+              <TouchableOpacity
+                onPress={handleSave}
+                style={styles.iconButton}
+                disabled={saving}
+                testID="saveButton"
+              >
+                <MaterialIcons
+                  name="check"
+                  size={22}
+                  color={saving ? "grey" : "#2a9d8f"}
+                />
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleCancel}
                 style={styles.iconButton}
+                testID="cancelButton"
               >
                 <MaterialIcons name="close" size={22} color="#e76f51" />
               </TouchableOpacity>

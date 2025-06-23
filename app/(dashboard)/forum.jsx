@@ -463,6 +463,7 @@ const Forum = () => {
           contentContainerStyle={{ gap: 16 }}
         />
       )}
+
       {/* New Thread Modal */}
       <Modal
         visible={modalVisible}
@@ -821,6 +822,10 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold"
+  },
   filterContainer: {
     flexDirection: "row",
     gap: 8,
@@ -833,7 +838,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 10,
   },
-
   filterButtonsRow: {
     flexDirection: "row",
     gap: 8,
@@ -841,7 +845,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
   filterButton: {
-    width: 60,
+    width: 62,
     paddingHorizontal: 7,
     paddingVertical: 4,
     borderRadius: 20,
@@ -854,10 +858,6 @@ const styles = StyleSheet.create({
   filterText: {
     color: "#fff",
     fontSize: 11,
-    fontWeight: "bold",
-  },
-  title: {
-    fontSize: 24,
     fontWeight: "bold",
   },
   threadCard: {
@@ -892,7 +892,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderRadius: 10,
     padding: 20,
-    maxHeight: "80%", // Added to prevent modal from taking full height
+    maxHeight: "80%", 
   },
   modalTitle: {
     fontSize: 22,
@@ -905,7 +905,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 8,
     fontSize: 16,
-    color: "#000", // Ensure text is visible in dark mode if you have a themed TextInput
   },
   commentHead: {
     fontSize: 16,

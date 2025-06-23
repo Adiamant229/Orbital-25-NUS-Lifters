@@ -28,6 +28,7 @@ jest.mock("react-native-dropdown-picker", () => {
 
 // Mock Firebase
 jest.mock("../../firebaseConfig", () => ({
+  auth: {},
   db: {},
 }));
 
