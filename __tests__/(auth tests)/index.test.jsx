@@ -1,4 +1,4 @@
-import { render, fireEvent, waitFor } from "@testing-library/react-native";
+import { render, fireEvent, waitFor, act } from "@testing-library/react-native";
 import { Alert } from "react-native";
 
 // Mock firebaseConfig module to avoid loading Firebase SDK
@@ -56,7 +56,9 @@ describe("Login Component", () => {
     const { getByText } = render(<Index />);
 
     // Press login without filling inputs
-    fireEvent.press(getByText("Login"));
+    await act(async () => {
+      fireEvent.press(getByText("Login"));
+    });
 
     expect(Alert.alert).toHaveBeenCalledWith(
       "Error",
@@ -70,7 +72,9 @@ describe("Login Component", () => {
     fireEvent.changeText(getByPlaceholderText("Email"), "test@example.com");
     fireEvent.changeText(getByPlaceholderText("Password"), "password");
 
-    fireEvent.press(getByText("Login"));
+    await act(async () => {
+      fireEvent.press(getByText("Login"));
+    });
 
     await waitFor(() => {
       expect(mockReplace).toHaveBeenCalledWith("/gymCapacity");
@@ -83,7 +87,9 @@ describe("Login Component", () => {
     fireEvent.changeText(getByPlaceholderText("Email"), "wrong@example.com");
     fireEvent.changeText(getByPlaceholderText("Password"), "wrongpassword");
 
-    fireEvent.press(getByText("Login"));
+    await act(async () => {
+      fireEvent.press(getByText("Login"));
+    });
 
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith(
@@ -102,11 +108,10 @@ describe("Login Component", () => {
       return () => {};
     });
 
-    const { getByText } = render(<Index />);
+    render(<Index />);
 
     await waitFor(() => {
       expect(mockReplace).toHaveBeenCalledWith("/gymCapacity");
     });
   });
-  
 });

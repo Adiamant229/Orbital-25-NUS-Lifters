@@ -1,5 +1,5 @@
-//react and expo import s
-import { useState, useEffect } from "react";
+//react and expo imports
+import { useRef, useState, useEffect } from "react";
 import {
   Alert,
   View,
@@ -52,6 +52,9 @@ const AddWorkout = () => {
 
   const { editWorkoutId } = useLocalSearchParams();
 
+  const nextExerciseId = useRef(1);
+  const nextSetId = useRef(1);
+
   //exercise dropdown box
   const exerciseOptions = [
     { label: "Bench Press", value: "Bench Press" },
@@ -90,7 +93,26 @@ const AddWorkout = () => {
             const data = docSnap.data();
             setWorkoutName(data.name || "");
             setWorkoutNotes(data.workoutNotes || "");
-            setExercises(data.exercises || []);
+
+            // Assign stable IDs to exercises and sets if missing
+            if (data.exercises && data.exercises.length > 0) {
+              const exercisesWithIds = data.exercises.map((ex) => {
+                // Assign exercise id or increment ref
+                const exId = ex.id ?? nextExerciseId.current++;
+                // Assign ids to sets as well
+                const setsWithIds = ex.sets
+                  ? ex.sets.map((set) => ({
+                      ...set,
+                      id: set.id ?? nextSetId.current++,
+                    }))
+                  : [];
+                return { ...ex, id: exId, sets: setsWithIds };
+              });
+              setExercises(exercisesWithIds);
+            } else {
+              setExercises([]);
+            }
+
             setWorkoutTimePeriod(data.timePeriod || null);
             setDate(
               data.createdAt?.toDate ? data.createdAt.toDate() : new Date()
@@ -108,14 +130,11 @@ const AddWorkout = () => {
     }
   }, [editWorkoutId]);
 
+  // Add new exercise with unique id
   const handleAddExercise = () => {
-    setExercises([
-      ...exercises,
-      {
-        id: exercises.length + 1,
-        name: null,
-        sets: [],
-      },
+    setExercises((prev) => [
+      ...prev,
+      { id: nextExerciseId.current++, name: null, sets: [] },
     ]);
   };
 
@@ -125,86 +144,25 @@ const AddWorkout = () => {
     setExercises(updated);
   };
 
+  // Add new set with unique id to exercise
   const handleAddSetToExercise = (exerciseIndex) => {
-    const updated = [...exercises];
-    updated[exerciseIndex].sets.push({
-      reps: "",
-      weight: "",
-      openReps: false,
-      openWeight: false,
+    setExercises((prevExercises) => {
+      const updated = [...prevExercises];
+      updated[exerciseIndex].sets.push({
+        id: nextSetId.current++,
+        reps: "",
+        weight: "",
+        openReps: false,
+        openWeight: false,
+      });
+      return updated;
     });
-    setExercises(updated);
   };
 
   const handleChangeSet = (exerciseIndex, setIndex, key, value) => {
     const updated = [...exercises];
     updated[exerciseIndex].sets[setIndex][key] = value;
     setExercises(updated);
-  };
-
-  const handleSaveWorkout = async () => {
-    if (!workoutName.trim()) {
-      Alert.alert("Please enter a workout name.");
-      return;
-    }
-    if (exercises.length === 0) {
-      Alert.alert("Add at least one exercise.");
-      return;
-    }
-    if (!workoutTimePeriod) {
-      Alert.alert("Please select a workout time period.");
-      return;
-    }
-
-    // Get the current user's UID
-    const currentUser = auth.currentUser;
-    if (!currentUser) {
-      Alert.alert("You must be logged in to save a workout.");
-      return;
-    }
-    const userId = currentUser.uid;
-
-    const save = async () => {
-      try {
-        if (editWorkoutId) {
-          await updateDoc(doc(db, "workouts", editWorkoutId), {
-            name: workoutName.trim(),
-            workoutNotes,
-            exercises,
-            timePeriod: workoutTimePeriod,
-            createdAt: date,
-            userId: userId, // Ensure userId is updated if it wasn't there before
-          });
-        } else {
-          await addDoc(collection(db, "workouts"), {
-            name: workoutName.trim(),
-            workoutNotes,
-            exercises,
-            timePeriod: workoutTimePeriod,
-            createdAt: date,
-            userId: userId, // Add userId when creating a new workout
-          });
-        }
-        Alert.alert(
-          "Success",
-          editWorkoutId ? "Workout updated!" : "Workout added!",
-          [{ text: "OK", onPress: () => router.back() }]
-        );
-      } catch (error) {
-        console.error("Error saving workout:", error);
-        Alert.alert("Failed to save workout.");
-      }
-    };
-    Alert.alert(
-      editWorkoutId ? "Update Workout" : "Save Workout",
-      editWorkoutId
-        ? "Are you sure you want to update this workout?"
-        : "Are you sure you want to save this workout?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: editWorkoutId ? "Update" : "Save", onPress: save },
-      ]
-    );
   };
 
   const handleDeleteExercise = (index) => {
@@ -221,6 +179,70 @@ const AddWorkout = () => {
 
   const dropdownListMode = Platform.OS === "android" ? "MODAL" : "SCROLLVIEW";
 
+  const handleSaveWorkout = async () => {
+    if (!workoutName.trim()) {
+      Alert.alert("Please enter a workout name.");
+      return;
+    }
+    if (exercises.length === 0) {
+      Alert.alert("Add at least one exercise.");
+      return;
+    }
+    if (!workoutTimePeriod) {
+      Alert.alert("Please select a workout time period.");
+      return;
+    }
+
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      Alert.alert("You must be logged in to save a workout.");
+      return;
+    }
+    const userId = currentUser.uid;
+
+    const save = async () => {
+      try {
+        if (editWorkoutId) {
+          await updateDoc(doc(db, "workouts", editWorkoutId), {
+            name: workoutName.trim(),
+            workoutNotes,
+            exercises,
+            timePeriod: workoutTimePeriod,
+            createdAt: date,
+            userId,
+          });
+        } else {
+          await addDoc(collection(db, "workouts"), {
+            name: workoutName.trim(),
+            workoutNotes,
+            exercises,
+            timePeriod: workoutTimePeriod,
+            createdAt: date,
+            userId,
+          });
+        }
+        Alert.alert(
+          "Success",
+          editWorkoutId ? "Workout updated!" : "Workout added!",
+          [{ text: "OK", onPress: () => router.back() }]
+        );
+      } catch (error) {
+        console.error("Error saving workout:", error);
+        Alert.alert("Failed to save workout.");
+      }
+    };
+
+    Alert.alert(
+      editWorkoutId ? "Update Workout" : "Save Workout",
+      editWorkoutId
+        ? "Are you sure you want to update this workout?"
+        : "Are you sure you want to save this workout?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: editWorkoutId ? "Update" : "Save", onPress: save },
+      ]
+    );
+  };
   return (
     <ThemedView style={styles.container}>
       <KeyboardAvoidingView
@@ -229,7 +251,7 @@ const AddWorkout = () => {
       >
         <ScrollView
           contentContainerStyle={styles.scrollContainer}
-          keyboardShouldPersistTaps="handled"
+          keyboardShouldPersistTaps="handled" 
           showsVerticalScrollIndicator={false}
           automaticallyAdjustKeyboardInsets={true}
         >
@@ -243,7 +265,8 @@ const AddWorkout = () => {
             placeholderTextColor="grey"
           />
 
-          <View style={styles.dateTimeRow}>
+          <View style={[styles.dateTimeRow, { zIndex: 3000 }]}>
+        
             <TouchableOpacity
               onPress={() => setShowDatePicker(true)}
               style={styles.datePickerButton}
@@ -257,7 +280,6 @@ const AddWorkout = () => {
                 onChange={onChangeDate}
               />
             )}
-
             <View style={styles.timeDropdownContainer}>
               <DropDownPicker
                 open={openTimeDropdown}
@@ -274,10 +296,11 @@ const AddWorkout = () => {
                 dropDownContainerStyle={{
                   backgroundColor: "#fff",
                   borderColor: "#ccc",
-                  zIndex: 3000,
+                  zIndex: 3000, 
                 }}
                 listMode="SCROLLVIEW"
                 dropDownDirection="BOTTOM"
+                maxHeight={200} 
               />
             </View>
           </View>
@@ -302,7 +325,7 @@ const AddWorkout = () => {
               <View
                 style={[
                   styles.exerciseCard,
-                  { zIndex: openDropdownIndex === exerciseIndex ? 2000 : 1000 },
+                  { zIndex: openDropdownIndex === exerciseIndex ? 2000 : 1000 }, 
                 ]}
               >
                 <View style={styles.exerciseHeader}>
@@ -323,10 +346,11 @@ const AddWorkout = () => {
                       dropDownContainerStyle={{
                         backgroundColor: "#fff",
                         borderColor: "#ccc",
-                        zIndex: 2000,
+                        zIndex: 2000, 
                       }}
-                      listMode="SCROLLVIEW"
+                      listMode={dropdownListMode} 
                       dropDownDirection="BOTTOM"
+                      maxHeight={200} 
                     />
                   </View>
 
@@ -380,8 +404,9 @@ const AddWorkout = () => {
                             styles.dropDownContainer,
                             { zIndex: set.openReps ? 1500 : 500 },
                           ]}
-                          listMode={dropdownListMode}
+                          listMode={dropdownListMode} 
                           dropDownDirection="BOTTOM"
+                          maxHeight={200} 
                         />
                       </View>
 
@@ -414,8 +439,9 @@ const AddWorkout = () => {
                             styles.dropDownContainer,
                             { zIndex: set.openWeight ? 1500 : 500 },
                           ]}
-                          listMode={dropdownListMode}
+                          listMode={dropdownListMode} 
                           dropDownDirection="BOTTOM"
+                          maxHeight={200} 
                         />
                       </View>
 
@@ -502,7 +528,6 @@ const styles = StyleSheet.create({
   dropdown: {
     marginBottom: 10,
     borderColor: "#ccc",
-    zIndex: 1,
   },
   dropDownContainer: {
     backgroundColor: "#fff",
@@ -513,7 +538,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 10,
     overflow: "visible",
-    zIndex: 500,
   },
   addSetButton: {
     alignSelf: "flex-start",
@@ -563,6 +587,5 @@ const styles = StyleSheet.create({
   },
   timeDropdown: {
     borderColor: "#ccc",
-    zIndex: 1,
   },
 });

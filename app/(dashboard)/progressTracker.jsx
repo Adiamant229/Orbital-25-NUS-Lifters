@@ -41,7 +41,7 @@ import {
   deleteDoc,
   doc,
   updateDoc,
-  where, // Import where for filtering
+  where,
 } from "firebase/firestore";
 
 const ProgressTracker = () => {
@@ -57,18 +57,57 @@ const ProgressTracker = () => {
   const [weightInput, setWeightInput] = useState("");
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  // For weights - REVERTED TO ORIGINAL LOGIC, PLUS FIX FOR YEAR OPTIONS
   const [openYearDropdown, setOpenYearDropdown] = useState(false);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  // Initial selectedYear set to null, will be updated by effect
+  const [selectedYear, setSelectedYear] = useState(null);
   const [yearOptions, setYearOptions] = useState([]);
+  const [allWeights, setAllWeights] = useState([]); // State to hold all weights for year dropdown
+
+  // For workouts - REMAINS WITH "ALL" OPTION
+  const [openWorkoutYearDropdown, setOpenWorkoutYearDropdown] = useState(false);
+  const [selectedWorkoutYear, setSelectedWorkoutYear] = useState("all");
+  const [workoutYearOptions, setWorkoutYearOptions] = useState([]);
 
   const [weightListModalVisible, setWeightListModalVisible] = useState(false);
   const [editingWeight, setEditingWeight] = useState(null);
   const user = auth.currentUser; // Get the current user
 
+  const [allWorkouts, setAllWorkouts] = useState([]); // For generating workout year dropdown
+
+  // NEW: Effect to fetch ALL weights for year dropdown generation (unfiltered)
   useEffect(() => {
+    if (!user) {
+      setAllWeights([]);
+      return;
+    }
+
+    const weightsCollection = collection(db, "users", user.uid, "weights");
+    const q = query(weightsCollection, orderBy("date", "desc")); // Order by date to get recent years easily
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setAllWeights(data);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  // Effect to populate year options for weights - NOW uses allWeights, no default current year
+  useEffect(() => {
+    if (allWeights.length === 0) {
+      setYearOptions([]);
+      setSelectedYear(null); // No year selected if no data
+      return;
+    }
+
     const uniqueYears = [
       ...new Set(
-        weights.map((w) => {
+        allWeights.map((w) => {
           const d =
             typeof w.date === "string"
               ? new Date(w.date)
@@ -76,33 +115,110 @@ const ProgressTracker = () => {
           return d.getFullYear();
         })
       ),
-    ].sort((a, b) => b - a);
+    ].sort((a, b) => b - a); // Sort descending for most recent year first
 
-    setYearOptions(
-      uniqueYears.map((year) => ({
-        label: year.toString(),
-        value: year,
-      }))
-    );
+    const options = uniqueYears.map((year) => ({
+      label: year.toString(),
+      value: year,
+    }));
+    setYearOptions(options);
 
-    if (!uniqueYears.includes(selectedYear)) {
-      setSelectedYear(uniqueYears[0] || new Date().getFullYear());
+    // If selectedYear is null or not in the new options, default to the most recent year available
+    if (selectedYear === null || !uniqueYears.includes(selectedYear)) {
+      setSelectedYear(uniqueYears[0]);
     }
-  }, [weights]);
+  }, [allWeights, selectedYear]); // Dependency on allWeights and selectedYear
 
+  // Effect to fetch ALL workouts for year dropdown generation (unfiltered) - REMAINS
   useEffect(() => {
-    // Only fetch workouts if a user is logged in
     if (!user) {
-      setWorkouts([]); // Clear workouts if no user is logged in
+      setAllWorkouts([]);
       return;
     }
 
-    // Modify the query to filter by userId
     const q = query(
       collection(db, "workouts"),
-      where("userId", "==", user.uid), // Filter by the current user's ID
+      where("userId", "==", user.uid),
       orderBy("createdAt", "desc")
     );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setAllWorkouts(data);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  // Effect to populate year options for workouts (uses allWorkouts) - REMAINS
+  useEffect(() => {
+    if (!user || allWorkouts.length === 0) {
+      setWorkoutYearOptions([{ label: "All", value: "all" }]);
+      setSelectedWorkoutYear("all");
+      return;
+    }
+
+    const uniqueWorkoutYears = [
+      ...new Set(
+        allWorkouts.map((w) => {
+          const d = w.createdAt?.toDate ? w.createdAt.toDate() : new Date();
+          return d.getFullYear();
+        })
+      ),
+    ].sort((a, b) => b - a);
+
+    const options = [
+      { label: "All", value: "all" },
+      ...uniqueWorkoutYears.map((year) => ({
+        label: year.toString(),
+        value: year,
+      })),
+    ];
+
+    setWorkoutYearOptions(options);
+
+    if (
+      selectedWorkoutYear !== "all" &&
+      !uniqueWorkoutYears.includes(selectedWorkoutYear) &&
+      uniqueWorkoutYears.length > 0
+    ) {
+      setSelectedWorkoutYear(uniqueWorkoutYears[0]);
+    } else if (uniqueWorkoutYears.length === 0) {
+      setSelectedWorkoutYear("all");
+    }
+  }, [allWorkouts, user]);
+
+  // Effect to fetch workouts based on selectedWorkoutYear (filters from Firebase) - REMAINS
+  useEffect(() => {
+    if (!user) {
+      setWorkouts([]);
+      return;
+    }
+
+    let q;
+    const workoutsCollectionRef = collection(db, "workouts");
+
+    if (selectedWorkoutYear === "all") {
+      q = query(
+        workoutsCollectionRef,
+        where("userId", "==", user.uid),
+        orderBy("createdAt", "desc")
+      );
+    } else {
+      const startOfYear = new Date(selectedWorkoutYear, 0, 1);
+      const endOfYear = new Date(selectedWorkoutYear + 1, 0, 1);
+
+      q = query(
+        workoutsCollectionRef,
+        where("userId", "==", user.uid),
+        where("createdAt", ">=", startOfYear),
+        where("createdAt", "<", endOfYear),
+        orderBy("createdAt", "desc")
+      );
+    }
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const workoutsData = snapshot.docs.map((doc) => ({
@@ -113,17 +229,27 @@ const ProgressTracker = () => {
     });
 
     return () => unsubscribe();
-  }, [user]); // Re-run effect when user changes
+  }, [user, selectedWorkoutYear]);
 
+  // Effect to fetch weights (filters by selectedYear for the graph/list display)
   useEffect(() => {
-    if (!user) {
-      setWeights([]);
+    if (!user || selectedYear === null) {
+      setWeights([]); // Clear weights if no year is selected (no data)
       return;
     }
 
     const weightsCollection = collection(db, "users", user.uid, "weights");
 
-    const q = query(weightsCollection, orderBy("date", "desc"));
+    // Calculate start and end of the selected year for the query
+    const startOfYear = new Date(selectedYear, 0, 1); // January 1st of the selected year
+    const endOfYear = new Date(selectedYear + 1, 0, 1); // January 1st of the *next* year
+
+    const q = query(
+      weightsCollection,
+      where("date", ">=", startOfYear), // Filter documents created on or after startOfYear
+      where("date", "<", endOfYear), // Filter documents created before endOfYear
+      orderBy("date", "desc")
+    );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const weightsData = snapshot.docs.map((doc) => ({
@@ -134,7 +260,7 @@ const ProgressTracker = () => {
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, selectedYear]); // Re-run effect when user or selectedYear changes
 
   const handleDeleteWorkout = (id) => {
     Alert.alert(
@@ -147,7 +273,6 @@ const ProgressTracker = () => {
           style: "destructive",
           onPress: async () => {
             try {
-              // Ensure that only the user's own workout can be deleted
               if (user) {
                 await deleteDoc(doc(db, "workouts", id));
                 setOpenedWorkouts((prev) => {
@@ -244,13 +369,8 @@ const ProgressTracker = () => {
     );
   };
 
-  const filteredWeights = weights.filter((w) => {
-    const d =
-      typeof w.date === "string"
-        ? new Date(w.date)
-        : w.date.toDate?.() || new Date();
-    return d.getFullYear() === selectedYear;
-  });
+  // filteredWeights now refers to the `weights` state which is already filtered by selectedYear
+  const filteredWeights = weights;
 
   const sortedFilteredWeightsForChart = [...filteredWeights]
     .map((w) => ({
@@ -401,6 +521,7 @@ const ProgressTracker = () => {
         <>
           <View style={styles.header2}>
             <ThemedText style={{ fontSize: 20 }}>Your Workouts</ThemedText>
+
             <TouchableOpacity
               onPress={() => router.push("/addWorkout")}
               style={styles.addButton2}
@@ -421,109 +542,163 @@ const ProgressTracker = () => {
             >
               <FontAwesome5 name="book-open" size={20} color="white" />
             </TouchableOpacity>
+
+            {/* DropDownPicker for Workout Year Filter */}
+            <DropDownPicker
+              open={openWorkoutYearDropdown}
+              value={selectedWorkoutYear}
+              items={workoutYearOptions}
+              setOpen={setOpenWorkoutYearDropdown}
+              setValue={setSelectedWorkoutYear}
+              setItems={setWorkoutYearOptions}
+              placeholder="Select Year"
+              listMode="SCROLLVIEW"
+              dropDownDirection="BOTTOM"
+              maxHeight={200}
+              containerStyle={{
+                width: 100,
+                zIndex: 1000,
+              }}
+              style={{
+                height: 50,
+                backgroundColor: "#2c2c2c",
+                borderColor: "#444444",
+              }}
+              dropDownContainerStyle={{
+                backgroundColor: "#2c2c2c",
+                borderColor: "#444444",
+              }}
+              textStyle={{
+                color: "#fff",
+              }}
+              labelStyle={{
+                color: "#fff",
+              }}
+              selectedItemLabelStyle={{
+                fontWeight: "bold",
+              }}
+              arrowIconStyle={{
+                tintColor: "#fff",
+              }}
+              tickIconStyle={{
+                tintColor: "#fff",
+              }}
+            />
           </View>
 
-          <FlatList
-            data={workouts}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => {
-              const isSelected = openedWorkouts.has(item.id);
-              return (
-                <TouchableOpacity
-                  onPress={() => toggleWorkout(item.id)}
-                  style={styles.card}
-                >
-                  <Text style={styles.cardTitle}>{item.name}</Text>
+          {workouts.length === 0 ? (
+            <Text>
+              {allWorkouts.length === 0
+                ? "No workout data available. Add an entry to get started!"
+                : `No workout data for ${selectedWorkoutYear}.`}
+            </Text>
+          ) : (
+            <FlatList
+              data={workouts}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => {
+                const isSelected = openedWorkouts.has(item.id);
+                return (
+                  <TouchableOpacity
+                    onPress={() => toggleWorkout(item.id)}
+                    style={styles.card}
+                  >
+                    <Text style={styles.cardTitle}>{item.name}</Text>
 
-                  {(item.createdAt || item.timePeriod) && (
-                    <Text style={{ color: "#555", marginTop: 4 }}>
-                      {(() => {
-                        if (!item.createdAt) return "";
+                    {(item.createdAt || item.timePeriod) && (
+                      <Text style={{ color: "#555", marginTop: 4 }}>
+                        {(() => {
+                          if (!item.createdAt) return "";
 
-                        const createdDate = item.createdAt.toDate();
-                        const now = new Date();
-                        const diffTime = Math.abs(now - createdDate);
-                        const diffDays = Math.floor(
-                          diffTime / (1000 * 60 * 60 * 24)
-                        );
+                          const createdDate = item.createdAt.toDate();
+                          const now = new Date();
+                          const diffTime = Math.abs(now - createdDate);
+                          const diffDays = Math.floor(
+                            diffTime / (1000 * 60 * 60 * 24)
+                          );
 
-                        const dateStr = createdDate.toLocaleDateString(
-                          undefined,
-                          {
-                            day: "2-digit",
-                            month: "long",
-                            year: "numeric",
-                          }
-                        );
+                          const dateStr = createdDate.toLocaleDateString(
+                            undefined,
+                            {
+                              day: "2-digit",
+                              month: "long",
+                              year: "numeric",
+                            }
+                          );
 
-                        const timePeriodStr = item.timePeriod
-                          ? ` ${item.timePeriod} Workout`
-                          : " Workout";
-                        const relativeStr =
-                          diffDays === 0
-                            ? "Today"
-                            : diffDays === 1
-                            ? "1 day ago"
-                            : `${diffDays} days ago`;
+                          const timePeriodStr = item.timePeriod
+                            ? ` ${item.timePeriod} Workout`
+                            : " Workout";
+                          const relativeStr =
+                            diffDays === 0
+                              ? "Today"
+                              : diffDays === 1
+                              ? "1 day ago"
+                              : `${diffDays} days ago`;
 
-                        return `${dateStr}${timePeriodStr} (${relativeStr})`;
-                      })()}
-                    </Text>
-                  )}
+                          return `${dateStr}${timePeriodStr} (${relativeStr})`;
+                        })()}
+                      </Text>
+                    )}
 
-                  {isSelected && (
-                    <View style={{ marginTop: 8 }}>
-                      {item.workoutNotes && item.workoutNotes.trim() !== "" && (
-                        <View style={{ marginBottom: 8 }}>
-                          <Text style={{ fontWeight: "bold" }}>Notes:</Text>
-                          <Text style={styles.notesText}>
-                            {item.workoutNotes}
-                          </Text>
-                        </View>
-                      )}
+                    {isSelected && (
+                      <View style={{ marginTop: 8 }}>
+                        {item.workoutNotes &&
+                          item.workoutNotes.trim() !== "" && (
+                            <View style={{ marginBottom: 8 }}>
+                              <Text style={{ fontWeight: "bold" }}>Notes:</Text>
+                              <Text style={styles.notesText}>
+                                {item.workoutNotes}
+                              </Text>
+                            </View>
+                          )}
 
-                      {item.exercises?.map((ex, i) => (
-                        <View key={i} style={{ marginBottom: 8 }}>
-                          <Text style={{ fontWeight: "bold" }}>{ex.name}</Text>
-                          {ex.sets.map((set, j) => (
-                            <Text key={j} style={{ marginLeft: 10 }}>
-                              Set {j + 1}: {set.reps} reps @ {set.weight} kg
+                        {item.exercises?.map((ex, i) => (
+                          <View key={i} style={{ marginBottom: 8 }}>
+                            <Text style={{ fontWeight: "bold" }}>
+                              {ex.name}
                             </Text>
-                          ))}
-                        </View>
-                      ))}
-                      <View style={{ flexDirection: "row", gap: 10 }}>
-                        <TouchableOpacity
-                          onPress={() => {
-                            router.push({
-                              pathname: "/addWorkout",
-                              params: { editWorkoutId: item.id },
-                            });
-                          }}
-                        >
-                          <Ionicons
-                            name="pencil-outline"
-                            size={20}
-                            color="#007AFF"
-                          />
-                        </TouchableOpacity>
+                            {ex.sets.map((set, j) => (
+                              <Text key={j} style={{ marginLeft: 10 }}>
+                                Set {j + 1}: {set.reps} reps @ {set.weight} kg
+                              </Text>
+                            ))}
+                          </View>
+                        ))}
 
-                        <TouchableOpacity
-                          onPress={() => handleDeleteWorkout(item.id)}
-                        >
-                          <Ionicons
-                            name="trash-outline"
-                            size={20}
-                            color="#ff3b30"
-                          />
-                        </TouchableOpacity>
+                        <View style={{ flexDirection: "row", gap: 10 }}>
+                          <TouchableOpacity
+                            onPress={() => {
+                              router.push({
+                                pathname: "/addWorkout",
+                                params: { editWorkoutId: item.id },
+                              });
+                            }}
+                          >
+                            <Ionicons
+                              name="pencil-outline"
+                              size={20}
+                              color="#007AFF"
+                            />
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            onPress={() => handleDeleteWorkout(item.id)}
+                          >
+                            <Ionicons
+                              name="trash-outline"
+                              size={20}
+                              color="#ff3b30"
+                            />
+                          </TouchableOpacity>
+                        </View>
                       </View>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              );
-            }}
-          />
+                    )}
+                  </TouchableOpacity>
+                );
+              }}
+            />
+          )}
         </>
       )}
 
@@ -578,6 +753,7 @@ const ProgressTracker = () => {
               <FontAwesome5 name="book-open" size={20} color="white" />
             </TouchableOpacity>
 
+            {/* DropDownPicker for Weight Year Filter - NOW CORRECTLY POPULATES */}
             <DropDownPicker
               open={openYearDropdown}
               value={selectedYear}
@@ -585,13 +761,43 @@ const ProgressTracker = () => {
               setOpen={setOpenYearDropdown}
               setValue={setSelectedYear}
               setItems={setYearOptions}
-              containerStyle={{ width: 150 }}
+              containerStyle={{ width: 100 }}
               placeholder="Select Year"
+              listMode={"SCROLLVIEW"}
+              dropDownDirection="BOTTOM"
+              maxHeight={200}
+              style={{
+                backgroundColor: "#2c2c2c",
+                borderColor: "#444444",
+              }}
+              textStyle={{
+                color: "#fff",
+              }}
+              labelStyle={{
+                color: "#fff",
+              }}
+              arrowIconStyle={{
+                tintColor: "#fff",
+              }}
+              tickIconStyle={{
+                tintColor: "#fff",
+              }}
+              selectedItemLabelStyle={{
+                fontWeight: "bold",
+              }}
+              dropDownContainerStyle={{
+                backgroundColor: "#2c2c2c",
+                borderColor: "#444444",
+              }}
             />
           </View>
 
           <View style={styles.summaryContainer}>
-            {sortedFilteredWeightsForChart.length > 0 ? (
+            {selectedYear === null ? (
+              <Text style={styles.graphPlaceholder}>
+                No weight data available. Add an entry to get started!
+              </Text>
+            ) : sortedFilteredWeightsForChart.length > 0 ? (
               <TouchableOpacity onPress={() => setWeightListModalVisible(true)}>
                 <LineChart
                   data={weightChartData}
@@ -629,7 +835,7 @@ const ProgressTracker = () => {
 
           {sortedFilteredWeightsForList.length === 0 ? (
             <ThemedText style={{ color: "#ccc" }}>
-              No weight entries found for {selectedYear}.
+              No weight entries found for {selectedYear || "this period"}.
             </ThemedText>
           ) : (
             <ScrollView
@@ -766,18 +972,20 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     marginBottom: 30,
     marginTop: 15,
+    justifyContent: 'center'
   },
   header2: {
     flexDirection: "row",
-    gap: 5,
+    gap: 4,
     alignItems: "center",
     marginBottom: 5,
+    flexWrap: "wrap",
   },
   header3: {
     flexDirection: "row",
     flexWrap: "wrap",
     alignItems: "center",
-    gap: 10,
+    gap: 7,
     marginBottom: 5,
   },
   buttonicons: {
@@ -789,7 +997,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#2196f3",
     borderRadius: 20,
     padding: 10,
-    width: 115,
+    width: 112,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -811,6 +1019,9 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontWeight: "600",
+  },
+  notesText: {
+    color: "#444",
   },
   deleteButton: {
     marginTop: 10,

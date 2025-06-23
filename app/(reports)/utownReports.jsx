@@ -95,21 +95,24 @@ const UtownReports = () => {
     { label: "Cleanliness Issue", value: "Cleanliness Issue" },
   ]);
 
-  useEffect(() => {
-    const fetchReports = async () => {
-      try {
-        const snapshot = await getDocs(reportsRef);
-        const data = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setReports(data);
-      } catch (error) {
-        console.error("Error fetching reports:", error);
-      }
-    };
+  const fetchReports = async () => {
+    try {
+      const snapshot = await getDocs(reportsRef);
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setReports(data);
+    } catch (error) {
+      console.error("Error fetching reports:", error);
+    }
+  };
 
-    fetchReports();
+  useEffect(() => {
+    const loadReports = async () => {
+      await fetchReports();
+    };
+    loadReports();
   }, []);
 
   const openAddModal = () => {
@@ -342,12 +345,17 @@ const UtownReports = () => {
       <View style={styles.header}>
         <ThemedText style={styles.title}>UTown Reports</ThemedText>
         <TouchableOpacity onPress={openAddModal} style={styles.addButton}>
-          <ThemedText style={{ color: "#fff" }}>+</ThemedText>
+          <ThemedText>+</ThemedText>
         </TouchableOpacity>
       </View>
       <FlatList
         data={reports}
         keyExtractor={(item) => item.id}
+        ListEmptyComponent={
+          <Text style={{ textAlign: "center", marginTop: 50, color: "#888" }}>
+            No reports yet. Tap + to add one.
+          </Text>
+        }
         renderItem={({ item }) => {
           const isCurrentUser = item.userId === currentUserId;
           const isExpanded = expandedReportId === item.id;
