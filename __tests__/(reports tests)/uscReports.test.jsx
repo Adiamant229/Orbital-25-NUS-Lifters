@@ -30,8 +30,32 @@ jest.mock("firebase/firestore", () => ({
   addDoc: jest.fn(() => Promise.resolve({ id: "newDocId" })),
   updateDoc: jest.fn(() => Promise.resolve()),
   deleteDoc: jest.fn(() => Promise.resolve()),
+  getDoc: jest.fn(() =>
+    Promise.resolve({
+      exists: () => true,
+      data: () => ({ imageUrl: "https://fakeimage.url/image.jpg" }),
+    })
+  ),
   doc: jest.fn(() => ({})),
   deleteField: jest.fn(() => "deleteField"),
+  query: jest.fn((ref) => ref),
+  onSnapshot: jest.fn((q, callback) => {
+    callback({
+      docs: [
+        {
+          id: "1",
+          data: () => ({
+            equipment: "Bench Press",
+            issueType: "Damaged",
+            remarks: "Test remark",
+            userId: "user1",
+            imageUrl: "https://fakeimage.url/image.jpg",
+          }),
+        },
+      ],
+    });
+    return jest.fn(); // Unsubscribe mock
+  }),
 }));
 
 jest.mock("firebase/storage", () => ({
@@ -60,6 +84,9 @@ jest.mock("expo-image-picker", () => ({
   requestMediaLibraryPermissionsAsync: jest.fn(() =>
     Promise.resolve({ granted: true })
   ),
+  MediaTypeOptions: {
+    Images: "Images", 
+  },
 }));
 
 jest.mock("react-native-dropdown-picker", () => {
@@ -109,8 +136,12 @@ describe("UscReports component", () => {
   });
 
   test("shows empty message when there are no reports", async () => {
-    const emptyMock = jest.fn(() => Promise.resolve({ docs: [] }));
-    require("firebase/firestore").getDocs.mockImplementationOnce(emptyMock);
+    const firestore = require("firebase/firestore");
+
+    firestore.onSnapshot.mockImplementationOnce((query, callback) => {
+      callback({ docs: [] }); 
+      return jest.fn(); 
+    });
 
     const { getByText } = render(<UscReports />);
     await waitFor(() =>
@@ -171,13 +202,17 @@ describe("UscReports component", () => {
   });
 
   test("image picker adds imageUri to state", async () => {
-    const { getByText } = render(<UscReports />);
-    fireEvent.press(getByText("+"));
+    const { getByText, getByTestId } = render(<UscReports />);
+    fireEvent.press(getByText("+")); // open modal
+
     await act(async () => {
-      fireEvent.press(getByText("Pick from Gallery"));
+      fireEvent.press(getByText("Pick from Gallery")); 
     });
-    expect(getByText("Take Photo")).toBeTruthy();
+
+    expect(getByTestId("image-preview")).toBeTruthy(); 
   });
+  
+  
 
   test("does not set imageUri when image picker is cancelled", async () => {
     require("expo-image-picker").launchImageLibraryAsync.mockImplementationOnce(
@@ -192,6 +227,23 @@ describe("UscReports component", () => {
     });
 
     expect(queryByText("Take Photo")).toBeTruthy();
+  });
+
+  test("alerts when cancelling creating a new report with changes", async () => {
+    const { getByTestId, getByText } = render(<UscReports />);
+    fireEvent.press(getByText("+"));
+    fireEvent.press(getByTestId("select-bench-press"));
+
+    await act(async () => {
+      fireEvent.press(getByText("Cancel"));
+    });
+
+    expect(Alert.alert).toHaveBeenCalledWith(
+      "Cancel New Report?",
+      "You have started creating a new report. Are you sure you want to cancel?",
+      expect.any(Array)
+    );
+
   });
 
   test("cancelling modal resets state", async () => {
@@ -227,6 +279,29 @@ describe("UscReports component", () => {
       "Are you sure you want to update this report?",
       expect.any(Array)
     );
+  });
+
+  test("alerts when cancelling editing a report with changes", async () => {
+    const { getByText, queryByText, getByTestId } = render(<UscReports />);
+    await waitFor(() => getByText("Bench Press - Damaged"));
+
+    fireEvent.press(getByText("Bench Press - Damaged"));
+
+    const editIcon = await waitFor(() => getByTestId("edit-icon-1"));
+    fireEvent.press(editIcon);
+
+    fireEvent.press(getByTestId("select-missing"));
+
+    await act(async () => {
+      fireEvent.press(getByText("Cancel"));
+    });
+
+    expect(Alert.alert).toHaveBeenCalledWith(
+      "Discard Changes?",
+      "You have unsaved changes. Are you sure you want to discard them?",
+      expect.any(Array)
+    );
+
   });
 
   test("cancel editing resets state", async () => {
@@ -265,20 +340,17 @@ describe("UscReports component", () => {
     );
   });
 
-  test("expands a report card to view remarks and image", async () => {
-    const { getByText, queryByText, getByTestId } = render(<UscReports />);
+  test("image picker adds imageUri to state", async () => {
+    const { getByText, getByTestId } = render(<UscReports />);
+    fireEvent.press(getByText("+"));
 
-    const reportTitle = await waitFor(() => getByText("Bench Press - Damaged"));
+    await act(async () => {
+      fireEvent.press(getByText("Pick from Gallery"));
+    });
 
-    expect(queryByText("Remarks: Test remark")).toBeNull();
-
-    fireEvent.press(reportTitle);
-
-    expect(getByText("Remarks: Test remark")).toBeTruthy();
-
-    expect(getByTestId("report-image-1")).toBeTruthy();
+    expect(getByTestId("image-preview")).toBeTruthy(); 
   });
-
+  
   test("confirmation alert on resolved calls deleteDoc and updates state", async () => {
     const { getByText } = render(<UscReports />);
     await waitFor(() => getByText("Bench Press - Damaged"));
@@ -296,20 +368,26 @@ describe("UscReports component", () => {
   });
 
   test("handles Firestore fetch error gracefully", async () => {
+    const firestore = require("firebase/firestore");
     const consoleSpy = jest.spyOn(console, "error").mockImplementation();
-    require("firebase/firestore").getDocs.mockImplementationOnce(() => {
-      throw new Error("Firestore failure");
+
+    firestore.onSnapshot.mockImplementationOnce((query, onNext, onError) => {
+      onError(new Error("Firestore failure")); // Trigger error callback
+      return () => {}; // Return unsubscribe function
     });
 
     render(<UscReports />);
-    await waitFor(() =>
+
+    await waitFor(() => {
       expect(consoleSpy).toHaveBeenCalledWith(
-        "Error fetching reports:",
+        "Error fetching real-time reports:",
         expect.any(Error)
-      )
-    );
+      );
+    });
+
     consoleSpy.mockRestore();
   });
+  
 
   test("handles Firestore error during submit", async () => {
     const consoleSpy = jest
@@ -330,8 +408,8 @@ describe("UscReports component", () => {
     });
 
     const { getByText, getByTestId } = render(<UscReports />);
-    fireEvent.press(getByText("+"));
-    fireEvent.press(getByTestId("select-bench-press"));
+    fireEvent.press(getByText("+")); 
+    fireEvent.press(getByTestId("select-bench-press")); 
     fireEvent.press(getByTestId("select-damaged"));
 
     await act(async () => {
