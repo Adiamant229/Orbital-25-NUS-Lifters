@@ -36,6 +36,7 @@ jest.mock("firebase/auth", () => ({
 }));
 
 const mockDoc = jest.fn(() => ({}));
+
 const mockSetDoc = jest.fn(() => Promise.resolve());
 
 jest.mock("firebase/firestore", () => ({
@@ -51,6 +52,16 @@ describe("Signup Component", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
+
+  test("clicking 'Login instead' redirects to the home page", async () => {
+    const { getByText } = render(<Signup />);
+    fireEvent.press(getByText("Login instead"));
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith("/");
+    });
+  });
+});
 
   test("shows alert if username is empty", async () => {
     const { getByText } = render(<Signup />);
@@ -180,12 +191,4 @@ describe("Signup Component", () => {
     });
   });
 
-  test("clicking 'Login instead' redirects to the home page", async () => {
-    const { getByText } = render(<Signup />);
-    fireEvent.press(getByText("Login instead"));
 
-    await waitFor(() => {
-      expect(mockReplace).toHaveBeenCalledWith("/");
-    });
-  });
-});

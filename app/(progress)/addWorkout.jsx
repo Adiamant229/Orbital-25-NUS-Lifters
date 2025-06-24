@@ -55,6 +55,8 @@ const AddWorkout = () => {
   const nextExerciseId = useRef(1);
   const nextSetId = useRef(1);
 
+  const [originalWorkout, setOriginalWorkout] = useState(null);
+
   //exercise dropdown box
   const exerciseOptions = [
     { label: "Bench Press", value: "Bench Press" },
@@ -91,15 +93,23 @@ const AddWorkout = () => {
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
             const data = docSnap.data();
+
+            setOriginalWorkout({
+              name: data.name || "",
+              workoutNotes: data.workoutNotes || "",
+              exercises: data.exercises || [],
+              timePeriod: data.timePeriod || null,
+              createdAt: data.createdAt?.toDate
+                ? data.createdAt.toDate()
+                : new Date(),
+            });
+
             setWorkoutName(data.name || "");
             setWorkoutNotes(data.workoutNotes || "");
 
-            // Assign stable IDs to exercises and sets if missing
             if (data.exercises && data.exercises.length > 0) {
               const exercisesWithIds = data.exercises.map((ex) => {
-                // Assign exercise id or increment ref
                 const exId = ex.id ?? nextExerciseId.current++;
-                // Assign ids to sets as well
                 const setsWithIds = ex.sets
                   ? ex.sets.map((set) => ({
                       ...set,
@@ -108,6 +118,19 @@ const AddWorkout = () => {
                   : [];
                 return { ...ex, id: exId, sets: setsWithIds };
               });
+
+              const maxExerciseId = Math.max(
+                ...exercisesWithIds.map((e) => e.id || 0),
+                0
+              );
+              nextExerciseId.current = maxExerciseId + 1;
+
+              const allSetIds = exercisesWithIds.flatMap((e) =>
+                e.sets.map((s) => s.id || 0)
+              );
+              const maxSetId = Math.max(...allSetIds, 0);
+              nextSetId.current = maxSetId + 1;
+
               setExercises(exercisesWithIds);
             } else {
               setExercises([]);
@@ -184,13 +207,32 @@ const AddWorkout = () => {
       Alert.alert("Please enter a workout name.");
       return;
     }
-    if (exercises.length === 0) {
-      Alert.alert("Add at least one exercise.");
-      return;
-    }
+
     if (!workoutTimePeriod) {
       Alert.alert("Please select a workout time period.");
       return;
+    }
+    const validExercises = exercises.filter(
+      (ex) => ex.name && ex.name.trim() !== ""
+    );
+    if (validExercises.length === 0) {
+      Alert.alert("Please add at least one exercise.");
+      return;
+    }
+
+    for (const ex of validExercises) {
+      if (!ex.sets || ex.sets.length === 0) {
+        Alert.alert("Please add at least one set to each exercise.");
+        return;
+      }
+    }
+    for (const ex of validExercises) {
+      for (const set of ex.sets) {
+        if (!set.reps || !set.weight) {
+          Alert.alert("Please fill in reps and weight for all sets.");
+          return;
+        }
+      }
     }
 
     const currentUser = auth.currentUser;
@@ -206,7 +248,7 @@ const AddWorkout = () => {
           await updateDoc(doc(db, "workouts", editWorkoutId), {
             name: workoutName.trim(),
             workoutNotes,
-            exercises,
+            exercises: validExercises,
             timePeriod: workoutTimePeriod,
             createdAt: date,
             userId,
@@ -243,6 +285,64 @@ const AddWorkout = () => {
       ]
     );
   };
+
+  const isDeepEqual = (a, b) => {
+    return JSON.stringify(a) === JSON.stringify(b);
+  };
+
+  const changesDone = () => {
+    if (!originalWorkout) {
+      // if no original data (adding new workout), consider dirty if any field is filled
+      return (
+        workoutName.trim() !== "" ||
+        workoutNotes.trim() !== "" ||
+        workoutTimePeriod !== null ||
+        (exercises.length > 0 &&
+          exercises.some(
+            (ex) =>
+              (ex.name && ex.name.trim() !== "") ||
+              (ex.sets &&
+                ex.sets.length > 0 &&
+                ex.sets.some(
+                  (set) =>
+                    (set.reps && set.reps !== "") ||
+                    (set.weight && set.weight !== "")
+                ))
+          ))
+      );
+    }
+
+    // compare current state to originalWorkout
+
+    if (workoutName !== originalWorkout.name) return true;
+    if (workoutNotes !== originalWorkout.workoutNotes) return true;
+    if (workoutTimePeriod !== originalWorkout.timePeriod) return true;
+
+    // Compare exercises deeply - quick way is stringify comparison
+    if (!isDeepEqual(exercises, originalWorkout.exercises)) return true;
+
+    // No differences found
+    return false;
+  };
+
+  const handleCancelPress = () => {
+    if (changesDone()) {
+      Alert.alert(
+        editWorkoutId ? "Discard Changes?" : "Cancel New Workout?",
+        editWorkoutId
+          ? "You have unsaved changes. Are you sure you want to discard them?"
+          : "You have started creating a new workout. Are you sure you want to cancel?",
+        [
+          { text: "No", style: "cancel" },
+          { text: "Yes", style: "destructive", onPress: () => router.back() },
+        ]
+      );
+    } else {
+      router.back();
+    }
+  };
+  
+
   return (
     <ThemedView style={styles.container}>
       <KeyboardAvoidingView
@@ -251,7 +351,7 @@ const AddWorkout = () => {
       >
         <ScrollView
           contentContainerStyle={styles.scrollContainer}
-          keyboardShouldPersistTaps="handled" 
+          keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           automaticallyAdjustKeyboardInsets={true}
         >
@@ -266,7 +366,6 @@ const AddWorkout = () => {
           />
 
           <View style={[styles.dateTimeRow, { zIndex: 3000 }]}>
-        
             <TouchableOpacity
               onPress={() => setShowDatePicker(true)}
               style={styles.datePickerButton}
@@ -296,11 +395,11 @@ const AddWorkout = () => {
                 dropDownContainerStyle={{
                   backgroundColor: "#fff",
                   borderColor: "#ccc",
-                  zIndex: 3000, 
+                  zIndex: 3000,
                 }}
                 listMode="SCROLLVIEW"
                 dropDownDirection="BOTTOM"
-                maxHeight={200} 
+                maxHeight={200}
               />
             </View>
           </View>
@@ -325,7 +424,7 @@ const AddWorkout = () => {
               <View
                 style={[
                   styles.exerciseCard,
-                  { zIndex: openDropdownIndex === exerciseIndex ? 2000 : 1000 }, 
+                  { zIndex: openDropdownIndex === exerciseIndex ? 2000 : 1000 },
                 ]}
               >
                 <View style={styles.exerciseHeader}>
@@ -346,17 +445,18 @@ const AddWorkout = () => {
                       dropDownContainerStyle={{
                         backgroundColor: "#fff",
                         borderColor: "#ccc",
-                        zIndex: 2000, 
+                        zIndex: 2000,
                       }}
-                      listMode={dropdownListMode} 
+                      listMode={dropdownListMode}
                       dropDownDirection="BOTTOM"
-                      maxHeight={200} 
+                      maxHeight={200}
                     />
                   </View>
 
                   <TouchableOpacity
                     onPress={() => handleDeleteExercise(exerciseIndex)}
                     style={styles.deleteExerciseButton}
+                    testID={`delete-exercise-btn-${exercise.id}`}
                   >
                     <Ionicons name="trash-outline" size={20} color="#ff3b30" />
                   </TouchableOpacity>
@@ -404,9 +504,9 @@ const AddWorkout = () => {
                             styles.dropDownContainer,
                             { zIndex: set.openReps ? 1500 : 500 },
                           ]}
-                          listMode={dropdownListMode} 
+                          listMode={dropdownListMode}
                           dropDownDirection="BOTTOM"
-                          maxHeight={200} 
+                          maxHeight={200}
                         />
                       </View>
 
@@ -439,9 +539,9 @@ const AddWorkout = () => {
                             styles.dropDownContainer,
                             { zIndex: set.openWeight ? 1500 : 500 },
                           ]}
-                          listMode={dropdownListMode} 
+                          listMode={dropdownListMode}
                           dropDownDirection="BOTTOM"
-                          maxHeight={200} 
+                          maxHeight={200}
                         />
                       </View>
 
@@ -482,7 +582,7 @@ const AddWorkout = () => {
             <ThemedButton onPress={handleSaveWorkout}>
               <ThemedText>{editWorkoutId ? "Save" : "Submit"}</ThemedText>
             </ThemedButton>
-            <ThemedButton onPress={() => router.back()}>
+            <ThemedButton onPress={handleCancelPress}>
               <ThemedText>Cancel</ThemedText>
             </ThemedButton>
           </View>

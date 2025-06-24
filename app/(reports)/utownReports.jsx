@@ -69,6 +69,8 @@ const UtownReports = () => {
 
   const reportsRef = collection(db, "utownReports");
 
+  const [originalReport, setOriginalReport] = useState(null);
+
   //equipment dropdown box
   const [equipmentItems, setEquipmentItems] = useState([
     { label: "Bench Press", value: "Bench Press" },
@@ -117,6 +119,7 @@ const UtownReports = () => {
 
   const openAddModal = () => {
     setEditingReportId(null);
+    setOriginalReport(null);
     setValue(null);
     setIssueValue(null);
     setRemarks("");
@@ -126,6 +129,12 @@ const UtownReports = () => {
 
   const openEditModal = (report) => {
     setEditingReportId(report.id);
+    setOriginalReport({
+      equipment: report.equipment,
+      issueType: report.issueType,
+      remarks: report.remarks || "",
+      imageUri: report.imageUrl || null,
+    });
     setValue(report.equipment);
     setIssueValue(report.issueType);
     setRemarks(report.remarks || "");
@@ -139,6 +148,7 @@ const UtownReports = () => {
         "Submission Error",
         "Please select equipment and issue type."
       );
+
       return;
     }
 
@@ -254,7 +264,6 @@ const UtownReports = () => {
       ]
     );
   };
-  
 
   const getStoragePathFromUrl = (url) => {
     try {
@@ -267,39 +276,40 @@ const UtownReports = () => {
   };
 
   const handleDeleteReport = (id) => {
-     Alert.alert(
-       "Resolve Report",
-       "Are you sure you want to mark this report as resolved?",
-       [
-         { text: "Cancel", style: "cancel" },
-         {
-           text: "Resolve",
-           style: "destructive",
-           onPress: async () => {
-             try {
-               const reportToDelete = reports.find((r) => r.id === id);
- 
-               if (reportToDelete?.imageUrl) {
-                 const imagePath = getStoragePathFromUrl(
-                   reportToDelete.imageUrl
-                 );
-                 const imageRef = ref(storage, imagePath);
-                 await deleteObject(imageRef);
-               }
- 
-               await deleteDoc(doc(db, "utownReports", id));
- 
-               setReports((prev) => prev.filter((r) => r.id !== id));
-               if (editingReportId === id) setEditingReportId(null);
-             } catch (error) {
-               console.error("Error deleting report:", error);
-               Alert.alert("Error", "Could not delete the report.");
-             }
-           },
-         },
-       ]
-     );
-   };
+    Alert.alert(
+      "Resolve Report",
+      "Are you sure you want to mark this report as resolved?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Resolve",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const reportToDelete = reports.find((r) => r.id === id);
+
+              if (reportToDelete?.imageUrl) {
+                const imagePath = getStoragePathFromUrl(
+                  reportToDelete.imageUrl
+                );
+                const imageRef = ref(storage, imagePath);
+                await deleteObject(imageRef);
+              }
+
+              await deleteDoc(doc(db, "utownReports", id));
+
+              setReports((prev) => prev.filter((r) => r.id !== id));
+              if (editingReportId === id) setEditingReportId(null);
+            } catch (error) {
+              console.error("Error deleting report:", error);
+              Alert.alert("Error", "Could not delete the report.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const pickImage = async () => {
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -338,6 +348,63 @@ const UtownReports = () => {
   const handleRemoveImage = () => {
     setImageUri(null);
     setImageDeletedLocally(true);
+  };
+
+  const changesDone = () => {
+    if (!originalReport) {
+      // Adding new report: check if anything is filled
+      return (
+        value !== null ||
+        issueValue !== null ||
+        remarks.trim() !== "" ||
+        imageUri !== null
+      );
+    } else {
+      // Editing: check if any field differs from original
+      return (
+        value !== originalReport.equipment ||
+        issueValue !== originalReport.issueType ||
+        remarks.trim() !== originalReport.remarks.trim() ||
+        imageUri !== originalReport.imageUri
+      );
+    }
+  };
+
+  const handleCancelPress = () => {
+    if (changesDone()) {
+      Alert.alert(
+        editingReportId ? "Discard Changes?" : "Cancel New Report?",
+        editingReportId
+          ? "You have unsaved changes. Are you sure you want to discard them?"
+          : "You have started creating a new report. Are you sure you want to cancel?",
+        [
+          { text: "No", style: "cancel" },
+          {
+            text: "Yes",
+            style: "destructive",
+            onPress: () => {
+              setModalVisible(false);
+              setEditingReportId(null);
+              setOriginalReport(null);
+              setValue(null);
+              setIssueValue(null);
+              setRemarks("");
+              setImageUri(null);
+              setImageDeletedLocally(false);
+            },
+          },
+        ]
+      );
+    } else {
+      setModalVisible(false);
+      setEditingReportId(null);
+      setOriginalReport(null);
+      setValue(null);
+      setIssueValue(null);
+      setRemarks("");
+      setImageUri(null);
+      setImageDeletedLocally(false);
+    }
   };
 
   return (
@@ -397,6 +464,7 @@ const UtownReports = () => {
                         source={{ uri: item.imageUrl }}
                         style={styles.reportImage}
                         resizeMode="cover"
+                        testID={`report-image-${item.id}`}
                       />
                     )}
 
@@ -406,9 +474,7 @@ const UtownReports = () => {
                     >
                       <View style={styles.buttonicons}>
                         <Entypo name="tools" size={20} color="white" />
-                        <ThemedText style={{ color: "fff" }}>
-                          Resolved
-                        </ThemedText>
+                        <ThemedText>Resolved</ThemedText>
                       </View>
                     </TouchableOpacity>
                   </>
@@ -518,12 +584,7 @@ const UtownReports = () => {
                   <ThemedText>{editingReportId ? "Save" : "Submit"}</ThemedText>
                 </ThemedButton>
                 <Spacer width="25" />
-                <ThemedButton
-                  onPress={() => {
-                    setModalVisible(false);
-                    setEditingReportId(null);
-                  }}
-                >
+                <ThemedButton onPress={handleCancelPress}>
                   <ThemedText>Cancel</ThemedText>
                 </ThemedButton>
               </View>
