@@ -1,7 +1,6 @@
 import { render, fireEvent, waitFor, act } from "@testing-library/react-native";
 import { Alert } from "react-native";
 
-// Mock firebaseConfig module to avoid loading Firebase SDK
 jest.mock("../../firebaseConfig", () => ({
   auth: {},
 }));
@@ -15,7 +14,6 @@ jest.mock("firebase/auth", () => ({
   }),
 
   signInWithEmailAndPassword: jest.fn((auth, email, password) => {
-    // Simple mock logic:
     if (!email || !password) {
       return Promise.reject({
         code: "auth/invalid-email",
@@ -32,7 +30,6 @@ jest.mock("firebase/auth", () => ({
   }),
 }));
 
-// Mock expo-router's useRouter hook
 const mockReplace = jest.fn();
 
 jest.mock("expo-router", () => ({
@@ -55,7 +52,6 @@ describe("Login Component", () => {
   test("shows alert if email or password is empty", async () => {
     const { getByText } = render(<Index />);
 
-    // Press login without filling inputs
     await act(async () => {
       fireEvent.press(getByText("Login"));
     });
@@ -64,21 +60,6 @@ describe("Login Component", () => {
       "Error",
       "Please enter both email and password"
     );
-  });
-
-  test("successful login calls Firebase and redirects", async () => {
-    const { getByText, getByPlaceholderText } = render(<Index />);
-
-    fireEvent.changeText(getByPlaceholderText("Email"), "test@example.com");
-    fireEvent.changeText(getByPlaceholderText("Password"), "password");
-
-    await act(async () => {
-      fireEvent.press(getByText("Login"));
-    });
-
-    await waitFor(() => {
-      expect(mockReplace).toHaveBeenCalledWith("/gymCapacity");
-    });
   });
 
   test("shows alert on invalid login", async () => {
@@ -96,6 +77,21 @@ describe("Login Component", () => {
         "Login Error",
         "Invalid email or password."
       );
+    });
+  });
+  
+  test("successful login calls Firebase and redirects", async () => {
+    const { getByText, getByPlaceholderText } = render(<Index />);
+
+    fireEvent.changeText(getByPlaceholderText("Email"), "test@example.com");
+    fireEvent.changeText(getByPlaceholderText("Password"), "password");
+
+    await act(async () => {
+      fireEvent.press(getByText("Login"));
+    });
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith("/gymCapacity");
     });
   });
 

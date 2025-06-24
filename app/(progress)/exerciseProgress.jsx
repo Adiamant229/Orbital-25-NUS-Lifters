@@ -125,7 +125,6 @@ const ExerciseProgress = () => {
           Array.from(allExercisesSet).map((ex) => ({ label: ex, value: ex }))
         );
       }
-      
 
       setExerciseData(dataByExercise);
     });
@@ -183,7 +182,29 @@ const ExerciseProgress = () => {
             setValue={setSelectedExercises}
             setItems={setItems}
             placeholder="Select Exercise"
-            
+            style={{
+              backgroundColor: "#2c2c2c",
+              borderColor: "#444444",
+            }}
+            textStyle={{
+              color: "#fff",
+            }}
+            labelStyle={{
+              color: "#fff",
+            }}
+            arrowIconStyle={{
+              tintColor: "#fff",
+            }}
+            tickIconStyle={{
+              tintColor: "#fff",
+            }}
+            selectedItemLabelStyle={{
+              fontWeight: "bold",
+            }}
+            dropDownContainerStyle={{
+              backgroundColor: "#2c2c2c",
+              borderColor: "#444444",
+            }}
           />
         </View>
 
@@ -196,6 +217,29 @@ const ExerciseProgress = () => {
             setValue={setSelectedYear}
             setItems={setYearItems}
             placeholder="Select Year"
+            style={{
+              backgroundColor: "#2c2c2c",
+              borderColor: "#444444",
+            }}
+            textStyle={{
+              color: "#fff",
+            }}
+            labelStyle={{
+              color: "#fff",
+            }}
+            arrowIconStyle={{
+              tintColor: "#fff",
+            }}
+            tickIconStyle={{
+              tintColor: "#fff",
+            }}
+            selectedItemLabelStyle={{
+              fontWeight: "bold",
+            }}
+            dropDownContainerStyle={{
+              backgroundColor: "#2c2c2c",
+              borderColor: "#444444",
+            }}
           />
         </View>
       </View>

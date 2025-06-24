@@ -65,7 +65,6 @@ const ProgressTracker = () => {
   const [yearOptions, setYearOptions] = useState([]);
   const [allWeights, setAllWeights] = useState([]); // State to hold all weights for year dropdown
 
-  // For workouts - REMAINS WITH "ALL" OPTION
   const [openWorkoutYearDropdown, setOpenWorkoutYearDropdown] = useState(false);
   const [selectedWorkoutYear, setSelectedWorkoutYear] = useState("all");
   const [workoutYearOptions, setWorkoutYearOptions] = useState([]);
@@ -75,6 +74,10 @@ const ProgressTracker = () => {
   const user = auth.currentUser; // Get the current user
 
   const [allWorkouts, setAllWorkouts] = useState([]); // For generating workout year dropdown
+
+  // NEW STATE: To track original values for edit mode comparison
+  const [originalWeightInput, setOriginalWeightInput] = useState("");
+  const [originalDate, setOriginalDate] = useState(new Date());
 
   // NEW: Effect to fetch ALL weights for year dropdown generation (unfiltered)
   useEffect(() => {
@@ -347,6 +350,8 @@ const ProgressTracker = () => {
         setWeightInput("");
         setDate(new Date());
         setEditingWeight(null);
+        setOriginalWeightInput(""); // Reset original values on successful submission
+        setOriginalDate(new Date()); // Reset original values on successful submission
       } catch (error) {
         console.error("Error submitting weight:", error);
         alert("Failed to submit weight.");
@@ -464,9 +469,59 @@ const ProgressTracker = () => {
 
   const openEditWeight = (w) => {
     setEditingWeight(w);
-    setDate(typeof w.date === "string" ? new Date(w.date) : w.date.toDate());
+    const initialDate =
+      typeof w.date === "string" ? new Date(w.date) : w.date.toDate();
+    setDate(initialDate);
+    setOriginalDate(initialDate); // Set original date for comparison
     setWeightInput(w.weight.toString());
+    setOriginalWeightInput(w.weight.toString()); // Set original weight input for comparison
     setModalVisible(true);
+  };
+
+  const handleCancelWeightEntry = () => {
+    // Check for changes based on whether it's an edit or new entry
+    let hasChanges = false;
+    if (editingWeight) {
+      // Editing an existing entry
+      const weightChanged = weightInput !== originalWeightInput;
+      const dateChanged = date.toDateString() !== originalDate.toDateString(); // Compare dates ignoring time
+      hasChanges = weightChanged || dateChanged;
+    } else {
+      // New entry
+      hasChanges = weightInput.length > 0;
+    }
+
+    if (hasChanges) {
+      Alert.alert(
+        editingWeight ? "Unsaved Changes" : "Discard Entry",
+        editingWeight
+          ? "You have unsaved changes. Are you sure you want to discard them?"
+          : "Are you sure you want to discard this new weight entry?",
+        [
+          { text: "No", style: "cancel" },
+          {
+            text: "Yes",
+            style: "destructive",
+            onPress: () => {
+              setModalVisible(false);
+              setEditingWeight(null);
+              setWeightInput("");
+              setDate(new Date());
+              setOriginalWeightInput(""); // Reset original values
+              setOriginalDate(new Date()); // Reset original values
+            },
+          },
+        ]
+      );
+    } else {
+      // No changes, just close the modal
+      setModalVisible(false);
+      setEditingWeight(null);
+      setWeightInput("");
+      setDate(new Date());
+      setOriginalWeightInput(""); // Reset original values
+      setOriginalDate(new Date()); // Reset original values
+    }
   };
 
   return (
@@ -740,6 +795,8 @@ const ProgressTracker = () => {
                 setEditingWeight(null);
                 setWeightInput("");
                 setDate(new Date());
+                setOriginalWeightInput(""); // Reset original for new entry
+                setOriginalDate(new Date()); // Reset original for new entry
               }}
               style={styles.addButton2}
             >
@@ -753,7 +810,6 @@ const ProgressTracker = () => {
               <FontAwesome5 name="book-open" size={20} color="white" />
             </TouchableOpacity>
 
-            {/* DropDownPicker for Weight Year Filter - NOW CORRECTLY POPULATES */}
             <DropDownPicker
               open={openYearDropdown}
               value={selectedYear}
@@ -933,14 +989,7 @@ const ProgressTracker = () => {
                     <ThemedText>{editingWeight ? "Save" : "Submit"}</ThemedText>
                   </ThemedButton>
 
-                  <ThemedButton
-                    onPress={() => {
-                      setModalVisible(false);
-                      setEditingWeight(null);
-                      setWeightInput("");
-                      setDate(new Date());
-                    }}
-                  >
+                  <ThemedButton onPress={handleCancelWeightEntry}>
                     <ThemedText>Cancel</ThemedText>
                   </ThemedButton>
                 </View>
@@ -972,7 +1021,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     marginBottom: 30,
     marginTop: 15,
-    justifyContent: 'center'
+    justifyContent: "center",
   },
   header2: {
     flexDirection: "row",
@@ -1109,3 +1158,4 @@ const styles = StyleSheet.create({
     gap: 10,
   },
 });
+

@@ -71,6 +71,8 @@ const MpshReports = () => {
 
   const reportsRef = collection(db, "mpshReports");
 
+  const [originalReport, setOriginalReport] = useState(null);
+  
   //equipment dropdown box
   const [equipmentItems, setEquipmentItems] = useState([
     { label: "Bench Press", value: "Bench Press" },
@@ -119,21 +121,30 @@ const MpshReports = () => {
 
   const openAddModal = () => {
     setEditingReportId(null);
+    setOriginalReport(null);
     setValue(null);
     setIssueValue(null);
     setRemarks("");
     setImageUri(null);
     setModalVisible(true);
   };
+  
 
   const openEditModal = (report) => {
     setEditingReportId(report.id);
+    setOriginalReport({
+      equipment: report.equipment,
+      issueType: report.issueType,
+      remarks: report.remarks || "",
+      imageUri: report.imageUrl || null,
+    });
     setValue(report.equipment);
     setIssueValue(report.issueType);
     setRemarks(report.remarks || "");
     setImageUri(report.imageUrl || null);
     setModalVisible(true);
   };
+  
 
   const handleSubmit = async () => {
     if (!value || !issueValue) {
@@ -345,6 +356,64 @@ const MpshReports = () => {
     setImageDeletedLocally(true);
   };
 
+
+  const changesDone = () => {
+    if (!originalReport) {
+      // Adding new report: check if anything is filled
+      return (
+        value !== null ||
+        issueValue !== null ||
+        remarks.trim() !== "" ||
+        imageUri !== null
+      );
+    } else {
+      // Editing: check if any field differs from original
+      return (
+        value !== originalReport.equipment ||
+        issueValue !== originalReport.issueType ||
+        remarks.trim() !== originalReport.remarks.trim() ||
+        imageUri !== originalReport.imageUri
+      );
+    }
+  };
+  
+  const handleCancelPress = () => {
+    if (changesDone()) {
+      Alert.alert(
+        editingReportId ? "Discard Changes?" : "Cancel New Report?",
+        editingReportId
+          ? "You have unsaved changes. Are you sure you want to discard them?"
+          : "You have started creating a new report. Are you sure you want to cancel?",
+        [
+          { text: "No", style: "cancel" },
+          {
+            text: "Yes",
+            style: "destructive",
+            onPress: () => {
+              setModalVisible(false);
+              setEditingReportId(null);
+              setOriginalReport(null);
+              setValue(null);
+              setIssueValue(null);
+              setRemarks("");
+              setImageUri(null);
+              setImageDeletedLocally(false);
+            },
+          },
+        ]
+      );
+    } else {
+      setModalVisible(false);
+      setEditingReportId(null);
+      setOriginalReport(null);
+      setValue(null);
+      setIssueValue(null);
+      setRemarks("");
+      setImageUri(null);
+      setImageDeletedLocally(false);
+    }
+  };
+  
   return (
     <ThemedView style={styles.container}>
       <View style={styles.header}>
@@ -402,6 +471,7 @@ const MpshReports = () => {
                         source={{ uri: item.imageUrl }}
                         style={styles.reportImage}
                         resizeMode="cover"
+                        testID={`report-image-${item.id}`}
                       />
                     )}
 
@@ -521,12 +591,7 @@ const MpshReports = () => {
                   <ThemedText>{editingReportId ? "Save" : "Submit"}</ThemedText>
                 </ThemedButton>
                 <Spacer width="25" />
-                <ThemedButton
-                  onPress={() => {
-                    setModalVisible(false);
-                    setEditingReportId(null);
-                  }}
-                >
+                <ThemedButton onPress={handleCancelPress}>
                   <ThemedText>Cancel</ThemedText>
                 </ThemedButton>
               </View>
