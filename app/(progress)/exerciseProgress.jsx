@@ -1,4 +1,4 @@
-// react imports
+// react and expo imports
 import { useEffect, useState } from "react";
 import { ScrollView, Dimensions, View, StyleSheet } from "react-native";
 import { LineChart } from "react-native-chart-kit";
@@ -9,31 +9,47 @@ import ThemedView from "../../components/themedView";
 import ThemedText from "../../components/themedText";
 
 // firebase imports
-import { query, collection, orderBy, onSnapshot } from "firebase/firestore";
+import {
+  query,
+  collection,
+  orderBy,
+  onSnapshot,
+  where,
+} from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 import { db } from "../../firebaseConfig";
 
-const Progression = () => {
+const ExerciseProgress = () => {
   const screenWidth = Dimensions.get("window").width;
 
   const chartConfig = {
-    backgroundGradientFrom: "#fff",
-    backgroundGradientTo: "#fff",
+    backgroundGradientFrom: "#2c2c2c",
+    backgroundGradientTo: "#1c1c1c",
     decimalPlaces: 1,
-    color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
-    labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-    style: styles.chart,
+    color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
+    labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+    style: { borderRadius: 16 },
     propsForDots: {
-      r: "5",
+      r: "6",
       strokeWidth: "2",
-      stroke: "#1e90ff",
+      stroke: "#007AFF",
+      fill: "#FFFFFF",
     },
+    propsForVerticalLabels: { fontSize: 10, fontWeight: "bold" },
+    propsForHorizontalLabels: { fontSize: 10, fontWeight: "bold" },
+    strokeWidth: 2,
+    propsForBackgroundLines: {
+      strokeDasharray: "0",
+      stroke: "#444444",
+    },
+    barPercentage: 0,
+    categoryPercentage: 0,
   };
 
   const [exerciseData, setExerciseData] = useState({});
   const [open, setOpen] = useState(false);
   const [selectedExercises, setSelectedExercises] = useState([]);
   const [items, setItems] = useState([]);
-
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [yearItems, setYearItems] = useState([]);
   const [yearDropdownOpen, setYearDropdownOpen] = useState(false);
@@ -46,7 +62,15 @@ const Progression = () => {
   }, []);
 
   useEffect(() => {
-    const q = query(collection(db, "workouts"), orderBy("createdAt", "asc"));
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+    if (!currentUser) return;
+
+    const q = query(
+      collection(db, "workouts"),
+      where("userId", "==", currentUser.uid),
+      orderBy("createdAt", "asc")
+    );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const dataByExercise = {};
@@ -63,7 +87,7 @@ const Progression = () => {
             })
           : "Unknown";
         const year = dateObj?.getFullYear();
-        if (year) yearSet.add(year); 
+        if (year) yearSet.add(year);
 
         workout.exercises?.forEach((ex) => {
           const name = ex.name.trim();
@@ -83,13 +107,19 @@ const Progression = () => {
       setYearItems(yearArray.map((y) => ({ label: `${y}`, value: y })));
 
       if (!yearSet.has(selectedYear)) {
-        setSelectedYear(yearArray[yearArray.length - 1]); 
+        setSelectedYear(yearArray[yearArray.length - 1]);
       }
 
       if (selectedExercises.length === 0) {
-        const allExercises = Array.from(allExercisesSet);
-        setSelectedExercises(allExercises);
-        setItems(allExercises.map((ex) => ({ label: ex, value: ex })));
+        // No default selection: just set the available items
+        setItems(
+          allExercisesSet.size
+            ? Array.from(allExercisesSet).map((ex) => ({
+                label: ex,
+                value: ex,
+              }))
+            : []
+        );
       } else {
         setItems(
           Array.from(allExercisesSet).map((ex) => ({ label: ex, value: ex }))
@@ -101,7 +131,6 @@ const Progression = () => {
 
     return () => unsubscribe();
   }, [selectedExercises]);
-  
 
   const renderChart = (title, data) => {
     if (!data || data.length === 0) return null;
@@ -127,14 +156,10 @@ const Progression = () => {
           {title} ({selectedYear})
         </ThemedText>
         <LineChart
-          data={{
-            labels,
-            datasets: [{ data: weights }],
-          }}
+          data={{ labels, datasets: [{ data: weights }] }}
           width={screenWidth - 30}
           height={220}
           chartConfig={chartConfig}
-          bezier
           style={styles.chart}
         />
       </View>
@@ -143,12 +168,11 @@ const Progression = () => {
 
   return (
     <ThemedView style={styles.container}>
-      <ThemedText style={styles.pageTitle}>Exercise Progress Charts</ThemedText>
+      <ThemedText style={styles.pageTitle}>Exercise Progress</ThemedText>
 
       <View style={styles.dropdownRow}>
         <View style={styles.exercisePicker}>
           <DropDownPicker
-         
             min={1}
             max={items.length}
             open={open}
@@ -158,6 +182,29 @@ const Progression = () => {
             setValue={setSelectedExercises}
             setItems={setItems}
             placeholder="Select Exercise"
+            style={{
+              backgroundColor: "#2c2c2c",
+              borderColor: "#444444",
+            }}
+            textStyle={{
+              color: "#fff",
+            }}
+            labelStyle={{
+              color: "#fff",
+            }}
+            arrowIconStyle={{
+              tintColor: "#fff",
+            }}
+            tickIconStyle={{
+              tintColor: "#fff",
+            }}
+            selectedItemLabelStyle={{
+              fontWeight: "bold",
+            }}
+            dropDownContainerStyle={{
+              backgroundColor: "#2c2c2c",
+              borderColor: "#444444",
+            }}
           />
         </View>
 
@@ -170,6 +217,29 @@ const Progression = () => {
             setValue={setSelectedYear}
             setItems={setYearItems}
             placeholder="Select Year"
+            style={{
+              backgroundColor: "#2c2c2c",
+              borderColor: "#444444",
+            }}
+            textStyle={{
+              color: "#fff",
+            }}
+            labelStyle={{
+              color: "#fff",
+            }}
+            arrowIconStyle={{
+              tintColor: "#fff",
+            }}
+            tickIconStyle={{
+              tintColor: "#fff",
+            }}
+            selectedItemLabelStyle={{
+              fontWeight: "bold",
+            }}
+            dropDownContainerStyle={{
+              backgroundColor: "#2c2c2c",
+              borderColor: "#444444",
+            }}
           />
         </View>
       </View>
@@ -183,7 +253,7 @@ const Progression = () => {
   );
 };
 
-export default Progression;
+export default ExerciseProgress;
 
 const styles = StyleSheet.create({
   container: {
