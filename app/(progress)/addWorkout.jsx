@@ -1,6 +1,7 @@
-//react and expo import s
-import { useState, useEffect } from "react";
+//react and expo imports
+import { useRef, useState, useEffect } from "react";
 import {
+  Alert,
   View,
   Text,
   TouchableOpacity,
@@ -14,22 +15,15 @@ import DropDownPicker from "react-native-dropdown-picker";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
-//themed components 
+//themed components
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import ThemedButton from "../../components/themedButton";
 import ThemedTextInput from "../../components/themedTextInput";
 
-//firebase imports 
-import { db } from "../../firebaseConfig";
-import {
-  collection,
-  addDoc,
-  doc,
-  getDoc,
-  updateDoc
-} from "firebase/firestore";
-
+//firebase imports
+import { db, auth } from "../../firebaseConfig"; // Import auth
+import { collection, addDoc, doc, getDoc, updateDoc } from "firebase/firestore";
 
 const AddWorkout = () => {
   const router = useRouter();
@@ -57,6 +51,11 @@ const AddWorkout = () => {
   const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
 
   const { editWorkoutId } = useLocalSearchParams();
+
+  const nextExerciseId = useRef(1);
+  const nextSetId = useRef(1);
+
+  const [originalWorkout, setOriginalWorkout] = useState(null);
 
   //exercise dropdown box
   const exerciseOptions = [
@@ -94,34 +93,71 @@ const AddWorkout = () => {
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
             const data = docSnap.data();
+
+            setOriginalWorkout({
+              name: data.name || "",
+              workoutNotes: data.workoutNotes || "",
+              exercises: data.exercises || [],
+              timePeriod: data.timePeriod || null,
+              createdAt: data.createdAt?.toDate
+                ? data.createdAt.toDate()
+                : new Date(),
+            });
+
             setWorkoutName(data.name || "");
             setWorkoutNotes(data.workoutNotes || "");
-            setExercises(data.exercises || []);
+
+            if (data.exercises && data.exercises.length > 0) {
+              const exercisesWithIds = data.exercises.map((ex) => {
+                const exId = ex.id ?? nextExerciseId.current++;
+                const setsWithIds = ex.sets
+                  ? ex.sets.map((set) => ({
+                      ...set,
+                      id: set.id ?? nextSetId.current++,
+                    }))
+                  : [];
+                return { ...ex, id: exId, sets: setsWithIds };
+              });
+
+              const maxExerciseId = Math.max(
+                ...exercisesWithIds.map((e) => e.id || 0),
+                0
+              );
+              nextExerciseId.current = maxExerciseId + 1;
+
+              const allSetIds = exercisesWithIds.flatMap((e) =>
+                e.sets.map((s) => s.id || 0)
+              );
+              const maxSetId = Math.max(...allSetIds, 0);
+              nextSetId.current = maxSetId + 1;
+
+              setExercises(exercisesWithIds);
+            } else {
+              setExercises([]);
+            }
+
             setWorkoutTimePeriod(data.timePeriod || null);
             setDate(
               data.createdAt?.toDate ? data.createdAt.toDate() : new Date()
             );
           } else {
-            alert("Workout not found.");
+            Alert.alert("Workout not found.");
             router.back();
           }
         } catch (error) {
           console.error("Error fetching workout:", error);
-          alert("Failed to fetch workout data.");
+          Alert.alert("Failed to fetch workout data.");
         }
       };
       fetchWorkout();
     }
   }, [editWorkoutId]);
 
+  // Add new exercise with unique id
   const handleAddExercise = () => {
-    setExercises([
-      ...exercises,
-      {
-        id: exercises.length + 1,
-        name: null,
-        sets: [],
-      },
+    setExercises((prev) => [
+      ...prev,
+      { id: nextExerciseId.current++, name: null, sets: [] },
     ]);
   };
 
@@ -131,60 +167,25 @@ const AddWorkout = () => {
     setExercises(updated);
   };
 
+  // Add new set with unique id to exercise
   const handleAddSetToExercise = (exerciseIndex) => {
-    const updated = [...exercises];
-    updated[exerciseIndex].sets.push({
-      reps: "",
-      weight: "",
-      openReps: false,
-      openWeight: false,
+    setExercises((prevExercises) => {
+      const updated = [...prevExercises];
+      updated[exerciseIndex].sets.push({
+        id: nextSetId.current++,
+        reps: "",
+        weight: "",
+        openReps: false,
+        openWeight: false,
+      });
+      return updated;
     });
-    setExercises(updated);
   };
 
   const handleChangeSet = (exerciseIndex, setIndex, key, value) => {
     const updated = [...exercises];
     updated[exerciseIndex].sets[setIndex][key] = value;
     setExercises(updated);
-  };
-
-  const handleSaveWorkout = async () => {
-    if (!workoutName.trim()) {
-      alert("Please enter a workout name.");
-      return;
-    }
-    if (exercises.length === 0) {
-      alert("Add at least one exercise.");
-      return;
-    }
-    if (!workoutTimePeriod) {
-      alert("Please select a workout time period.");
-      return;
-    }
-
-    try {
-      if (editWorkoutId) {
-        await updateDoc(doc(db, "workouts", editWorkoutId), {
-          name: workoutName.trim(),
-          workoutNotes,
-          exercises,
-          timePeriod: workoutTimePeriod,
-          createdAt: date,
-        });
-      } else {
-        await addDoc(collection(db, "workouts"), {
-          name: workoutName.trim(),
-          workoutNotes,
-          exercises,
-          timePeriod: workoutTimePeriod,
-          createdAt: date,
-        });
-      }
-      router.back();
-    } catch (error) {
-      console.error("Error saving workout:", error);
-      alert("Failed to save workout.");
-    }
   };
 
   const handleDeleteExercise = (index) => {
@@ -200,6 +201,147 @@ const AddWorkout = () => {
   };
 
   const dropdownListMode = Platform.OS === "android" ? "MODAL" : "SCROLLVIEW";
+
+  const handleSaveWorkout = async () => {
+    if (!workoutName.trim()) {
+      Alert.alert("Please enter a workout name.");
+      return;
+    }
+
+    if (!workoutTimePeriod) {
+      Alert.alert("Please select a workout time period.");
+      return;
+    }
+    const validExercises = exercises.filter(
+      (ex) => ex.name && ex.name.trim() !== ""
+    );
+    if (validExercises.length === 0) {
+      Alert.alert("Please add at least one exercise.");
+      return;
+    }
+
+    for (const ex of validExercises) {
+      if (!ex.sets || ex.sets.length === 0) {
+        Alert.alert("Please add at least one set to each exercise.");
+        return;
+      }
+    }
+    for (const ex of validExercises) {
+      for (const set of ex.sets) {
+        if (!set.reps || !set.weight) {
+          Alert.alert("Please fill in reps and weight for all sets.");
+          return;
+        }
+      }
+    }
+
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      Alert.alert("You must be logged in to save a workout.");
+      return;
+    }
+    const userId = currentUser.uid;
+
+    const save = async () => {
+      try {
+        if (editWorkoutId) {
+          await updateDoc(doc(db, "workouts", editWorkoutId), {
+            name: workoutName.trim(),
+            workoutNotes,
+            exercises: validExercises,
+            timePeriod: workoutTimePeriod,
+            createdAt: date,
+            userId,
+          });
+        } else {
+          await addDoc(collection(db, "workouts"), {
+            name: workoutName.trim(),
+            workoutNotes,
+            exercises,
+            timePeriod: workoutTimePeriod,
+            createdAt: date,
+            userId,
+          });
+        }
+        Alert.alert(
+          "Success",
+          editWorkoutId ? "Workout updated!" : "Workout added!",
+          [{ text: "OK", onPress: () => router.back() }]
+        );
+      } catch (error) {
+        console.error("Error saving workout:", error);
+        Alert.alert("Failed to save workout.");
+      }
+    };
+
+    Alert.alert(
+      editWorkoutId ? "Update Workout" : "Save Workout",
+      editWorkoutId
+        ? "Are you sure you want to update this workout?"
+        : "Are you sure you want to save this workout?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: editWorkoutId ? "Update" : "Save", onPress: save },
+      ]
+    );
+  };
+
+  const isDeepEqual = (a, b) => {
+    return JSON.stringify(a) === JSON.stringify(b);
+  };
+
+  const changesDone = () => {
+    if (!originalWorkout) {
+      // if no original data (adding new workout), consider dirty if any field is filled
+      return (
+        workoutName.trim() !== "" ||
+        workoutNotes.trim() !== "" ||
+        workoutTimePeriod !== null ||
+        (exercises.length > 0 &&
+          exercises.some(
+            (ex) =>
+              (ex.name && ex.name.trim() !== "") ||
+              (ex.sets &&
+                ex.sets.length > 0 &&
+                ex.sets.some(
+                  (set) =>
+                    (set.reps && set.reps !== "") ||
+                    (set.weight && set.weight !== "")
+                ))
+          ))
+      );
+    }
+
+    // compare current state to originalWorkout
+
+    if (workoutName !== originalWorkout.name) return true;
+    if (workoutNotes !== originalWorkout.workoutNotes) return true;
+    if (workoutTimePeriod !== originalWorkout.timePeriod) return true;
+
+    // Compare exercises deeply - quick way is stringify comparison
+    if (!isDeepEqual(exercises, originalWorkout.exercises)) return true;
+
+    // No differences found
+    return false;
+  };
+
+  const handleCancelPress = () => {
+    if (changesDone()) {
+      Alert.alert(
+        editWorkoutId ? "Discard Changes?" : "Cancel New Workout?",
+        editWorkoutId
+          ? "You have unsaved changes. Are you sure you want to discard them?"
+          : "You have started creating a new workout. Are you sure you want to cancel?",
+        [
+          { text: "No", style: "cancel" },
+          { text: "Yes", style: "destructive", onPress: () => router.back() },
+        ]
+      );
+    } else {
+      router.back();
+    }
+  };
+  
 
   return (
     <ThemedView style={styles.container}>
@@ -223,7 +365,7 @@ const AddWorkout = () => {
             placeholderTextColor="grey"
           />
 
-          <View style={styles.dateTimeRow}>
+          <View style={[styles.dateTimeRow, { zIndex: 3000 }]}>
             <TouchableOpacity
               onPress={() => setShowDatePicker(true)}
               style={styles.datePickerButton}
@@ -237,7 +379,6 @@ const AddWorkout = () => {
                 onChange={onChangeDate}
               />
             )}
-
             <View style={styles.timeDropdownContainer}>
               <DropDownPicker
                 open={openTimeDropdown}
@@ -258,6 +399,7 @@ const AddWorkout = () => {
                 }}
                 listMode="SCROLLVIEW"
                 dropDownDirection="BOTTOM"
+                maxHeight={200}
               />
             </View>
           </View>
@@ -305,14 +447,16 @@ const AddWorkout = () => {
                         borderColor: "#ccc",
                         zIndex: 2000,
                       }}
-                      listMode="SCROLLVIEW"
+                      listMode={dropdownListMode}
                       dropDownDirection="BOTTOM"
+                      maxHeight={200}
                     />
                   </View>
 
                   <TouchableOpacity
                     onPress={() => handleDeleteExercise(exerciseIndex)}
                     style={styles.deleteExerciseButton}
+                    testID={`delete-exercise-btn-${exercise.id}`}
                   >
                     <Ionicons name="trash-outline" size={20} color="#ff3b30" />
                   </TouchableOpacity>
@@ -362,6 +506,7 @@ const AddWorkout = () => {
                           ]}
                           listMode={dropdownListMode}
                           dropDownDirection="BOTTOM"
+                          maxHeight={200}
                         />
                       </View>
 
@@ -396,6 +541,7 @@ const AddWorkout = () => {
                           ]}
                           listMode={dropdownListMode}
                           dropDownDirection="BOTTOM"
+                          maxHeight={200}
                         />
                       </View>
 
@@ -417,7 +563,9 @@ const AddWorkout = () => {
                   onPress={() => handleAddSetToExercise(exerciseIndex)}
                   style={styles.addSetButton}
                 >
-                  <ThemedText style={{ color: "#007bff" }}>+ Add Set</ThemedText>
+                  <ThemedText style={{ color: "#007bff" }}>
+                    + Add Set
+                  </ThemedText>
                 </TouchableOpacity>
               </View>
             </View>
@@ -432,9 +580,9 @@ const AddWorkout = () => {
 
           <View style={styles.buttonRow}>
             <ThemedButton onPress={handleSaveWorkout}>
-              <ThemedText>Save</ThemedText>
+              <ThemedText>{editWorkoutId ? "Save" : "Submit"}</ThemedText>
             </ThemedButton>
-            <ThemedButton onPress={() => router.back()}>
+            <ThemedButton onPress={handleCancelPress}>
               <ThemedText>Cancel</ThemedText>
             </ThemedButton>
           </View>
@@ -451,21 +599,21 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 10,
     paddingHorizontal: 20,
-    paddingBottom: 100
+    paddingBottom: 100,
   },
   scrollContainer: {
     paddingBottom: 100,
-    overflow: "visible" 
+    overflow: "visible",
   },
   title: {
     fontSize: 22,
     fontWeight: "bold",
-    marginBottom: 10
+    marginBottom: 10,
   },
   addExerciseButton: {
     alignSelf: "flex-start",
     marginBottom: 20,
-    marginTop: 10
+    marginTop: 10,
   },
   exerciseCard: {
     marginTop: 10,
@@ -475,27 +623,25 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     borderRadius: 10,
     backgroundColor: "#1c1c1c",
-    overflow: "visible"
+    overflow: "visible",
   },
   dropdown: {
     marginBottom: 10,
     borderColor: "#ccc",
-    zIndex: 1
   },
   dropDownContainer: {
     backgroundColor: "#fff",
-    borderColor: "#ccc"
+    borderColor: "#ccc",
   },
   setRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 10,
     overflow: "visible",
-    zIndex: 500
   },
   addSetButton: {
     alignSelf: "flex-start",
-    marginTop: 5
+    marginTop: 5,
   },
   buttonRow: {
     flexDirection: "row",
@@ -506,29 +652,29 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 10,
-    overflow: "visible"
+    overflow: "visible",
   },
   deleteExerciseButton: {
     marginLeft: 10,
-    paddingHorizontal: 6
+    paddingHorizontal: 6,
   },
   deleteSetButton: {
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 6
+    paddingHorizontal: 6,
   },
   setLabel: {
     width: 60,
     fontWeight: "bold",
     alignSelf: "center",
     color: "#fff",
-    paddingBottom: 10
+    paddingBottom: 10,
   },
   dateTimeRow: {
     flexDirection: "row",
     alignItems: "center",
     marginVertical: 10,
-    overflow: "visible"
+    overflow: "visible",
   },
   datePickerButton: {
     flex: 1,
@@ -537,10 +683,9 @@ const styles = StyleSheet.create({
     flex: 1,
     maxWidth: 150,
     marginLeft: 10,
-    overflow: "visible"
+    overflow: "visible",
   },
   timeDropdown: {
     borderColor: "#ccc",
-    zIndex: 1
   },
 });

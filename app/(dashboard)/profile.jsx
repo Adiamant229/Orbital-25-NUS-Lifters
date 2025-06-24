@@ -1,6 +1,7 @@
 // react and expo imports
 import { useEffect, useState } from "react";
 import {
+  Alert,
   StyleSheet,
   TouchableOpacity,
   View,
@@ -27,6 +28,8 @@ const Profile = () => {
   const [editMode, setEditMode] = useState(false);
   const [inputName, setInputName] = useState("");
 
+  const [saving, setSaving] = useState(false);
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -51,19 +54,35 @@ const Profile = () => {
     fetchUserData();
   }, []);
 
-  const handleSave = async () => {
-    try {
-      const user = auth.currentUser;
-      if (user) {
-        const docRef = doc(db, "users", user.uid);
-        await updateDoc(docRef, { name: inputName });
-        setUserName(inputName);
-        setEditMode(false);
-        console.log("Username updated to:", inputName);
-      }
-    } catch (error) {
-      console.error("Error saving user name:", error);
+  const handleSave = () => {
+    if (inputName.trim() === "") {
+      Alert.alert("Error", "Please enter a new name.");
+      return;
     }
+
+    Alert.alert("Save Name", "Are you sure you want to update your name?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Save",
+        onPress: async () => {
+          setSaving(true);
+          try {
+            const user = auth.currentUser;
+            if (user) {
+              const docRef = doc(db, "users", user.uid);
+              await updateDoc(docRef, { name: inputName });
+              setUserName(inputName);
+              setEditMode(false);
+            }
+          } catch (error) {
+            console.error("Error saving user name:", error);
+            Alert.alert("Error", "Failed to save your name. Please try again.");
+          } finally {
+            setSaving(false);
+          }
+        },
+      },
+    ]);
   };
 
   const handleCancel = () => {
@@ -72,16 +91,26 @@ const Profile = () => {
   };
 
   const handleLogout = async () => {
-    try {
-      const user = auth.currentUser;
-      await signOut(auth);
-      console.log("User signed out:", user?.uid);
-      router.replace("/");
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
+    Alert.alert("Logout", "Are you sure you want to logout?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Logout",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            const user = auth.currentUser;
+            await signOut(auth);
+            console.log("User signed out:", user?.uid);
+            router.replace("/");
+          } catch (error) {
+            console.error("Logout error:", error);
+            Alert.alert("Error", "Failed to logout. Please try again.");
+          }
+        },
+      },
+    ]);
   };
-
+  
   return (
     <ThemedView style={styles.container}>
       <ThemedText style={styles.title} title={true}>
@@ -96,6 +125,7 @@ const Profile = () => {
           <TouchableOpacity
             onPress={() => setEditMode(true)}
             style={styles.editIconOnAvatar}
+            testID="editButton"
           >
             <MaterialIcons name="edit" size={20} color="#f2f2f2" />
           </TouchableOpacity>
@@ -113,12 +143,22 @@ const Profile = () => {
               placeholder="Enter new name"
             />
             <View style={styles.editIconsRow}>
-              <TouchableOpacity onPress={handleSave} style={styles.iconButton}>
-                <MaterialIcons name="check" size={22} color="#2a9d8f" />
+              <TouchableOpacity
+                onPress={handleSave}
+                style={styles.iconButton}
+                disabled={saving}
+                testID="saveButton"
+              >
+                <MaterialIcons
+                  name="check"
+                  size={22}
+                  color={saving ? "grey" : "#2a9d8f"}
+                />
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleCancel}
                 style={styles.iconButton}
+                testID="cancelButton"
               >
                 <MaterialIcons name="close" size={22} color="#e76f51" />
               </TouchableOpacity>
