@@ -1,6 +1,7 @@
 //react and expo imports
 import { useState, useEffect } from "react";
 import {
+  Alert,
   View,
   Text,
   FlatList,
@@ -68,6 +69,8 @@ const UtownReports = () => {
 
   const reportsRef = collection(db, "utownReports");
 
+  const [originalReport, setOriginalReport] = useState(null);
+
   //equipment dropdown box
   const [equipmentItems, setEquipmentItems] = useState([
     { label: "Bench Press", value: "Bench Press" },
@@ -94,25 +97,29 @@ const UtownReports = () => {
     { label: "Cleanliness Issue", value: "Cleanliness Issue" },
   ]);
 
-  useEffect(() => {
-    const fetchReports = async () => {
-      try {
-        const snapshot = await getDocs(reportsRef);
-        const data = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setReports(data);
-      } catch (error) {
-        console.error("Error fetching reports:", error);
-      }
-    };
+  const fetchReports = async () => {
+    try {
+      const snapshot = await getDocs(reportsRef);
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setReports(data);
+    } catch (error) {
+      console.error("Error fetching reports:", error);
+    }
+  };
 
-    fetchReports();
+  useEffect(() => {
+    const loadReports = async () => {
+      await fetchReports();
+    };
+    loadReports();
   }, []);
 
   const openAddModal = () => {
     setEditingReportId(null);
+    setOriginalReport(null);
     setValue(null);
     setIssueValue(null);
     setRemarks("");
@@ -122,6 +129,12 @@ const UtownReports = () => {
 
   const openEditModal = (report) => {
     setEditingReportId(report.id);
+    setOriginalReport({
+      equipment: report.equipment,
+      issueType: report.issueType,
+      remarks: report.remarks || "",
+      imageUri: report.imageUrl || null,
+    });
     setValue(report.equipment);
     setIssueValue(report.issueType);
     setRemarks(report.remarks || "");
@@ -131,101 +144,125 @@ const UtownReports = () => {
 
   const handleSubmit = async () => {
     if (!value || !issueValue) {
-      alert("Please select equipment and issue type.");
+      Alert.alert(
+        "Submission Error",
+        "Please select equipment and issue type."
+      );
+
       return;
     }
 
-    try {
-      let imageUrl = null;
-      let oldImageUrl = null;
+    Alert.alert(
+      editingReportId ? "Update Report" : "Submit Report",
 
-      if (editingReportId) {
-        const docRef = doc(db, "utownReports", editingReportId);
-        const reportSnapshot = await getDocs(reportsRef);
-        const report = reportSnapshot.docs
-          .find((doc) => doc.id === editingReportId)
-          ?.data();
-        oldImageUrl = report?.imageUrl || null;
-      }
+      editingReportId
+        ? "Are you sure you want to update this report?"
+        : "Are you sure you want to submit this report?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: editingReportId ? "Update" : "Submit",
+          style: "cancel",
+          onPress: async () => {
+            try {
+              let imageUrl = null;
+              let oldImageUrl = null;
 
-      if (imageUri && !imageUri.startsWith("https://")) {
-        const response = await fetch(imageUri);
-        const blob = await response.blob();
+              if (editingReportId) {
+                const docRef = doc(db, "utownReports", editingReportId);
+                const reportSnapshot = await getDocs(reportsRef);
+                const report = reportSnapshot.docs
+                  .find((doc) => doc.id === editingReportId)
+                  ?.data();
+                oldImageUrl = report?.imageUrl || null;
+              }
 
-        const imageRef = ref(storage, `utownReports/${uuid.v4()}`);
-        await uploadBytes(imageRef, blob);
-        imageUrl = await getDownloadURL(imageRef);
+              if (imageUri && !imageUri.startsWith("https://")) {
+                const response = await fetch(imageUri);
+                const blob = await response.blob();
 
-        if (oldImageUrl) {
-          try {
-            const oldPath = getStoragePathFromUrl(oldImageUrl);
-            await deleteObject(ref(storage, oldPath));
-            console.log("Old image deleted:", oldPath);
-          } catch (e) {
-            console.warn("Failed to delete old image:", e);
-          }
-        }
-      } else if (imageDeletedLocally && !imageUri) {
-        if (oldImageUrl) {
-          try {
-            const oldPath = getStoragePathFromUrl(oldImageUrl);
-            await deleteObject(ref(storage, oldPath));
-            console.log("Deleted old image due to removal");
-          } catch (e) {
-            console.warn("Failed to delete old image:", e);
-          }
-        }
-        imageUrl = null;
-      } else if (imageUri?.startsWith("https://")) {
-        imageUrl = imageUri;
-      }
+                const imageRef = ref(storage, `utownReports/${uuid.v4()}`);
+                await uploadBytes(imageRef, blob);
+                imageUrl = await getDownloadURL(imageRef);
 
-      if (editingReportId) {
-        const docRef = doc(db, "utownReports", editingReportId);
-        await updateDoc(docRef, {
-          equipment: value,
-          issueType: issueValue,
-          remarks: remarks.trim(),
-          ...(imageUrl !== null ? { imageUrl } : { imageUrl: deleteField() }),
-        });
+                if (oldImageUrl) {
+                  try {
+                    const oldPath = getStoragePathFromUrl(oldImageUrl);
+                    await deleteObject(ref(storage, oldPath));
+                    console.log("Old image deleted:", oldPath);
+                  } catch (e) {
+                    console.warn("Failed to delete old image:", e);
+                  }
+                }
+              } else if (imageDeletedLocally && !imageUri) {
+                if (oldImageUrl) {
+                  try {
+                    const oldPath = getStoragePathFromUrl(oldImageUrl);
+                    await deleteObject(ref(storage, oldPath));
+                    console.log("Deleted old image due to removal");
+                  } catch (e) {
+                    console.warn("Failed to delete old image:", e);
+                  }
+                }
+                imageUrl = null;
+              } else if (imageUri?.startsWith("https://")) {
+                imageUrl = imageUri;
+              }
 
-        setReports((prev) =>
-          prev.map((r) =>
-            r.id === editingReportId
-              ? {
-                  ...r,
+              if (editingReportId) {
+                const docRef = doc(db, "utownReports", editingReportId);
+                await updateDoc(docRef, {
                   equipment: value,
                   issueType: issueValue,
                   remarks: remarks.trim(),
-                  ...(imageUrl !== null ? { imageUrl } : { imageUrl: null }),
-                }
-              : r
-          )
-        );
-      } else {
-        const newReport = {
-          equipment: value,
-          issueType: issueValue,
-          remarks: remarks.trim(),
-          userId: currentUserId,
-          ...(imageUrl && { imageUrl }),
-        };
+                  ...(imageUrl !== null
+                    ? { imageUrl }
+                    : { imageUrl: deleteField() }),
+                });
 
-        const docRef = await addDoc(reportsRef, newReport);
-        setReports([...reports, { id: docRef.id, ...newReport }]);
-      }
+                setReports((prev) =>
+                  prev.map((r) =>
+                    r.id === editingReportId
+                      ? {
+                          ...r,
+                          equipment: value,
+                          issueType: issueValue,
+                          remarks: remarks.trim(),
+                          ...(imageUrl !== null
+                            ? { imageUrl }
+                            : { imageUrl: null }),
+                        }
+                      : r
+                  )
+                );
+              } else {
+                const newReport = {
+                  equipment: value,
+                  issueType: issueValue,
+                  remarks: remarks.trim(),
+                  userId: currentUserId,
+                  ...(imageUrl && { imageUrl }),
+                };
 
-      setModalVisible(false);
-      setEditingReportId(null);
-      setValue(null);
-      setIssueValue(null);
-      setRemarks("");
-      setImageUri(null);
-      setImageDeletedLocally(false);
-    } catch (error) {
-      console.error("Error submitting report:", error);
-      alert("Failed to submit report.");
-    }
+                const docRef = await addDoc(reportsRef, newReport);
+                setReports([...reports, { id: docRef.id, ...newReport }]);
+              }
+
+              setModalVisible(false);
+              setEditingReportId(null);
+              setValue(null);
+              setIssueValue(null);
+              setRemarks("");
+              setImageUri(null);
+              setImageDeletedLocally(false);
+            } catch (error) {
+              console.error("Error submitting report:", error);
+              Alert.alert("Failed to submit report.");
+            }
+          },
+        },
+      ]
+    );
   };
 
   const getStoragePathFromUrl = (url) => {
@@ -238,23 +275,39 @@ const UtownReports = () => {
     }
   };
 
-  const handleDeleteReport = async (id) => {
-    try {
-      const reportToDelete = reports.find((r) => r.id === id);
+  const handleDeleteReport = (id) => {
+    Alert.alert(
+      "Resolve Report",
+      "Are you sure you want to mark this report as resolved?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Resolve",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const reportToDelete = reports.find((r) => r.id === id);
 
-      if (reportToDelete?.imageUrl) {
-        const imagePath = getStoragePathFromUrl(reportToDelete.imageUrl);
-        const imageRef = ref(storage, imagePath);
-        await deleteObject(imageRef);
-      }
+              if (reportToDelete?.imageUrl) {
+                const imagePath = getStoragePathFromUrl(
+                  reportToDelete.imageUrl
+                );
+                const imageRef = ref(storage, imagePath);
+                await deleteObject(imageRef);
+              }
 
-      await deleteDoc(doc(db, "utownReports", id));
+              await deleteDoc(doc(db, "utownReports", id));
 
-      setReports((prev) => prev.filter((r) => r.id !== id));
-      if (editingReportId === id) setEditingReportId(null);
-    } catch (error) {
-      console.error("Error deleting report:", error);
-    }
+              setReports((prev) => prev.filter((r) => r.id !== id));
+              if (editingReportId === id) setEditingReportId(null);
+            } catch (error) {
+              console.error("Error deleting report:", error);
+              Alert.alert("Error", "Could not delete the report.");
+            }
+          },
+        },
+      ]
+    );
   };
 
   const pickImage = async () => {
@@ -262,7 +315,7 @@ const UtownReports = () => {
       await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (!permissionResult.granted) {
-      alert("Permission to access media library is required!");
+      Alert.alert("Permission to access media library is required!");
       return;
     }
 
@@ -279,7 +332,7 @@ const UtownReports = () => {
   const takePhoto = async () => {
     let permissionResult = await ImagePicker.requestCameraPermissionsAsync();
     if (permissionResult.granted === false) {
-      alert("Permission to access camera is required!");
+      Alert.alert("Permission to access camera is required!");
       return;
     }
 
@@ -297,17 +350,79 @@ const UtownReports = () => {
     setImageDeletedLocally(true);
   };
 
+  const changesDone = () => {
+    if (!originalReport) {
+      // Adding new report: check if anything is filled
+      return (
+        value !== null ||
+        issueValue !== null ||
+        remarks.trim() !== "" ||
+        imageUri !== null
+      );
+    } else {
+      // Editing: check if any field differs from original
+      return (
+        value !== originalReport.equipment ||
+        issueValue !== originalReport.issueType ||
+        remarks.trim() !== originalReport.remarks.trim() ||
+        imageUri !== originalReport.imageUri
+      );
+    }
+  };
+
+  const handleCancelPress = () => {
+    if (changesDone()) {
+      Alert.alert(
+        editingReportId ? "Discard Changes?" : "Cancel New Report?",
+        editingReportId
+          ? "You have unsaved changes. Are you sure you want to discard them?"
+          : "You have started creating a new report. Are you sure you want to cancel?",
+        [
+          { text: "No", style: "cancel" },
+          {
+            text: "Yes",
+            style: "destructive",
+            onPress: () => {
+              setModalVisible(false);
+              setEditingReportId(null);
+              setOriginalReport(null);
+              setValue(null);
+              setIssueValue(null);
+              setRemarks("");
+              setImageUri(null);
+              setImageDeletedLocally(false);
+            },
+          },
+        ]
+      );
+    } else {
+      setModalVisible(false);
+      setEditingReportId(null);
+      setOriginalReport(null);
+      setValue(null);
+      setIssueValue(null);
+      setRemarks("");
+      setImageUri(null);
+      setImageDeletedLocally(false);
+    }
+  };
+
   return (
     <ThemedView style={styles.container}>
       <View style={styles.header}>
         <ThemedText style={styles.title}>UTown Reports</ThemedText>
         <TouchableOpacity onPress={openAddModal} style={styles.addButton}>
-          <ThemedText style={{ color: "#fff" }}>+</ThemedText>
+          <ThemedText>+</ThemedText>
         </TouchableOpacity>
       </View>
       <FlatList
         data={reports}
         keyExtractor={(item) => item.id}
+        ListEmptyComponent={
+          <Text style={{ textAlign: "center", marginTop: 50, color: "#888" }}>
+            No reports yet. Tap + to add one.
+          </Text>
+        }
         renderItem={({ item }) => {
           const isCurrentUser = item.userId === currentUserId;
           const isExpanded = expandedReportId === item.id;
@@ -323,7 +438,10 @@ const UtownReports = () => {
                     {item.equipment} - {item.issueType}
                   </Text>
                   {isExpanded && isCurrentUser && (
-                    <TouchableOpacity onPress={() => openEditModal(item)}>
+                    <TouchableOpacity
+                      onPress={() => openEditModal(item)}
+                      testID={`edit-icon-${item.id}`}
+                    >
                       <Ionicons
                         name="pencil-outline"
                         size={20}
@@ -346,6 +464,7 @@ const UtownReports = () => {
                         source={{ uri: item.imageUrl }}
                         style={styles.reportImage}
                         resizeMode="cover"
+                        testID={`report-image-${item.id}`}
                       />
                     )}
 
@@ -355,9 +474,7 @@ const UtownReports = () => {
                     >
                       <View style={styles.buttonicons}>
                         <Entypo name="tools" size={20} color="white" />
-                        <ThemedText style={{ color: "fff" }}>
-                          Resolved
-                        </ThemedText>
+                        <ThemedText>Resolved</ThemedText>
                       </View>
                     </TouchableOpacity>
                   </>
@@ -467,12 +584,7 @@ const UtownReports = () => {
                   <ThemedText>{editingReportId ? "Save" : "Submit"}</ThemedText>
                 </ThemedButton>
                 <Spacer width="25" />
-                <ThemedButton
-                  onPress={() => {
-                    setModalVisible(false);
-                    setEditingReportId(null);
-                  }}
-                >
+                <ThemedButton onPress={handleCancelPress}>
                   <ThemedText>Cancel</ThemedText>
                 </ThemedButton>
               </View>
