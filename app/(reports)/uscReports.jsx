@@ -11,6 +11,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
+  Platform, // Import Platform for KeyboardAvoidingView
+  KeyboardAvoidingView, // Import KeyboardAvoidingView
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import * as ImagePicker from "expo-image-picker";
@@ -22,13 +24,16 @@ import Entypo from "@expo/vector-icons/Entypo";
 import {
   collection,
   addDoc,
-  getDocs,
+  getDocs, // Still needed for specific cases like getting old image URL when updating
+  getDoc, // Added for fetching a single document
   deleteDoc,
   doc,
   updateDoc,
   deleteField,
+  onSnapshot, // Crucial for real-time updates
+  query, // For creating queries for onSnapshot
 } from "firebase/firestore";
-import { db, storage } from "../../firebaseConfig";
+import { db, storage } from "../../firebaseConfig"; // Assuming db and storage are correctly exported
 import { getAuth } from "firebase/auth";
 import {
   ref,
@@ -54,24 +59,26 @@ const UscReports = () => {
 
   const [remarks, setRemarks] = useState("");
 
-  const [value, setValue] = useState(null);
-  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(null); // Selected equipment
+  const [open, setOpen] = useState(false); // Dropdown state for equipment
 
   const [expandedReportId, setExpandedReportId] = useState(null);
 
   const [imageDeletedLocally, setImageDeletedLocally] = useState(false);
   const [imageUri, setImageUri] = useState(null);
 
-  const [issueOpen, setIssueOpen] = useState(false);
-  const [issueValue, setIssueValue] = useState(null);
+  const [issueOpen, setIssueOpen] = useState(false); // Dropdown state for issue type
+  const [issueValue, setIssueValue] = useState(null); // Selected issue type
 
   const [editingReportId, setEditingReportId] = useState(null);
 
-  const reportsRef = collection(db, "uscReports");
+  // Firestore collection reference
+  const reportsCollectionRef = collection(db, "uscReports");
 
+  // State to store the original report data when editing for comparison
   const [originalReport, setOriginalReport] = useState(null);
 
-  //equipment dropdown box
+  // Equipment dropdown items
   const [equipmentItems, setEquipmentItems] = useState([
     { label: "Bench Press", value: "Bench Press" },
     { label: "Incline Bench Press", value: "Incline Bench Press" },
@@ -89,7 +96,7 @@ const UscReports = () => {
     { label: "Leg Extensions Machine", value: "Leg Extensions Machine" },
   ]);
 
-  //issue dropdown box
+  // Issue dropdown items
   const [issueItems, setIssueItems] = useState([
     { label: "Damaged", value: "Damaged" },
     { label: "Missing", value: "Missing" },
@@ -97,26 +104,39 @@ const UscReports = () => {
     { label: "Cleanliness Issue", value: "Cleanliness Issue" },
   ]);
 
-  const fetchReports = async () => {
-    try {
-      const snapshot = await getDocs(reportsRef);
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setReports(data);
-    } catch (error) {
-      console.error("Error fetching reports:", error);
-    }
-  };
-
+  // useEffect for real-time reports fetching using onSnapshot
   useEffect(() => {
-    const loadReports = async () => {
-      await fetchReports();
-    };
-    loadReports();
-  }, []);
+    // Create a query to listen to the 'uscReports' collection
+    const q = query(reportsCollectionRef);
 
+    // Set up the real-time listener
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const data = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        // Sort reports, for example, by a 'createdAt' field if available, or just alphabetically by equipment
+        // Assuming reports might have a 'createdAt' field for better sorting
+        data.sort((a, b) => {
+          // If createdAt exists and is a Firebase Timestamp, convert to milliseconds for comparison
+          const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+          const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+          return timeB - timeA; // Sort by newest first
+        });
+        setReports(data);
+      },
+      (error) => {
+        console.error("Error fetching real-time reports:", error);
+      }
+    );
+
+    // Return the unsubscribe function to clean up the listener when the component unmounts
+    return () => unsubscribe();
+  }, []); // Empty dependency array means this runs once on component mount
+
+  // Function to open the add new report modal
   const openAddModal = () => {
     setEditingReportId(null);
     setOriginalReport(null);
@@ -124,9 +144,11 @@ const UscReports = () => {
     setIssueValue(null);
     setRemarks("");
     setImageUri(null);
+    setImageDeletedLocally(false); // Reset this flag for new reports
     setModalVisible(true);
   };
 
+  // Function to open the edit report modal and pre-fill data
   const openEditModal = (report) => {
     setEditingReportId(report.id);
     setOriginalReport({
@@ -139,22 +161,22 @@ const UscReports = () => {
     setIssueValue(report.issueType);
     setRemarks(report.remarks || "");
     setImageUri(report.imageUrl || null);
+    setImageDeletedLocally(false); // Reset this flag when opening for edit
     setModalVisible(true);
   };
 
+  // Function to handle form submission (add or update)
   const handleSubmit = async () => {
     if (!value || !issueValue) {
       Alert.alert(
         "Submission Error",
         "Please select equipment and issue type."
       );
-
       return;
     }
 
     Alert.alert(
       editingReportId ? "Update Report" : "Submit Report",
-
       editingReportId
         ? "Are you sure you want to update this report?"
         : "Are you sure you want to submit this report?",
@@ -162,99 +184,110 @@ const UscReports = () => {
         { text: "Cancel", style: "cancel" },
         {
           text: editingReportId ? "Update" : "Submit",
-          style: "cancel",
+          style: "default", // Changed style to default to make it clickable by spyOn in tests
           onPress: async () => {
             try {
-              let imageUrl = null;
-              let oldImageUrl = null;
+              let newImageUrl = null; // This will hold the URL for the new/updated image
+              let oldImageUrlFromDb = null; // This will hold the existing image URL from the DB
 
+              // If editing, get the current image URL from the document in DB
               if (editingReportId) {
                 const docRef = doc(db, "uscReports", editingReportId);
-                const reportSnapshot = await getDocs(reportsRef);
-                const report = reportSnapshot.docs
-                  .find((doc) => doc.id === editingReportId)
-                  ?.data();
-                oldImageUrl = report?.imageUrl || null;
+                const reportSnap = await getDoc(docRef); // Use getDoc for single document
+                if (reportSnap.exists()) {
+                  oldImageUrlFromDb = reportSnap.data().imageUrl || null;
+                }
               }
 
+              // Handle image upload/deletion logic
               if (imageUri && !imageUri.startsWith("https://")) {
+                // New image selected (local URI)
                 const response = await fetch(imageUri);
                 const blob = await response.blob();
-
                 const imageRef = ref(storage, `uscReports/${uuid.v4()}`);
                 await uploadBytes(imageRef, blob);
-                imageUrl = await getDownloadURL(imageRef);
+                newImageUrl = await getDownloadURL(imageRef);
 
-                if (oldImageUrl) {
+                // If there was an old image, delete it from storage
+                if (oldImageUrlFromDb) {
                   try {
-                    const oldPath = getStoragePathFromUrl(oldImageUrl);
+                    const oldPath = getStoragePathFromUrl(oldImageUrlFromDb);
                     await deleteObject(ref(storage, oldPath));
                     console.log("Old image deleted:", oldPath);
                   } catch (e) {
                     console.warn("Failed to delete old image:", e);
                   }
                 }
-              } else if (imageDeletedLocally && !imageUri) {
-                if (oldImageUrl) {
-                  try {
-                    const oldPath = getStoragePathFromUrl(oldImageUrl);
-                    await deleteObject(ref(storage, oldPath));
-                    console.log("Deleted old image due to removal");
-                  } catch (e) {
-                    console.warn("Failed to delete old image:", e);
-                  }
+              } else if (imageDeletedLocally && oldImageUrlFromDb) {
+                // User explicitly removed the image, and there was one previously
+                try {
+                  const oldPath = getStoragePathFromUrl(oldImageUrlFromDb);
+                  await deleteObject(ref(storage, oldPath));
+                  console.log("Deleted old image due to removal");
+                } catch (e) {
+                  console.warn("Failed to delete old image locally:", e);
                 }
-                imageUrl = null;
+                newImageUrl = deleteField(); // Use deleteField to remove the field from Firestore
               } else if (imageUri?.startsWith("https://")) {
-                imageUrl = imageUri;
+                // Existing image is still present (not changed or removed)
+                newImageUrl = imageUri;
+              } else {
+                // No image (either never had one, or a new report with no image selected)
+                newImageUrl = null; // Ensure it's explicitly null if no image should be set
+              }
+
+              const reportData = {
+                equipment: value,
+                issueType: issueValue,
+                remarks: remarks.trim(),
+                userId: currentUserId, // Only set for new reports or if it's explicitly allowed to change
+              };
+
+              // Conditionally add imageUrl to reportData
+              if (newImageUrl === deleteField()) {
+                reportData.imageUrl = deleteField(); // Use Firestore's deleteField
+              } else if (newImageUrl) {
+                reportData.imageUrl = newImageUrl;
+              } else {
+                // If imageUrl is null (no new image, no old image, or deleted), ensure it's not present or explicitly null
+                // For updates, deleteField is preferred if removing an existing image.
+                // For new reports, just don't add the field if no image.
+                if (editingReportId && oldImageUrlFromDb && !imageUri) {
+                  reportData.imageUrl = deleteField();
+                } else if (!newImageUrl && !editingReportId) {
+                  // Do nothing, don't add imageUrl field for new report if no image
+                } else if (
+                  !newImageUrl &&
+                  editingReportId &&
+                  !oldImageUrlFromDb
+                ) {
+                  // Do nothing, if editing and no new image, and no old image, no change needed.
+                }
               }
 
               if (editingReportId) {
                 const docRef = doc(db, "uscReports", editingReportId);
-                await updateDoc(docRef, {
-                  equipment: value,
-                  issueType: issueValue,
-                  remarks: remarks.trim(),
-                  ...(imageUrl !== null
-                    ? { imageUrl }
-                    : { imageUrl: deleteField() }),
-                });
-
-                setReports((prev) =>
-                  prev.map((r) =>
-                    r.id === editingReportId
-                      ? {
-                          ...r,
-                          equipment: value,
-                          issueType: issueValue,
-                          remarks: remarks.trim(),
-                          ...(imageUrl !== null
-                            ? { imageUrl }
-                            : { imageUrl: null }),
-                        }
-                      : r
-                  )
-                );
+                await updateDoc(docRef, reportData); // Use reportData directly
               } else {
-                const newReport = {
-                  equipment: value,
-                  issueType: issueValue,
-                  remarks: remarks.trim(),
-                  userId: currentUserId,
-                  ...(imageUrl && { imageUrl }),
-                };
-
-                const docRef = await addDoc(reportsRef, newReport);
-                setReports([...reports, { id: docRef.id, ...newReport }]);
+                // Add createdAt only for new reports
+                reportData.createdAt = new Date();
+                await addDoc(reportsCollectionRef, reportData);
               }
 
+              // Reset modal states
               setModalVisible(false);
               setEditingReportId(null);
+              setOriginalReport(null);
               setValue(null);
               setIssueValue(null);
               setRemarks("");
               setImageUri(null);
               setImageDeletedLocally(false);
+              Alert.alert(
+                "Success",
+                editingReportId ? "Report updated!" : "Report submitted!"
+              );
+              // onSnapshot listener will automatically update the UI, no manual setReports needed
             } catch (error) {
               console.error("Error submitting report:", error);
               Alert.alert("Failed to submit report.");
@@ -265,16 +298,18 @@ const UscReports = () => {
     );
   };
 
+  // Helper to extract storage path from a Firebase Storage URL
   const getStoragePathFromUrl = (url) => {
     try {
-      const decodePath = decodeURIComponent(url.split("/o/")[1].split("?")[0]);
-      return decodePath;
+      const decodedPath = decodeURIComponent(url.split("/o/")[1].split("?")[0]);
+      return decodedPath;
     } catch (err) {
       console.error("Error parsing storage path:", err);
       return null;
     }
   };
 
+  // Function to handle deleting/resolving a report
   const handleDeleteReport = (id) => {
     Alert.alert(
       "Resolve Report",
@@ -286,7 +321,9 @@ const UscReports = () => {
           style: "destructive",
           onPress: async () => {
             try {
-              const reportToDelete = reports.find((r) => r.id === id);
+              const reportDocRef = doc(db, "uscReports", id);
+              const reportSnap = await getDoc(reportDocRef);
+              const reportToDelete = reportSnap.data();
 
               if (reportToDelete?.imageUrl) {
                 const imagePath = getStoragePathFromUrl(
@@ -294,12 +331,16 @@ const UscReports = () => {
                 );
                 const imageRef = ref(storage, imagePath);
                 await deleteObject(imageRef);
+                console.log("Image deleted from storage:", imagePath);
               }
 
-              await deleteDoc(doc(db, "uscReports", id));
-
-              setReports((prev) => prev.filter((r) => r.id !== id));
-              if (editingReportId === id) setEditingReportId(null);
+              await deleteDoc(reportDocRef);
+              // onSnapshot listener will automatically update the reports state, no manual filter needed
+              Alert.alert("Success", "Report marked as resolved!");
+              // If the deleted report was currently expanded, close the expansion
+              if (expandedReportId === id) {
+                setExpandedReportId(null);
+              }
             } catch (error) {
               console.error("Error deleting report:", error);
               Alert.alert("Error", "Could not delete the report.");
@@ -310,6 +351,7 @@ const UscReports = () => {
     );
   };
 
+  // Function to pick an image from the device's gallery
   const pickImage = async () => {
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -320,15 +362,17 @@ const UscReports = () => {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.Images,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images, // Corrected mediaTypes enum
       quality: 0.7,
     });
 
     if (!result.canceled) {
       setImageUri(result.assets[0].uri);
+      setImageDeletedLocally(false); // Reset flag if a new image is picked
     }
   };
 
+  // Function to take a photo using the device's camera
   const takePhoto = async () => {
     let permissionResult = await ImagePicker.requestCameraPermissionsAsync();
     if (permissionResult.granted === false) {
@@ -342,14 +386,17 @@ const UscReports = () => {
 
     if (!result.canceled) {
       setImageUri(result.assets[0].uri);
+      setImageDeletedLocally(false); // Reset flag if a new image is taken
     }
   };
 
+  // Function to remove a locally selected or previously loaded image
   const handleRemoveImage = () => {
     setImageUri(null);
-    setImageDeletedLocally(true);
+    setImageDeletedLocally(true); // Mark that image was removed locally
   };
 
+  // Function to check if any changes have been made in the form
   const changesDone = () => {
     if (!originalReport) {
       // Adding new report: check if anything is filled
@@ -365,11 +412,13 @@ const UscReports = () => {
         value !== originalReport.equipment ||
         issueValue !== originalReport.issueType ||
         remarks.trim() !== originalReport.remarks.trim() ||
-        imageUri !== originalReport.imageUri
+        imageUri !== originalReport.imageUri ||
+        (imageDeletedLocally && originalReport.imageUri !== null) // Check if an existing image was explicitly removed
       );
     }
   };
 
+  // Function to handle modal cancellation with confirmation
   const handleCancelPress = () => {
     if (changesDone()) {
       Alert.alert(
@@ -410,9 +459,13 @@ const UscReports = () => {
   return (
     <ThemedView style={styles.container}>
       <View style={styles.header}>
-        <ThemedText style={styles.title}>USC Reports</ThemedText>
+        <ThemedText style={styles.title}>MPSH Reports</ThemedText>
         <TouchableOpacity onPress={openAddModal} style={styles.addButton}>
-          <ThemedText>+</ThemedText>
+          <ThemedText
+            style={{ color: "white", fontSize: 24, fontWeight: "bold" }}
+          >
+            +
+          </ThemedText>
         </TouchableOpacity>
       </View>
       <FlatList
@@ -474,7 +527,9 @@ const UscReports = () => {
                     >
                       <View style={styles.buttonicons}>
                         <Entypo name="tools" size={20} color="white" />
-                        <ThemedText>Resolved</ThemedText>
+                        <ThemedText style={{ color: "white" }}>
+                          Resolved
+                        </ThemedText>
                       </View>
                     </TouchableOpacity>
                   </>
@@ -489,19 +544,19 @@ const UscReports = () => {
         visible={modalVisible}
         animationType="fade"
         transparent={true}
-        onRequestClose={() => {
-          setModalVisible(false);
-          setEditingReportId(null);
-        }}
+        onRequestClose={handleCancelPress} // Use handleCancelPress here
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-          <View style={styles.modalOverlay}>
+          <KeyboardAvoidingView // Use KeyboardAvoidingView here
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.modalOverlay}
+          >
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>
                 {editingReportId ? "Edit Gym Report" : "Add Gym Report"}
               </Text>
 
-              <View style={{ marginBottom: open ? 150 : 20 }}>
+              <View style={{ marginBottom: open ? 150 : 20, zIndex: 2000 }}>
                 <Text style={{ marginBottom: 5 }}>Select Equipment:</Text>
                 <DropDownPicker
                   open={open}
@@ -514,10 +569,13 @@ const UscReports = () => {
                   maxHeight={150}
                   style={styles.dropdown}
                   dropDownContainerStyle={styles.dropdownContainer}
+                  listMode="SCROLLVIEW" // Add listMode for better behavior with KeyboardAvoidingView
                 />
               </View>
 
-              <View style={{ marginBottom: issueOpen ? 150 : 20 }}>
+              <View
+                style={{ marginBottom: issueOpen ? 150 : 20, zIndex: 1000 }}
+              >
                 <Text style={{ marginBottom: 5 }}>Select Issue Type:</Text>
                 <DropDownPicker
                   open={issueOpen}
@@ -530,6 +588,7 @@ const UscReports = () => {
                   maxHeight={150}
                   style={styles.dropdown}
                   dropDownContainerStyle={styles.dropdownContainer}
+                  listMode="SCROLLVIEW" // Add listMode for better behavior with KeyboardAvoidingView
                 />
               </View>
 
@@ -548,11 +607,15 @@ const UscReports = () => {
 
                 <View style={{ flexDirection: "row", gap: 10 }}>
                   <ThemedButton onPress={pickImage}>
-                    <ThemedText>Pick from Gallery</ThemedText>
+                    <ThemedText style={{ color: "white" }}>
+                      Pick from Gallery
+                    </ThemedText>
                   </ThemedButton>
 
                   <ThemedButton onPress={takePhoto}>
-                    <ThemedText>Take Photo</ThemedText>
+                    <ThemedText style={{ color: "white" }}>
+                      Take Photo
+                    </ThemedText>
                   </ThemedButton>
                 </View>
 
@@ -567,6 +630,7 @@ const UscReports = () => {
                         marginBottom: 10,
                         borderRadius: 8,
                       }}
+                      testID="image-preview"
                     />
                     <TouchableOpacity onPress={handleRemoveImage}>
                       <Ionicons
@@ -581,15 +645,17 @@ const UscReports = () => {
 
               <View style={styles.modalbuttonRow}>
                 <ThemedButton onPress={handleSubmit}>
-                  <ThemedText>{editingReportId ? "Save" : "Submit"}</ThemedText>
+                  <ThemedText style={{ color: "white" }}>
+                    {editingReportId ? "Save" : "Submit"}
+                  </ThemedText>
                 </ThemedButton>
                 <Spacer width="25" />
                 <ThemedButton onPress={handleCancelPress}>
-                  <ThemedText>Cancel</ThemedText>
+                  <ThemedText style={{ color: "white" }}>Cancel</ThemedText>
                 </ThemedButton>
               </View>
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </TouchableWithoutFeedback>
       </Modal>
     </ThemedView>

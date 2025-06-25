@@ -1,15 +1,16 @@
+jest.mock("expo-router", () => ({
+  useRouter: () => ({
+    back: jest.fn(),
+  }),
+  useLocalSearchParams: jest.fn(() => ({})), // default empty object
+}));
+
+import * as ExpoRouter from "expo-router";
 import { render, fireEvent, waitFor, act } from "@testing-library/react-native";
 import AddWorkout from "../../app/(progress)/addWorkout";
 import { Alert } from "react-native";
 
 jest.mock("@react-native-community/datetimepicker", () => "DateTimePicker");
-
-jest.mock("expo-router", () => ({
-  useRouter: () => ({
-    back: jest.fn(),
-  }),
-  useLocalSearchParams: () => ({}),
-}));
 
 jest.mock("../../firebaseConfig", () => ({
   auth: {
@@ -20,17 +21,37 @@ jest.mock("../../firebaseConfig", () => ({
 
 const mockAddDoc = jest.fn();
 const mockUpdateDoc = jest.fn();
+const mockGetDoc = jest.fn();
+const mockDoc = jest.fn();
 
 jest.mock("firebase/firestore", () => ({
   collection: jest.fn(),
   addDoc: (...args) => mockAddDoc(...args),
-  doc: jest.fn(),
-  getDoc: jest.fn(),
+  doc: (...args) => mockDoc(...args),
+  getDoc: (...args) => mockGetDoc(...args),
   updateDoc: (...args) => mockUpdateDoc(...args),
 }));
 
+// Mock data for edit workout fetch
+const mockWorkoutData = {
+  exists: () => true,
+  data: () => ({
+    name: "Original Workout",
+    workoutNotes: "Original notes",
+    exercises: [
+      {
+        id: 1,
+        name: "Bench Press",
+        sets: [{ id: 1, reps: "10", weight: "50" }],
+      },
+    ],
+    timePeriod: "Morning",
+    createdAt: { toDate: () => new Date("2023-01-01T00:00:00Z") },
+  }),
+};
 describe("AddWorkout Component", () => {
   beforeEach(() => {
+    ExpoRouter.useLocalSearchParams.mockImplementation(() => ({}));
     jest.clearAllMocks();
   });
 
@@ -76,7 +97,9 @@ describe("AddWorkout Component", () => {
     fireEvent.press(getByText("Submit"));
 
     await waitFor(() => {
-      expect(alertSpy).toHaveBeenCalledWith("Please add at least one exercise.");
+      expect(alertSpy).toHaveBeenCalledWith(
+        "Please add at least one exercise."
+      );
     });
   });
 
@@ -185,15 +208,15 @@ describe("AddWorkout Component", () => {
     expect(getByText("40.0 kg")).toBeTruthy();
   });
 
-test("removes exercise when delete button is pressed", () => {
-  const { getByText, queryByText, getByTestId } = render(<AddWorkout />);
-  fireEvent.press(getByText("+ Add Exercise"));
-  expect(getByText("Exercise 1")).toBeTruthy();
+  test("removes exercise when delete button is pressed", () => {
+    const { getByText, queryByText, getByTestId } = render(<AddWorkout />);
+    fireEvent.press(getByText("+ Add Exercise"));
+    expect(getByText("Exercise 1")).toBeTruthy();
 
-  fireEvent.press(getByTestId("delete-exercise-btn-1"));
+    fireEvent.press(getByTestId("delete-exercise-btn-1"));
 
-  expect(queryByText("Exercise 1")).toBeNull();
-});
+    expect(queryByText("Exercise 1")).toBeNull();
+  });
 
   test("submits successfully with valid data and confirms submission", async () => {
     const { getByText, getByPlaceholderText, getAllByText } = render(
@@ -240,6 +263,34 @@ test("removes exercise when delete button is pressed", () => {
     });
   });
 
+  test("alerts when cancelling a new workout with changes", async () => {
+    const alertMock = jest
+      .spyOn(Alert, "alert")
+      .mockImplementation((title, message, buttons) => {
+        if (Array.isArray(buttons)) {
+          const cancelBtn = buttons.find((b) => b.style === "cancel");
+          if (cancelBtn?.onPress) cancelBtn.onPress();
+        }
+      });
+
+    const { getByText, getByPlaceholderText } = render(<AddWorkout />);
+
+    fireEvent.changeText(
+      getByPlaceholderText("Add in workout title"),
+      "Workout"
+    );
+
+    fireEvent.press(getByText("+ Add Exercise"));
+
+    fireEvent.press(getByText("Cancel"));
+
+    expect(Alert.alert).toHaveBeenCalledWith(
+      "Cancel New Workout?",
+      "You have started creating a new workout. Are you sure you want to cancel?",
+      expect.any(Array)
+    );
+  });
+
   test("does not submit workout if submission confirmation is cancelled", async () => {
     const alertMock = jest
       .spyOn(Alert, "alert")
@@ -250,8 +301,7 @@ test("removes exercise when delete button is pressed", () => {
         }
       });
 
-    const { getByText, getByPlaceholderText, getByTestId, getAllByText } =
-      render(<AddWorkout />);
+    const { getByText, getByPlaceholderText } = render(<AddWorkout />);
 
     fireEvent.changeText(
       getByPlaceholderText("Add in workout title"),
@@ -320,6 +370,85 @@ test("removes exercise when delete button is pressed", () => {
 
     await waitFor(() => {
       expect(mockAddDoc).toHaveBeenCalled();
+    });
+  });
+
+  describe("editing existing workout", () => {
+    beforeEach(() => {
+      ExpoRouter.useLocalSearchParams.mockImplementation(() => ({
+        editWorkoutId: "workout123",
+      }));
+      mockGetDoc.mockResolvedValueOnce(mockWorkoutData);
+      mockDoc.mockReturnValue({});
+      jest.clearAllMocks();
+    });
+
+    test("loads existing workout and updates on submit", async () => {
+      const alertSpy = jest
+        .spyOn(Alert, "alert")
+        .mockImplementation((title, message, buttons) => {
+          const confirmBtn = buttons.find((btn) => btn.text === "Update");
+          if (confirmBtn && confirmBtn.onPress) confirmBtn.onPress();
+        });
+
+      const { getByPlaceholderText, getByText } = render(<AddWorkout />);
+
+      await waitFor(() => {
+        expect(getByPlaceholderText("Add in workout title").props.value).toBe(
+          "Original Workout"
+        );
+      });
+
+      fireEvent.changeText(
+        getByPlaceholderText("Add in workout title"),
+        "Updated Workout"
+      );
+
+      fireEvent.press(getByText("Save"));
+
+      await waitFor(() => {
+        expect(alertSpy).toHaveBeenCalledWith(
+          "Update Workout",
+          "Are you sure you want to update this workout?",
+          expect.any(Array)
+        );
+        expect(mockUpdateDoc).toHaveBeenCalledTimes(1);
+
+        const updateArg = mockUpdateDoc.mock.calls[0][1];
+        expect(updateArg.name).toBe("Updated Workout");
+      });
+
+      alertSpy.mockRestore();
+    });
+
+    test("loads existing workout and updates on submit", async () => {
+      const alertSpy = jest
+        .spyOn(Alert, "alert")
+        .mockImplementation((title, message, buttons) => {
+          const confirmBtn = buttons.find((btn) => btn.text === "Update");
+          if (confirmBtn && confirmBtn.onPress) confirmBtn.onPress();
+        });
+
+      const { getByPlaceholderText, getByText } = render(<AddWorkout />);
+
+      await waitFor(() => {
+        expect(getByPlaceholderText("Add in workout title").props.value).toBe(
+          "Original Workout"
+        );
+      });
+
+      fireEvent.changeText(
+        getByPlaceholderText("Add in workout title"),
+        "Updated Workout"
+      );
+
+      fireEvent.press(getByText("Cancel"));
+
+      expect(alertSpy).toHaveBeenCalledWith(
+        "Discard Changes?",
+        "You have unsaved changes. Are you sure you want to discard them?",
+        expect.any(Array)
+      );
     });
   });
 });
