@@ -22,11 +22,10 @@ import {
   deleteDoc,
   doc,
   getDoc,
-  getDocs,
   query,
   updateDoc,
   where,
-  onSnapshot,
+  onSnapshot, 
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { db } from "../../firebaseConfig";
@@ -49,7 +48,6 @@ const Forum = () => {
   const [newTitle, setNewTitle] = useState("");
   const [newCategory, setNewCategory] = useState(categories[0]);
   const [newContent, setNewContent] = useState(""); // New state for content
-  const [newAuthor, setNewAuthor] = useState("Anonymous");
 
   const [currentUserId, setCurrentUserId] = useState(null);
 
@@ -61,27 +59,61 @@ const Forum = () => {
   const [editThread, setEditThread] = useState(null);
   const [editTitle, setEditTitle] = useState("");
   const [editCategory, setEditCategory] = useState(categories[0]);
-  const [editContent, setEditContent] = useState(""); // This is for thread content
+  const [editContent, setEditContent] = useState("");
 
   const [commentInput, setCommentInput] = useState("");
   const [editingComment, setEditingComment] = useState(null);
+  const [editingCommentContent, setEditingCommentContent] = useState(""); 
 
   useEffect(() => {
     const auth = getAuth();
     const user = auth.currentUser;
     if (user) {
       setCurrentUserId(user.uid);
-      setNewAuthor(user.displayName || "Anonymous");
     }
-    fetchThreads();
-  }, [selectedCategory]);
 
-  // Moved comment subscription to a separate useEffect to ensure it runs only when selectedThread changes
+    // Real-time listener for threads
+    let q;
+    if (selectedCategory === "All") {
+      q = query(collection(db, "threads"));
+    } else {
+      q = query(
+        collection(db, "threads"),
+        where("category", "==", selectedCategory)
+      );
+    }
+
+    setLoading(true);
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const threadsList = [];
+        snapshot.forEach((doc) => {
+          threadsList.push({ id: doc.id, ...doc.data() });
+        });
+        // Sort threads by createdAt in descending order (newest first)
+        threadsList.sort(
+          (a, b) => b.createdAt?.toMillis() - a.createdAt?.toMillis()
+        );
+        setThreads(threadsList);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Error fetching threads in real-time: ", error);
+        setLoading(false);
+      }
+    );
+
+   
+    return () => unsubscribe();
+  }, [selectedCategory]); 
+
   useEffect(() => {
     if (!selectedThread) {
       return;
     }
 
+    // Real-time listener for the selected thread
     const threadUnsubscribe = onSnapshot(
       doc(db, "threads", selectedThread.id),
       (snapshot) => {
@@ -92,11 +124,18 @@ const Forum = () => {
           });
         } else {
           console.warn("Thread document no longer exists");
-          setSelectedThread(null); // Close modal if thread is deleted
+          setSelectedThread(null); 
+          setComments([]);
+          setEditingComment(null); 
+          setCommentInput(""); 
         }
+      },
+      (error) => {
+        console.error("Error fetching selected thread in real-time: ", error);
       }
     );
 
+    // Real-time listener for comments of the selected thread
     const commentUnsubscribe = onSnapshot(
       collection(db, "threads", selectedThread.id, "comments"),
       (snapshot) => {
@@ -109,6 +148,9 @@ const Forum = () => {
           (a, b) => a.createdAt.toMillis() - b.createdAt.toMillis()
         );
         setComments(updatedComments);
+      },
+      (error) => {
+        console.error("Error fetching comments in real-time: ", error);
       }
     );
 
@@ -116,35 +158,9 @@ const Forum = () => {
       commentUnsubscribe();
       threadUnsubscribe();
     };
-  }, [selectedThread?.id]); // Only re-run when selectedThread.id changes
+  }, [selectedThread?.id]); 
 
-  const fetchThreads = async () => {
-    setLoading(true);
-    try {
-      let q;
-      if (selectedCategory === "All") {
-        q = query(collection(db, "threads"));
-      } else {
-        q = query(
-          collection(db, "threads"),
-          where("category", "==", selectedCategory)
-        );
-      }
-
-      const querySnapshot = await getDocs(q);
-      const threadsList = [];
-      querySnapshot.forEach((doc) => {
-        threadsList.push({ id: doc.id, ...doc.data() });
-      });
-      setThreads(threadsList);
-    } catch (error) {
-      console.error("Error fetching threads: ", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const addThread = async () => {
+  const addThread = () => {
     if (!newTitle.trim()) {
       Alert.alert("Error", "Please enter a thread title.");
       return;
@@ -153,40 +169,61 @@ const Forum = () => {
       Alert.alert("Error", "Please enter some content for the thread.");
       return;
     }
-    try {
-      const auth = getAuth();
-      const user = auth.currentUser;
-      if (!user) {
-        Alert.alert("Error", "User not logged in");
-        return;
-      }
 
-      // Fetch fresh username from Firestore:
-      const userDocRef = doc(db, "users", user.uid);
-      const userDocSnap = await getDoc(userDocRef);
-      const freshUserName = userDocSnap.exists()
-        ? userDocSnap.data().name
-        : "Anonymous";
+    Alert.alert(
+      "Confirm Create",
+      "Do you really want to create this thread?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+          onPress: () => {
+            // Do nothing, just dismiss
+          },
+        },
+        {
+          text: "Create",
+          onPress: async () => {
+            try {
+              const auth = getAuth();
+              const user = auth.currentUser;
+              if (!user) {
+                Alert.alert("Error", "User not logged in");
+                return;
+              }
 
-      await addDoc(collection(db, "threads"), {
-        title: newTitle,
-        category: newCategory,
-        author: freshUserName,
-        authorId: user.uid,
-        content: newContent, // Save content here
-        createdAt: new Date(),
-      });
-      Alert.alert("Success", "Thread created!");
-      setModalVisible(false);
-      setNewTitle("");
-      setNewCategory(categories[0]);
-      setNewContent(""); // Clear content input
-      fetchThreads();
-    } catch (error) {
-      console.error("Error adding thread: ", error);
-      Alert.alert("Error", "Could not create thread.");
-    }
+              // Fetch fresh username from Firestore:
+              const userDocRef = doc(db, "users", user.uid);
+              const userDocSnap = await getDoc(userDocRef);
+              const freshUserName = userDocSnap.exists()
+                ? userDocSnap.data().name
+                : "Anonymous";
+
+              await addDoc(collection(db, "threads"), {
+                title: newTitle,
+                category: newCategory,
+                author: freshUserName,
+                authorId: user.uid,
+                content: newContent,
+                createdAt: new Date(),
+              });
+
+              Alert.alert("Success", "Thread created!");
+              setModalVisible(false);
+              setNewTitle("");
+              setNewCategory(categories[0]);
+              setNewContent(""); 
+            } catch (error) {
+              console.error("Error adding thread: ", error);
+              Alert.alert("Error", "Could not create thread.");
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
   };
+  
 
   const deleteThread = async (threadId) => {
     Alert.alert(
@@ -201,7 +238,7 @@ const Forum = () => {
             try {
               await deleteDoc(doc(db, "threads", threadId));
               Alert.alert("Deleted", "Thread removed successfully.");
-              fetchThreads();
+              // onSnapshot listener will automatically update the threads state
               if (selectedThread?.id === threadId) {
                 setSelectedThread(null); // Close the detail modal if the current thread is deleted
               }
@@ -220,12 +257,12 @@ const Forum = () => {
     setEditThread(thread);
     setEditTitle(thread.title);
     setEditCategory(thread.category);
-    setEditContent(thread.content); // This sets the thread's content for editing
+    setEditContent(thread.content); 
     setEditModalVisible(true);
   };
 
   // Update thread in Firestore
-  const updateThread = async () => {
+  const updateThread = () => {
     if (!editTitle.trim()) {
       Alert.alert("Error", "Please enter a thread title.");
       return;
@@ -235,69 +272,175 @@ const Forum = () => {
       return;
     }
 
-    try {
-      const threadDocRef = doc(db, "threads", editThread.id);
-      await updateDoc(threadDocRef, {
-        title: editTitle,
-        category: editCategory,
-        content: editContent,
-        updatedAt: new Date(),
-      });
-      Alert.alert("Success", "Thread updated!");
-      setEditModalVisible(false);
-      setEditThread(null);
-      fetchThreads();
-    } catch (error) {
-      console.error("Error updating thread: ", error);
-      Alert.alert("Error", "Could not update thread.");
-    }
+    Alert.alert(
+      "Confirm Save",
+      "Do you really want to save changes to this thread?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+          onPress: () => {
+            // Do nothing, just dismiss
+          },
+        },
+        {
+          text: "Save",
+          onPress: async () => {
+            try {
+              const threadDocRef = doc(db, "threads", editThread.id);
+              await updateDoc(threadDocRef, {
+                title: editTitle,
+                category: editCategory,
+                content: editContent,
+                updatedAt: new Date(),
+              });
+              Alert.alert("Success", "Thread updated!");
+              setEditModalVisible(false);
+              setEditThread(null);
+            } catch (error) {
+              console.error("Error updating thread: ", error);
+              Alert.alert("Error", "Could not update thread.");
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
   };
 
+  const cancelCreateThread = () => {
+    const hasChanges =
+      newTitle.trim() !== "" ||
+      newContent.trim() !== "" ||
+      newCategory !== categories[0];
+
+    if (hasChanges) {
+      Alert.alert(
+        "Discard Thread?",
+        "You have started creating a new thread. Are you sure you want to discard this thread?",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Discard",
+            style: "destructive",
+            onPress: () => {
+              setModalVisible(false);
+              setNewTitle("");
+              setNewCategory(categories[0]);
+              setNewContent("");
+            },
+          },
+        ]
+      );
+    } else {
+      setModalVisible(false);
+    }
+  };
+  
+  const cancelEditThread = () => {
+    if (!editThread) {
+      setEditModalVisible(false);
+      return;
+    }
+
+    const hasTitleChanged =
+      editTitle.trim() !== (editThread.title?.trim() || "");
+    const hasContentChanged =
+      editContent.trim() !== (editThread.content?.trim() || "");
+    const hasCategoryChanged = editCategory !== editThread.category;
+
+    const hasChanges =
+      hasTitleChanged || hasContentChanged || hasCategoryChanged;
+
+    if (hasChanges) {
+      Alert.alert(
+        "Discard Changes?",
+        "You have unsaved changes. Are you sure you want to discard them?",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Discard",
+            style: "destructive",
+            onPress: () => {
+              setEditModalVisible(false);
+              setEditThread(null);
+            },
+          },
+        ]
+      );
+    } else {
+      setEditModalVisible(false);
+      setEditThread(null);
+    }
+  };
+  
   const addComment = async (threadID, content) => {
     if (!content.trim()) {
       Alert.alert("Error", "Please enter a comment");
       return;
     }
-    try {
-      const auth = getAuth();
-      const user = auth.currentUser;
-      if (!user) {
-        Alert.alert("Error", "User not logged in.");
-        return;
-      }
-      const userDocRef = doc(db, "users", user?.uid);
-      const userDocSnap = await getDoc(userDocRef);
-      const commenter = userDocSnap.exists()
-        ? userDocSnap.data().name
-        : "Anonymous";
-      const threadRef = doc(db, "threads", threadID);
-      const threadSnap = await getDoc(threadRef);
-      if (!threadSnap.exists()) {
-        Alert.alert("Error", "Thread not found");
-        return;
-      }
-      const commentsRef = collection(threadRef, "comments");
-      const comment = {
-        commenter: commenter,
-        commenterID: currentUserId,
-        content: content,
-        createdAt: new Date(),
-        editedAt: null,
-      };
-      await addDoc(commentsRef, comment);
-      setCommentInput(""); // Clear the input after adding
-      Keyboard.dismiss(); // Dismiss keyboard after posting
-    } catch (err) {
-      console.error("Error adding comment: ", err);
-      Alert.alert("Error", "Could not add comment.");
-    }
-  };
 
+    Alert.alert(
+      "Confirm Post",
+      "Do you really want to post this comment?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+          onPress: () => {
+          },
+        },
+        {
+          text: "Post",
+          onPress: async () => {
+            try {
+              const auth = getAuth();
+              const user = auth.currentUser;
+              if (!user) {
+                Alert.alert("Error", "User not logged in.");
+                return;
+              }
+              const userDocRef = doc(db, "users", user?.uid);
+              const userDocSnap = await getDoc(userDocRef);
+              const commenter = userDocSnap.exists()
+                ? userDocSnap.data().name
+                : "Anonymous";
+              const threadRef = doc(db, "threads", threadID);
+              const threadSnap = await getDoc(threadRef);
+              if (!threadSnap.exists()) {
+                Alert.alert("Error", "Thread not found");
+                return;
+              }
+              const commentsRef = collection(threadRef, "comments");
+              const comment = {
+                commenter: commenter,
+                commenterID: user.uid,
+                content: content,
+                createdAt: new Date(),
+                editedAt: null,
+              };
+              await addDoc(commentsRef, comment);
+              setCommentInput(""); 
+              Keyboard.dismiss(); 
+            } catch (err) {
+              console.error("Error adding comment: ", err);
+              Alert.alert("Error", "Could not add comment.");
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+  
   const editComment = async (threadID, commentID, content) => {
-    if (!content.trim()) {
+    const trimmedContent = content.trim();
+
+    if (!trimmedContent) {
       Alert.alert("Error", "Comment cannot be empty.");
       return;
     }
+
     try {
       const auth = getAuth();
       const user = auth.currentUser;
@@ -305,29 +448,56 @@ const Forum = () => {
         Alert.alert("Error", "User not logged in");
         return;
       }
+
       const commentRef = doc(db, "threads", threadID, "comments", commentID);
       const commentSnap = await getDoc(commentRef);
-      const comment = commentSnap.data();
+
       if (!commentSnap.exists()) {
-        throw new Error("Comment not found");
+        Alert.alert("Error", "Comment not found.");
+        return;
       }
+
+      const comment = commentSnap.data();
+
       if (currentUserId !== comment.commenterID) {
-        console.error(currentUserId);
-        console.error(comment.commenterID);
         throw new Error("Trying to edit comment without being the commenter");
       }
-      await updateDoc(commentRef, {
-        content,
-        editedAt: new Date(),
-      });
-      setEditingComment(null); // leave editing mode
-      Keyboard.dismiss(); // Dismiss keyboard after editing
+
+      Alert.alert(
+        "Confirm Save",
+        "Do you want to save changes to this comment?",
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
+          },
+          {
+            text: "Save",
+            onPress: async () => {
+              try {
+                await updateDoc(commentRef, {
+                  content: trimmedContent,
+                  editedAt: new Date(),
+                });
+                setEditingComment(null);
+                setEditingCommentContent("");
+                Keyboard.dismiss();
+                Alert.alert("Success", "Comment updated!");
+              } catch (err) {
+                console.error("Error saving edited comment: ", err);
+                Alert.alert("Error", "Could not update comment.");
+              }
+            },
+          },
+        ],
+        { cancelable: true }
+      );
     } catch (err) {
-      console.error("Error editing comment: ", err);
-      Alert.alert("Error", "Could not edit comment.");
+      console.error("Error preparing comment for edit: ", err);
+      Alert.alert("Error", "Could not fetch comment.");
     }
   };
-
+  
   const deleteComment = async (threadID, commentID) => {
     Alert.alert(
       "Delete Comment",
@@ -375,6 +545,40 @@ const Forum = () => {
     );
   };
 
+  const cancelEditComment = () => {
+    if (!editingComment) {
+      setEditingComment(null);
+      setEditingCommentContent("");
+      return;
+    }
+
+    const originalContent = editingComment.content?.trim() || "";
+    const currentContent = editingCommentContent.trim();
+    const hasChanges = currentContent !== originalContent;
+
+    if (hasChanges) {
+      Alert.alert(
+        "Discard Changes?",
+        "You have unsaved changes to this comment. Are you sure you want to discard them?",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Discard",
+            style: "destructive",
+            onPress: () => {
+              setEditingComment(null);
+              setEditingCommentContent("");
+            },
+          },
+        ]
+      );
+    } else {
+      setEditingComment(null);
+      setEditingCommentContent("");
+    }
+  };
+  
+  
   return (
     <ThemedView style={styles.innerContainer}>
       <Spacer />
@@ -536,7 +740,7 @@ const Forum = () => {
                   </ThemedButton>
 
                   <ThemedButton
-                    onPress={() => setModalVisible(false)}
+                    onPress={cancelCreateThread}
                     style={{ flex: 1 }}
                   >
                     <Text style={styles.filterText}>Cancel</Text>
@@ -614,10 +818,7 @@ const Forum = () => {
                     <Text style={styles.filterText}>Save</Text>
                   </ThemedButton>
 
-                  <ThemedButton
-                    onPress={() => setEditModalVisible(false)}
-                    style={{ flex: 1 }}
-                  >
+                  <ThemedButton onPress={cancelEditThread} style={{ flex: 1 }}>
                     <Text style={styles.filterText}>Cancel</Text>
                   </ThemedButton>
                 </View>
@@ -626,7 +827,7 @@ const Forum = () => {
           </KeyboardAvoidingView>
         </TouchableWithoutFeedback>
       </Modal>
-   
+
       {/* Thread Detail Modal */}
       <Modal
         visible={selectedThread !== null}
@@ -636,6 +837,7 @@ const Forum = () => {
           setSelectedThread(null);
           setComments([]);
           setEditingComment(null); // Reset editing comment state
+          setEditingCommentContent(""); // Clear editing comment content
           setCommentInput(""); // Clear comment input
         }}
       >
@@ -644,10 +846,11 @@ const Forum = () => {
             setSelectedThread(null);
             setComments([]);
             setEditingComment(null); // Reset editing comment state
+            setEditingCommentContent(""); // Clear editing comment content
             setCommentInput(""); // Clear comment input
           }}
         >
-          <KeyboardAvoidingView 
+          <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={styles.modalBackdrop}
           >
@@ -671,7 +874,7 @@ const Forum = () => {
                         <Text style={styles.commentHead}>Comments:</Text>
                         <FlatList
                           data={comments}
-                          extraData={editingComment}
+                          extraData={editingComment} // Ensure FlatList re-renders when editingComment changes
                           keyExtractor={(item) => item.id}
                           renderItem={({ item }) => {
                             return editingComment !== null &&
@@ -682,8 +885,8 @@ const Forum = () => {
                                     styles.input,
                                     { height: 100, textAlignVertical: "top" },
                                   ]}
-                                  value={editContent} // This needs to be a separate state for comment editing
-                                  onChangeText={setEditContent} // This should be a separate setState for comment editing
+                                  value={editingCommentContent} // Use the new state for comment editing
+                                  onChangeText={setEditingCommentContent} // Use the new setter
                                   multiline={true}
                                 />
                                 <View
@@ -698,7 +901,7 @@ const Forum = () => {
                                       editComment(
                                         selectedThread.id,
                                         item.id,
-                                        editContent // Use the correct state for comment editing here
+                                        editingCommentContent // Use the correct state for comment editing here
                                       )
                                     }
                                     style={{ flex: 1, marginRight: 10 }}
@@ -707,7 +910,7 @@ const Forum = () => {
                                   </ThemedButton>
 
                                   <ThemedButton
-                                    onPress={() => setEditingComment(null)}
+                                    onPress={cancelEditComment}
                                     style={{ flex: 1 }}
                                   >
                                     <Text style={styles.filterText}>
@@ -743,7 +946,7 @@ const Forum = () => {
                                     <Pressable
                                       onPress={() => {
                                         setEditingComment(item.id);
-                                        setEditContent(item.content); // Prefill the edit input
+                                        setEditingCommentContent(item.content); // Prefill the edit input
                                       }}
                                     >
                                       <Ionicons
@@ -810,7 +1013,6 @@ const Forum = () => {
           </KeyboardAvoidingView>
         </TouchableWithoutFeedback>
       </Modal>
-   
     </ThemedView>
   );
 };
@@ -824,7 +1026,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: "bold"
+    fontWeight: "bold",
   },
   filterContainer: {
     flexDirection: "row",
@@ -892,7 +1094,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderRadius: 10,
     padding: 20,
-    maxHeight: "80%", 
+    maxHeight: "80%",
   },
   modalTitle: {
     fontSize: 22,
