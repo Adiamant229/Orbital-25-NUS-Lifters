@@ -39,6 +39,11 @@ const Signup = () => {
   const spacerHeight = Platform.OS === "ios" ? 10 : 3;
   const logoWidthAndHeight = Platform.OS === "ios" ? 280 : 240;
 
+  const validateEmail = (email) => {
+    const re = /\S+@\S+\.\S+/;
+    return re.test(email);
+  };
+
   const handleRegister = async () => {
     if (!name.trim()) {
       Alert.alert("Error", "Please enter your username.");
@@ -46,6 +51,14 @@ const Signup = () => {
     }
     if (!email || !password) {
       Alert.alert("Error", "Please enter both email and password.");
+      return;
+    }
+    if (!validateEmail(email)) {
+      Alert.alert("Error", "Please enter a valid email address.");
+      return;
+    }
+    if (password.length < 6) {
+      Alert.alert("Error", "Password should be at least 6 characters.");
       return;
     }
     if (password !== confirmPassword) {
@@ -81,7 +94,7 @@ const Signup = () => {
 
       router.replace("/gymCapacity");
     } catch (error) {
-      const errorCode = error.code;
+      const errorCode = error?.code ?? "unknown_error";
       console.error("Sign-up error:", errorCode);
 
       let userFacingMessage = "An error occurred during sign up.";
@@ -139,8 +152,8 @@ const Signup = () => {
               secureTextEntry
               onChangeText={setPassword}
               value={password}
-              textContentType="oneTimeCode"
-              autoComplete="off"
+              textContentType="password"
+              autoComplete="password"
             />
 
             <ThemedTextInput
