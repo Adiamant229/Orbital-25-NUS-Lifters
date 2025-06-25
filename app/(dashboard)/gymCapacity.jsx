@@ -67,7 +67,7 @@ const gymCapacity = () => {
                                 <ThemedText>
                                     UTown Gym:
                                     { loading && gyms.length === 0 ? "Loading"
-                                        : gyms[1].capacity }
+                                        : gyms[2].capacity }
                                 </ThemedText>
                                 <Spacer />
                                 <MaterialIcons size={50} name="groups" />
@@ -75,15 +75,12 @@ const gymCapacity = () => {
 
                             <ThemedButton
                                 style={styles.button}
-                                onPress={() => router.push("/mpshReports")}
+                                onPress={() => router.push("/uscReports")}
                             >
-                                <ThemedText>MPSH Gym: { loading && gyms.length === 0 ? "Loading" : gyms[0].capacity }</ThemedText>
+                                <ThemedText>USC Gym: { loading && gyms.length === 0 ? "Loading" : gyms[1].capacity }</ThemedText>
                                 <Spacer />
                                 <MaterialIcons size={50} name="groups" />
                             </ThemedButton>
-                            <ThemedButton
-                                onPress={() => router.push("/uscReports")}
-                            ><Text>USC Gym: Under Maintenance</Text></ThemedButton>
                         </ThemedView>
                     </ScrollView>
                 </SafeAreaView>
