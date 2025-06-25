@@ -19,7 +19,7 @@ An all-in-one mobile app for NUS gym-goers — track gym capacity, report equipm
 - 📚 Gym Information & Guide
 
 - 👤 Profile Page
-- 
+  
 ---
 
 ## 📱 APK Download (Android Only)
