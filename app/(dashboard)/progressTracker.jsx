@@ -29,6 +29,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import ThemedButton from "../../components/themedButton";
+import Spacer from "../../components/spacer";
 
 //firebase imports
 import { db, auth } from "../../firebaseConfig";
@@ -527,7 +528,6 @@ const ProgressTracker = () => {
   return (
     <ThemedView style={styles.container}>
       <ThemedText style={styles.title}>Progress Tracker</ThemedText>
-
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => setSelectedTab("workouts")}
@@ -642,7 +642,7 @@ const ProgressTracker = () => {
           </View>
 
           {workouts.length === 0 ? (
-            <Text>
+            <Text style={styles.graphPlaceholder}>
               {allWorkouts.length === 0
                 ? "No workout data available. Add an entry to get started!"
                 : `No workout data for ${selectedWorkoutYear}.`}
@@ -1008,7 +1008,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 15,
-    paddingTop: 70,
+    paddingTop: Platform.OS === "ios" ? 70 : 30
   },
   title: {
     fontSize: 22,

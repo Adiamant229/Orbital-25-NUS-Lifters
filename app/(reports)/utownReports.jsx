@@ -459,20 +459,16 @@ const UtownReports = () => {
   return (
     <ThemedView style={styles.container}>
       <View style={styles.header}>
-        <ThemedText style={styles.title}>MPSH Reports</ThemedText>
+        <ThemedText style={styles.title}>UTown Reports</ThemedText>
         <TouchableOpacity onPress={openAddModal} style={styles.addButton}>
-          <ThemedText
-            style={{ color: "white", fontSize: 24, fontWeight: "bold" }}
-          >
-            +
-          </ThemedText>
+          <ThemedText>+</ThemedText>
         </TouchableOpacity>
       </View>
       <FlatList
         data={reports}
         keyExtractor={(item) => item.id}
         ListEmptyComponent={
-          <Text style={{ textAlign: "center", marginTop: 50, color: "#888" }}>
+          <Text style={{ textAlign: "center", marginTop: 10, color: "#888" }}>
             No reports yet. Tap + to add one.
           </Text>
         }

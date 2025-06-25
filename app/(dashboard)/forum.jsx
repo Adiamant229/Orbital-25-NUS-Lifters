@@ -37,6 +37,7 @@ import ThemedView from "../../components/themedView";
 import ThemedButton from "../../components/themedButton";
 import Spacer from "../../components/spacer";
 
+
 const categories = ["Training", "Diet", "Cardio"];
 
 const Forum = () => {
@@ -578,11 +579,8 @@ const Forum = () => {
     }
   };
   
-  
   return (
     <ThemedView style={styles.innerContainer}>
-      <Spacer />
-      <Spacer />
       <ThemedText style={styles.title} title={true}>
         Official NUS Lifters Club Forum
       </ThemedText>
@@ -1023,9 +1021,10 @@ const styles = StyleSheet.create({
   innerContainer: {
     flex: 1,
     padding: 20,
+    paddingTop: Platform.OS === "ios" ? 70 : 30,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
   },
   filterContainer: {
