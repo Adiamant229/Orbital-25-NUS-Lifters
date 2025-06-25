@@ -43,6 +43,7 @@ import {
   doc,
   updateDoc,
   where,
+  Timestamp, // <--- Import Timestamp here so your component can access the mocked version
 } from "firebase/firestore";
 
 const ProgressTracker = () => {
@@ -112,10 +113,11 @@ const ProgressTracker = () => {
     const uniqueYears = [
       ...new Set(
         allWeights.map((w) => {
+          // This line is the focus of the error
           const d =
             typeof w.date === "string"
               ? new Date(w.date)
-              : w.date.toDate?.() || new Date();
+              : w.date.toDate?.() || new Date(); // w.date.toDate() will now be defined due to mock
           return d.getFullYear();
         })
       ),
@@ -585,6 +587,7 @@ const ProgressTracker = () => {
             </TouchableOpacity>
 
             <TouchableOpacity
+              testID="exerciseProgress-button"
               onPress={() => router.push("/exerciseProgress")}
               style={styles.addButton2}
             >
@@ -592,6 +595,7 @@ const ProgressTracker = () => {
             </TouchableOpacity>
 
             <TouchableOpacity
+              testID="exercises-button"
               onPress={() => router.push("/exercises")}
               style={styles.addButton2}
             >
@@ -723,6 +727,7 @@ const ProgressTracker = () => {
 
                         <View style={{ flexDirection: "row", gap: 10 }}>
                           <TouchableOpacity
+                            testID={`edit-button-${item.id}`}
                             onPress={() => {
                               router.push({
                                 pathname: "/addWorkout",
@@ -738,6 +743,7 @@ const ProgressTracker = () => {
                           </TouchableOpacity>
 
                           <TouchableOpacity
+                            testID={`delete-button-${item.id}`}
                             onPress={() => handleDeleteWorkout(item.id)}
                           >
                             <Ionicons
@@ -1008,7 +1014,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 15,
-    paddingTop: Platform.OS === "ios" ? 70 : 30
+    paddingTop: Platform.OS === "ios" ? 70 : 30,
   },
   title: {
     fontSize: 22,
@@ -1158,4 +1164,3 @@ const styles = StyleSheet.create({
     gap: 10,
   },
 });
-
