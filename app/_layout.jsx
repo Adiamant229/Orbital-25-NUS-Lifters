@@ -24,7 +24,7 @@ const RootLayout = () => {
 
         <Stack.Screen
           name="(reports)"
-          options={{ title: "Latest Reports & Issues " }}
+          options={{ title: "Gym Facility Info" }}
         />
 
         <Stack.Screen

@@ -1,5 +1,5 @@
 import { render, fireEvent, waitFor, act } from "@testing-library/react-native";
-import { Alert } from "react-native";
+import { Alert, Linking } from "react-native";
 
 jest.mock("../../firebaseConfig", () => ({
   auth: {},
@@ -109,6 +109,11 @@ jest.mock("react-native-dropdown-picker", () => {
       )
     );
 });
+
+jest.mock("react-native/Libraries/Linking/Linking", () => ({
+  openURL: jest.fn(),
+}));
+
 
 jest.spyOn(Alert, "alert").mockImplementation((title, message, buttons) => {
   if (buttons) {
@@ -419,4 +424,5 @@ describe("UtownReports component", () => {
 
     consoleSpy.mockRestore();
   });
+  
 });
