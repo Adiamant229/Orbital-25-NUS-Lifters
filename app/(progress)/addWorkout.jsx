@@ -369,6 +369,7 @@ const AddWorkout = () => {
             <TouchableOpacity
               onPress={() => setShowDatePicker(true)}
               style={styles.datePickerButton}
+              testID="open-date-picker-btn"
             >
               <ThemedText>Select Date: {date.toLocaleDateString()}</ThemedText>
             </TouchableOpacity>
@@ -377,6 +378,7 @@ const AddWorkout = () => {
                 value={date}
                 mode="date"
                 onChange={onChangeDate}
+                testID="date-picker"
               />
             )}
             <View style={styles.timeDropdownContainer}>

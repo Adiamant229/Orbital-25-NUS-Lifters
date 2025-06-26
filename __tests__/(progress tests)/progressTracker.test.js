@@ -159,12 +159,14 @@ beforeEach(() => {
     jest.clearAllMocks();
   
     jest.spyOn(Alert, "alert").mockImplementation((title, message, buttons) => {
-      // Automatically "press" the destructive Delete button for tests
-      const deleteButton = buttons.find(
-        (button) => button.style === "destructive" || button.text === "Delete"
+      const confirmButton = buttons.find(
+        (button) =>
+          button.text === "Submit" ||
+          button.text === "Update" ||
+          button.style === "destructive"
       );
-      if (deleteButton && deleteButton.onPress) {
-        deleteButton.onPress();
+      if (confirmButton && confirmButton.onPress) {
+        confirmButton.onPress();
       }
     });
   });
@@ -521,5 +523,50 @@ describe("ProgressTracker Component - Tabs", () => {
       expect(firestore.deleteDoc.mock.calls[0][0].id).toBe("w1");
     });
   });
+
+  test("submits new weight when valid input is entered and Save is confirmed", async () => {
+    const { getByText, getByPlaceholderText, getByTestId } = render(<ProgressTracker />);
+    fireEvent.press(getByText("Bodyweight"));
+    fireEvent.press(getByText("+ New Weight"));
   
+    const input = getByPlaceholderText("Enter weight (kg)");
+    fireEvent.changeText(input, "72.5");
+  
+    fireEvent.press(getByTestId("saveWeightButton")); 
+  
+    const firestore = require("firebase/firestore");
+    await waitFor(() => {
+      expect(firestore.addDoc).toHaveBeenCalledTimes(1);
+      const payload = firestore.addDoc.mock.calls[0][1];
+      expect(payload.weight).toBe(72.5);
+      expect(payload.date).toBeInstanceOf(Object); 
+    });
+  });
+  
+  /*test("opens edit weight modal with pre-filled data after tapping graph and edit", async () => {
+    const {
+      getByText,
+      getByTestId,
+      getByPlaceholderText,
+      queryByText,
+    } = render(<ProgressTracker />);
+
+    // 1. Switch to Bodyweight tab
+    fireEvent.press(getByText("Bodyweight"));
+
+    // 2. Open the "Add New Weight" modal
+    fireEvent.press(getByText("+ New Weight"));
+
+    // 3. Enter new weight
+    const input1 = getByPlaceholderText("Enter weight (kg)");
+    fireEvent.changeText(input1, "72.5");
+
+    // 4. Press Save button
+    fireEvent.press(getByTestId("saveWeightButton"));
+
+    // 5. Wait for the "Add New Weight" modal to close by checking modal title no longer present
+    await waitFor(() => {
+      expect(queryByText(/Add New Weight|Edit Weight Entry/)).toBeNull();
+    });
+  });*/
 });

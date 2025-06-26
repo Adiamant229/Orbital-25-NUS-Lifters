@@ -451,4 +451,20 @@ describe("AddWorkout Component", () => {
       );
     });
   });
+
+  test("updates the workout date when a new date is selected", async () => {
+    const { getByTestId, getByText } = render(<AddWorkout />);
+
+    fireEvent.press(getByTestId("open-date-picker-btn"));
+
+    const newSelectedDate = new Date("2024-12-25");
+
+    act(() => {
+      const picker = getByTestId("date-picker");
+      picker.props.onChange({}, newSelectedDate);
+    });
+
+    expect(getByText(/25\/12\/2024|12\/25\/2024/)).toBeTruthy(); 
+  });
+
 });

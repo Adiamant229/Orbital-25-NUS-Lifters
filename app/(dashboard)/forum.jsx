@@ -615,6 +615,7 @@ const Forum = () => {
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <Pressable
+              testID={"thread-card-button"}
               onPress={() => {
                 setSelectedThread(item);
               }}
@@ -642,14 +643,20 @@ const Forum = () => {
                   </View>
                   {item.authorId === currentUserId && (
                     <View style={{ flexDirection: "row", gap: 10 }}>
-                      <Pressable onPress={() => openEditModal(item)}>
+                      <Pressable
+                        onPress={() => openEditModal(item)}
+                        testID="edit-thread-button"
+                      >
                         <Ionicons
                           name="pencil-outline"
                           size={20}
                           color="#007AFF"
                         />
                       </Pressable>
-                      <Pressable onPress={() => deleteThread(item.id)}>
+                      <Pressable
+                        onPress={() => deleteThread(item.id)}
+                        testID="delete-thread-button"
+                      >
                         <Ionicons
                           name="trash-outline"
                           size={20}
@@ -946,6 +953,7 @@ const Forum = () => {
                                         setEditingComment(item.id);
                                         setEditingCommentContent(item.content); // Prefill the edit input
                                       }}
+                                      testID="edit-comment-button"
                                     >
                                       <Ionicons
                                         name="pencil-outline"
