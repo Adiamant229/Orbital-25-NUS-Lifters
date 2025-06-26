@@ -4,6 +4,7 @@ import {
   Alert,
   View,
   Text,
+  Linking,
   FlatList,
   Modal,
   TouchableWithoutFeedback,
@@ -11,29 +12,29 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
-  Platform, // Import Platform for KeyboardAvoidingView
-  KeyboardAvoidingView, // Import KeyboardAvoidingView
+  Platform, 
+  KeyboardAvoidingView, 
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import * as ImagePicker from "expo-image-picker";
 import uuid from "react-native-uuid";
 import { Ionicons } from "@expo/vector-icons";
 import Entypo from "@expo/vector-icons/Entypo";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 //firebase imports
 import {
   collection,
   addDoc,
-  getDocs, // Still needed for specific cases like getting old image URL when updating
-  getDoc, // Added for fetching a single document
+  getDoc, 
   deleteDoc,
   doc,
   updateDoc,
   deleteField,
-  onSnapshot, // Crucial for real-time updates
-  query, // For creating queries for onSnapshot
+  onSnapshot, 
+  query, 
 } from "firebase/firestore";
-import { db, storage } from "../../firebaseConfig"; // Assuming db and storage are correctly exported
+import { db, storage } from "../../firebaseConfig"; 
 import { getAuth } from "firebase/auth";
 import {
   ref,
@@ -362,7 +363,7 @@ const UtownReports = () => {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images, // Corrected mediaTypes enum
+      mediaTypes: ImagePicker.Images, // Corrected mediaTypes enum
       quality: 0.7,
     });
 
@@ -456,17 +457,31 @@ const UtownReports = () => {
     }
   };
 
+
+  const gymLocationUrl =
+    "https://www.google.com/maps/place/Stephen+Riady+Centre/@1.3045125,103.7694824,1126m/data=!3m3!1e3!4b1!5s0x31da1af5c87e327b:0x1dceaf1bae41c7f4!4m6!3m5!1s0x31da1b6eea104ed1:0x6336ed5d792c400c!8m2!3d1.3045125!4d103.7720573!16s%2Fg%2F12hkklvsp?entry=ttu&g_ep=EgoyMDI1MDYyMy4yIKXMDSoASAFQAw%3D%3D";
+
+  const handleLink = () => {
+    Linking.openURL(gymLocationUrl).catch((err) =>
+      console.error("Failed to open URL:", err)
+    );
+  };
+
   return (
     <ThemedView style={styles.container}>
-      <View style={styles.header}>
-        <ThemedText style={styles.title}>UTown Reports</ThemedText>
-        <TouchableOpacity onPress={openAddModal} style={styles.addButton}>
-          <ThemedText>+</ThemedText>
-        </TouchableOpacity>
-      </View>
       <FlatList
         data={reports}
         keyExtractor={(item) => item.id}
+        ListHeaderComponent={
+          <>
+            <View style={styles.header}>
+              <ThemedText style={{ fontSize: 22 }}>UTown Reports</ThemedText>
+              <TouchableOpacity onPress={openAddModal} style={styles.addButton}>
+                <ThemedText>+</ThemedText>
+              </TouchableOpacity>
+            </View>
+          </>
+        }
         ListEmptyComponent={
           <Text style={{ textAlign: "center", marginTop: 10, color: "#888" }}>
             No reports yet. Tap + to add one.
@@ -502,11 +517,11 @@ const UtownReports = () => {
 
                 {isExpanded && (
                   <>
-                    {item.remarks ? (
+                    {item.remarks && (
                       <Text style={styles.cardRemarks}>
                         Remarks: {item.remarks}
                       </Text>
-                    ) : null}
+                    )}
 
                     {item.imageUrl && (
                       <Image
@@ -534,16 +549,51 @@ const UtownReports = () => {
             </TouchableOpacity>
           );
         }}
+        ListFooterComponent={
+          <View
+            style={{
+              backgroundColor: "#7d015c", // purple color
+              borderRadius: 20,
+              padding: 15,
+              marginTop: 20,
+              paddingHorizontal: 20,
+              marginHorizontal: 4,
+            }}
+          >
+            <ThemedText style={{ fontSize: 18 }}>Gym Details</ThemedText>
+
+            <Spacer height={10} />
+
+            <ThemedText>Operating Hours:</ThemedText>
+            <ThemedText>Monday to Friday 0700hr to 2200hr</ThemedText>
+
+            <ThemedText>Weekends and Public Holidays 0700hr</ThemedText>
+
+            <Spacer height={10} />
+
+            <View style={styles.buttonicons}>
+              <ThemedText>Location: </ThemedText>
+
+              <FontAwesome name="map-marker" size={24} color="red" />
+              <ThemedText
+                onPress={handleLink}
+                style={{ color: "#007AFF", textDecorationLine: "underline" }}
+              >
+                Stephen Riady Centre
+              </ThemedText>
+            </View>
+          </View>
+        }
       />
 
       <Modal
         visible={modalVisible}
         animationType="fade"
         transparent={true}
-        onRequestClose={handleCancelPress} // Use handleCancelPress here
+        onRequestClose={handleCancelPress}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-          <KeyboardAvoidingView // Use KeyboardAvoidingView here
+          <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={styles.modalOverlay}
           >
@@ -565,7 +615,7 @@ const UtownReports = () => {
                   maxHeight={150}
                   style={styles.dropdown}
                   dropDownContainerStyle={styles.dropdownContainer}
-                  listMode="SCROLLVIEW" // Add listMode for better behavior with KeyboardAvoidingView
+                  listMode="SCROLLVIEW"
                 />
               </View>
 
@@ -584,7 +634,7 @@ const UtownReports = () => {
                   maxHeight={150}
                   style={styles.dropdown}
                   dropDownContainerStyle={styles.dropdownContainer}
-                  listMode="SCROLLVIEW" // Add listMode for better behavior with KeyboardAvoidingView
+                  listMode="SCROLLVIEW"
                 />
               </View>
 
@@ -656,6 +706,8 @@ const UtownReports = () => {
       </Modal>
     </ThemedView>
   );
+  
+  
 };
 
 export default UtownReports;
@@ -669,7 +721,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 10,
   },
-  title: { fontSize: 22, fontWeight: "bold" },
   addButton: {
     backgroundColor: "#007bff",
     paddingVertical: 6,
