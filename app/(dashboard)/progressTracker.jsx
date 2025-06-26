@@ -860,7 +860,10 @@ const ProgressTracker = () => {
                 No weight data available. Add an entry to get started!
               </Text>
             ) : sortedFilteredWeightsForChart.length > 0 ? (
-              <TouchableOpacity onPress={() => setWeightListModalVisible(true)}>
+              <TouchableOpacity
+                testID="bodyweight-graph"
+                onPress={() => setWeightListModalVisible(true)}
+              >
                 <LineChart
                   data={weightChartData}
                   width={screenWidth - 30}
@@ -918,6 +921,7 @@ const ProgressTracker = () => {
                     </ThemedText>
                     <View style={styles.weightEntryButtons}>
                       <TouchableOpacity
+                        testID={`edit-weight-${w.id}`}
                         onPress={() => {
                           openEditWeight(w);
                           setWeightListModalVisible(false);
@@ -991,7 +995,10 @@ const ProgressTracker = () => {
                 />
 
                 <View style={styles.modalButtonRow}>
-                  <ThemedButton onPress={handleSubmitWeight}>
+                  <ThemedButton
+                    onPress={handleSubmitWeight}
+                    testID="saveWeightButton"
+                  >
                     <ThemedText>{editingWeight ? "Save" : "Submit"}</ThemedText>
                   </ThemedButton>
 
