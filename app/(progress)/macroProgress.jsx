@@ -1,16 +1,24 @@
+// react and expo imports
 import { useEffect, useState } from "react";
 import { ScrollView, Dimensions, View, StyleSheet } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import DropDownPicker from "react-native-dropdown-picker";
 
+// themed components
 import ThemedView from "../../components/themedView";
 import ThemedText from "../../components/themedText";
 
-import { query, collection, orderBy, where, getDocs } from "firebase/firestore";
+// firebase imports
+import {
+  query,
+  collection,
+  orderBy,
+  onSnapshot,
+} from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { db } from "../../firebaseConfig";
 
-const ExerciseProgress = () => {
+const MacroProgress = () => {
   const screenWidth = Dimensions.get("window").width;
 
   const chartConfig = {
@@ -37,16 +45,21 @@ const ExerciseProgress = () => {
     categoryPercentage: 0,
   };
 
-  const [exerciseData, setExerciseData] = useState({});
+  // Fixed macro types
+  const macroTypes = ["Calories", "Protein", "Carbs", "Fats"];
+
+  const [macroData, setMacroData] = useState({});
   const [open, setOpen] = useState(false);
-  const [selectedExercises, setSelectedExercises] = useState([]);
-  const [items, setItems] = useState([]);
+  const [selectedMacros, setSelectedMacros] = useState(macroTypes); 
+  const [items, setItems] = useState(
+    macroTypes.map((m) => ({ label: m, value: m }))
+  );
+
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [yearItems, setYearItems] = useState([]);
   const [yearDropdownOpen, setYearDropdownOpen] = useState(false);
 
   useEffect(() => {
-    // Initialize years dropdown options: current year ± 1 year
     const currentYear = new Date().getFullYear();
     const years = [currentYear - 1, currentYear, currentYear + 1];
     setYearItems(years.map((y) => ({ label: `${y}`, value: y })));
@@ -54,84 +67,88 @@ const ExerciseProgress = () => {
   }, []);
 
   useEffect(() => {
-    const fetchWorkouts = async () => {
-      const auth = getAuth();
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+    if (!currentUser) return;
 
-      try {
-        const q = query(
-          collection(db, "workouts"),
-          where("userId", "==", currentUser.uid),
-          orderBy("createdAt", "asc")
-        );
+    const q = query(
+      collection(db, "users", currentUser.uid, "macros"),
+      orderBy("createdAt", "asc")
+    );
 
-        const snapshot = await getDocs(q);
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const dataByMacro = {
+        Calories: [],
+        Protein: [],
+        Carbs: [],
+        Fats: [],
+      };
+      const yearSet = new Set();
 
-        const dataByExercise = {};
-        const allExercisesSet = new Set();
-        const yearSet = new Set();
+      snapshot.docs.forEach((doc) => {
+        const macroEntry = doc.data();
+        const dateObj = macroEntry.createdAt?.toDate
+          ? macroEntry.createdAt.toDate()
+          : macroEntry.createdAt instanceof Date
+          ? macroEntry.createdAt
+          : new Date(macroEntry.createdAt);
 
-        snapshot.docs.forEach((doc) => {
-          const workout = doc.data();
-          const dateObj = workout.createdAt?.toDate();
-          const dateStr = dateObj
-            ? dateObj.toLocaleDateString("en-SG", {
-                day: "2-digit",
-                month: "short",
-              })
-            : "Unknown";
-          const year = dateObj?.getFullYear();
-          if (year) yearSet.add(year);
+        const year = dateObj?.getFullYear();
+        if (year) yearSet.add(year);
 
-          workout.exercises?.forEach((ex) => {
-            const name = ex.name.trim();
-            allExercisesSet.add(name);
-            const heaviest = Math.max(...ex.sets.map((s) => s.weight));
+        const dateStr = dateObj
+          ? dateObj.toLocaleDateString("en-SG", {
+              day: "2-digit",
+              month: "short",
+            })
+          : "Unknown";
 
-            if (!dataByExercise[name]) dataByExercise[name] = [];
-            dataByExercise[name].push({
-              date: dateStr,
-              weight: heaviest,
-              year,
-            });
-          });
+        // Push macro values by type with date and year for filtering
+        dataByMacro.Calories.push({
+          date: dateStr,
+          value: macroEntry.calories,
+          year,
         });
+        dataByMacro.Protein.push({
+          date: dateStr,
+          value: macroEntry.protein,
+          year,
+        });
+        dataByMacro.Carbs.push({
+          date: dateStr,
+          value: macroEntry.carbs,
+          year,
+        });
+        dataByMacro.Fats.push({
+          date: dateStr,
+          value: macroEntry.fats,
+          year,
+        });
+      });
 
-        const yearArray = Array.from(yearSet).sort((a, b) => a - b);
-        setYearItems(yearArray.map((y) => ({ label: `${y}`, value: y })));
+      // Sort years and update year dropdown items
+      const yearArray = Array.from(yearSet).sort((a, b) => a - b);
+      setYearItems(yearArray.map((y) => ({ label: `${y}`, value: y })));
 
-        if (!yearSet.has(selectedYear) && yearArray.length > 0) {
-          setSelectedYear(yearArray[yearArray.length - 1]);
-        }
-
-        const exerciseArray = Array.from(allExercisesSet);
-
-        setItems(
-          exerciseArray.map((ex) => ({
-            label: ex,
-            value: ex,
-          }))
-        );
-
-        // Select all exercises by default
-        setSelectedExercises(exerciseArray);
-
-        setExerciseData(dataByExercise);
-      } catch (error) {
-        console.error("Error fetching workouts:", error);
+      // If current selected year not in data, set to last available year
+      if (!yearSet.has(selectedYear) && yearArray.length > 0) {
+        setSelectedYear(yearArray[yearArray.length - 1]);
       }
-    };
 
-    fetchWorkouts();
-  }, []);
+      setMacroData(dataByMacro);
+    });
+
+    return () => unsubscribe();
+  }, [selectedYear]);
 
   const renderChart = (title, data) => {
     if (!data || data.length === 0) return null;
 
+    // Filter data by selected year
     const filteredData = data.filter((entry) => entry.year === selectedYear);
     if (filteredData.length === 0) return null;
 
+    // Sort by date
     const sortedData = filteredData.slice().sort((a, b) => {
       const [dayA, monthA] = a.date.split(" ");
       const [dayB, monthB] = b.date.split(" ");
@@ -142,7 +159,7 @@ const ExerciseProgress = () => {
     });
 
     const labels = sortedData.map((entry) => entry.date);
-    const weights = sortedData.map((entry) => entry.weight);
+    const values = sortedData.map((entry) => entry.value);
 
     return (
       <View key={title} style={styles.chartContainer}>
@@ -150,7 +167,7 @@ const ExerciseProgress = () => {
           {title} ({selectedYear})
         </ThemedText>
         <LineChart
-          data={{ labels, datasets: [{ data: weights }] }}
+          data={{ labels, datasets: [{ data: values }] }}
           width={screenWidth - 30}
           height={220}
           chartConfig={chartConfig}
@@ -162,7 +179,7 @@ const ExerciseProgress = () => {
 
   return (
     <ThemedView style={styles.container}>
-      <ThemedText style={styles.pageTitle}>Exercise Progress</ThemedText>
+      <ThemedText style={styles.pageTitle}>Macro Progress</ThemedText>
 
       <View style={styles.dropdownRow}>
         <View style={styles.exercisePicker}>
@@ -170,13 +187,13 @@ const ExerciseProgress = () => {
             min={1}
             max={items.length}
             open={open}
-            value={selectedExercises}
+            value={selectedMacros}
             items={items}
             setOpen={setOpen}
-            setValue={setSelectedExercises}
+            setValue={setSelectedMacros}
             setItems={setItems}
             multiple={true}
-            placeholder="Select Exercise"
+            placeholder="Select Macros"
             style={{
               backgroundColor: "#2c2c2c",
               borderColor: "#444444",
@@ -240,15 +257,13 @@ const ExerciseProgress = () => {
       </View>
 
       <ScrollView>
-        {Object.entries(exerciseData)
-          .filter(([exercise]) => selectedExercises.includes(exercise))
-          .map(([exercise, data]) => renderChart(exercise, data))}
+        {selectedMacros.map((macro) => renderChart(macro, macroData[macro]))}
       </ScrollView>
     </ThemedView>
   );
 };
 
-export default ExerciseProgress;
+export default MacroProgress;
 
 const styles = StyleSheet.create({
   container: {

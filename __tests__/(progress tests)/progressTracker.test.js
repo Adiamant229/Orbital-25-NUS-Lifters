@@ -340,7 +340,7 @@ describe("ProgressTracker Component - Tabs", () => {
     expect(getByText("Progress Tracker")).toBeTruthy();
     expect(getByText("Workouts")).toBeTruthy();
     expect(getByText("Bodyweight")).toBeTruthy();
-    expect(getByText("Diet")).toBeTruthy();
+    expect(getByText("Macros")).toBeTruthy();
   });
 
   test("switches tabs when pressing buttons", () => {
@@ -353,8 +353,8 @@ describe("ProgressTracker Component - Tabs", () => {
     expect(getByText("Your Bodyweights")).toBeTruthy();
     expect(queryByText("Your Workouts")).toBeNull();
 
-    fireEvent.press(getByText("Diet"));
-    expect(getByText("Your Meals")).toBeTruthy();
+    fireEvent.press(getByText("Macros"));
+    expect(getByText("Your Macros")).toBeTruthy();
     expect(queryByText("Your Bodyweights")).toBeNull();
   });
 

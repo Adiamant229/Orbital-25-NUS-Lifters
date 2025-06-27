@@ -3,13 +3,7 @@ import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import { View, TouchableOpacity, Text } from "react-native"; // Needed for dropdown mock
 import ExerciseProgress from "../../app/(progress)/exerciseProgress";
 import { getAuth } from "firebase/auth";
-import {
-  query,
-  collection,
-  orderBy,
-  where,
-  onSnapshot,
-} from "firebase/firestore";
+import { query, collection, orderBy, where, getDocs } from "firebase/firestore";
 
 jest.mock("../../firebaseConfig", () => ({
   db: {},
@@ -25,7 +19,7 @@ jest.mock("firebase/firestore", () => {
     collection: jest.fn(),
     orderBy: jest.fn(),
     where: jest.fn(),
-    onSnapshot: jest.fn(),
+    getDocs: jest.fn(),
   };
 });
 
@@ -69,46 +63,43 @@ describe("ExerciseProgress Component", () => {
     where.mockImplementation(() => ({ whereField: "userId" }));
     query.mockImplementation(() => "queryMock");
 
-    const fakeSnapshot = {
-      docs: [
-        {
-          data: () => ({
-            userId: fakeUserId,
-            createdAt: {
-              toDate: () => new Date("2025-05-10T10:00:00Z"),
+    const fakeDocs = [
+      {
+        data: () => ({
+          userId: fakeUserId,
+          createdAt: {
+            toDate: () => new Date("2025-05-10T10:00:00Z"),
+          },
+          exercises: [
+            {
+              name: "Bench Press",
+              sets: [{ weight: 100 }, { weight: 110 }],
             },
-            exercises: [
-              {
-                name: "Bench Press",
-                sets: [{ weight: 100 }, { weight: 110 }],
-              },
-              {
-                name: "Squat",
-                sets: [{ weight: 140 }, { weight: 150 }],
-              },
-            ],
-          }),
-        },
-        {
-          data: () => ({
-            userId: fakeUserId,
-            createdAt: {
-              toDate: () => new Date("2025-05-15T12:00:00Z"),
+            {
+              name: "Squat",
+              sets: [{ weight: 140 }, { weight: 150 }],
             },
-            exercises: [
-              {
-                name: "Bench Press",
-                sets: [{ weight: 115 }],
-              },
-            ],
-          }),
-        },
-      ],
-    };
+          ],
+        }),
+      },
+      {
+        data: () => ({
+          userId: fakeUserId,
+          createdAt: {
+            toDate: () => new Date("2025-05-15T12:00:00Z"),
+          },
+          exercises: [
+            {
+              name: "Bench Press",
+              sets: [{ weight: 115 }],
+            },
+          ],
+        }),
+      },
+    ];
 
-    onSnapshot.mockImplementation((query, callback) => {
-      callback(fakeSnapshot);
-      return jest.fn(); 
+    getDocs.mockResolvedValue({
+      docs: fakeDocs,
     });
   });
 
@@ -147,8 +138,10 @@ describe("ExerciseProgress Component", () => {
     expect(queryByText(`Squat (${currentYear})`)).toBeNull();
   });
 
-  test("calls onSnapshot once to listen to workouts", () => {
+  test("calls getDocs once to fetch workouts", async () => {
     render(<ExerciseProgress />);
-    expect(onSnapshot).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(getDocs).toHaveBeenCalledTimes(1);
+    });
   });
 });

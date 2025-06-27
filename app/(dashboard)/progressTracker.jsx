@@ -10,6 +10,7 @@ import {
   TextInput,
   Modal,
   Keyboard,
+  SafeAreaView,
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
   Platform,
@@ -29,7 +30,6 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import ThemedButton from "../../components/themedButton";
-import Spacer from "../../components/spacer";
 
 //firebase imports
 import { db, auth } from "../../firebaseConfig";
@@ -81,6 +81,137 @@ const ProgressTracker = () => {
   const [originalWeightInput, setOriginalWeightInput] = useState("");
   const [originalDate, setOriginalDate] = useState(new Date());
 
+
+  const [macroModalVisible, setMacroModalVisible] = useState(false);
+  const [macroTitle, setMacroTitle] = useState("");
+  const [calories, setCalories] = useState("");
+  const [protein, setProtein] = useState("");
+  const [carbs, setCarbs] = useState("");
+  const [fats, setFats] = useState("");
+
+  const [macros, setMacros] = useState([]);
+  const [allMacros, setAllMacros] = useState([]);
+  const [openedMacros, setOpenedMacros] = useState(new Set());
+  const [macroYearOptions, setMacroYearOptions] = useState([]);
+  const [selectedMacroYear, setSelectedMacroYear] = useState("all");
+  const [openMacroYearDropdown, setOpenMacroYearDropdown] = useState(false);
+
+
+  const [editingMacro, setEditingMacro] = useState(null);
+  const [originalMacroTitle, setOriginalMacroTitle] = useState("");
+  const [originalCalories, setOriginalCalories] = useState("");
+  const [originalProtein, setOriginalProtein] = useState("");
+  const [originalCarbs, setOriginalCarbs] = useState("");
+  const [originalFats, setOriginalFats] = useState("");
+  const [macroDate, setMacroDate] = useState(new Date());
+  const [showMacroDatePicker, setShowMacroDatePicker] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      setAllMacros([]);
+      return;
+    }
+
+    const q = query(
+      collection(db, "users", user.uid, "macros"),
+      orderBy("createdAt", "desc")
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setAllMacros(data);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+  
+
+
+  useEffect(() => {
+    if (!user || allMacros.length === 0) {
+      setMacroYearOptions([{ label: "All", value: "all" }]);
+      setSelectedMacroYear("all");
+      return;
+    }
+
+    const uniqueYears = [
+      ...new Set(
+        allMacros.map((m) => {
+          const d = m.createdAt?.toDate?.() || new Date();
+          return d.getFullYear();
+        })
+      ),
+    ].sort((a, b) => b - a);
+
+    const options = [
+      { label: "All", value: "all" },
+      ...uniqueYears.map((year) => ({
+        label: year.toString(),
+        value: year,
+      })),
+    ];
+
+    setMacroYearOptions(options);
+
+    if (
+      selectedMacroYear !== "all" &&
+      !uniqueYears.includes(selectedMacroYear) &&
+      uniqueYears.length > 0
+    ) {
+      setSelectedMacroYear(uniqueYears[0]);
+    } else if (uniqueYears.length === 0) {
+      setSelectedMacroYear("all");
+    }
+  }, [allMacros, user]);
+
+
+  useEffect(() => {
+    if (!user) {
+      setMacros([]);
+      return;
+    }
+
+    const macrosRef = collection(db, "users", user.uid, "macros");
+    let q;
+
+    if (selectedMacroYear === "all") {
+      q = query(macrosRef, orderBy("createdAt", "desc"));
+    } else {
+      const startOfYear = new Date(selectedMacroYear, 0, 1);
+      const endOfYear = new Date(selectedMacroYear + 1, 0, 1);
+
+      q = query(
+        macrosRef,
+        where("createdAt", ">=", startOfYear),
+        where("createdAt", "<", endOfYear),
+        orderBy("createdAt", "desc")
+      );
+    }
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setMacros(data);
+    });
+
+    return () => unsubscribe();
+  }, [user, selectedMacroYear]);
+  
+
+  const toggleMacro = (id) => {
+    setOpenedMacros((prev) => {
+      const newSet = new Set(prev);
+      newSet.has(id) ? newSet.delete(id) : newSet.add(id);
+      return newSet;
+    });
+  };
+  
+  
   // NEW: Effect to fetch ALL weights for year dropdown generation (unfiltered)
   useEffect(() => {
     if (!user) {
@@ -527,6 +658,157 @@ const ProgressTracker = () => {
     }
   };
 
+  const handleSubmitMacros = async () => {
+    if (!macroTitle || !calories || !protein || !carbs || !fats) {
+      alert("Please fill in all fields.");
+      return;
+    }
+
+    const caloriesVal = parseInt(calories);
+    const proteinVal = parseInt(protein);
+    const carbsVal = parseInt(carbs);
+    const fatsVal = parseInt(fats);
+
+    if ([caloriesVal, proteinVal, carbsVal, fatsVal].some(isNaN)) {
+      alert("All macros must be numeric values.");
+      return;
+    }
+
+    const submit = async () => {
+      try {
+        const macrosRef = collection(db, "users", user.uid, "macros");
+
+        if (editingMacro) {
+          const macroDocRef = doc(macrosRef, editingMacro.id);
+          await updateDoc(macroDocRef, {
+            title: macroTitle,
+            createdAt: macroDate,
+            calories: caloriesVal,
+            protein: proteinVal,
+            carbs: carbsVal,
+            fats: fatsVal,
+          });
+        } else {
+          await addDoc(macrosRef, {
+            title: macroTitle,
+            createdAt: macroDate,
+            calories: caloriesVal,
+            protein: proteinVal,
+            carbs: carbsVal,
+            fats: fatsVal,
+          });
+        }
+
+        setMacroModalVisible(false);
+        setMacroTitle("");
+        setCalories("");
+        setProtein("");
+        setCarbs("");
+        setFats("");
+        setEditingMacro(null);
+      } catch (error) {
+        console.error("Error saving macro entry:", error);
+        alert("Failed to save macro entry.");
+      }
+    };
+
+    Alert.alert(
+      editingMacro ? "Update Macros" : "Submit Macros",
+      editingMacro
+        ? "Are you sure you want to update this macro entry?"
+        : "Are you sure you want to submit this macro entry?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: editingMacro ? "Update" : "Submit",
+          style: "default",
+          onPress: submit,
+        },
+      ]
+    );
+  };
+  
+
+  const openEditMacro = (macro) => {
+    setEditingMacro(macro);
+    setMacroTitle(macro.title);
+    setCalories(macro.calories.toString());
+    setProtein(macro.protein.toString());
+    setCarbs(macro.carbs.toString());
+    setFats(macro.fats.toString());
+
+    // Store original values for change detection on cancel
+    setOriginalMacroTitle(macro.title);
+    setOriginalCalories(macro.calories.toString());
+    setOriginalProtein(macro.protein.toString());
+    setOriginalCarbs(macro.carbs.toString());
+    setOriginalFats(macro.fats.toString());
+
+    setMacroModalVisible(true);
+  };
+
+  const handleDeleteMacro = (id) => {
+    Alert.alert(
+      "Delete Macro Entry",
+      "Are you sure you want to delete this macro entry?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteDoc(doc(db, "users", user.uid, "macros", id));
+            } catch (error) {
+              console.error("Failed to delete macro entry:", error);
+              alert("Failed to delete macro entry");
+            }
+          },
+        },
+      ]
+    );
+  };
+  
+  const handleCancelMacroEntry = () => {
+    const hasChanges =
+      macroTitle !== originalMacroTitle ||
+      calories !== originalCalories ||
+      protein !== originalProtein ||
+      carbs !== originalCarbs ||
+      fats !== originalFats;
+
+    if (hasChanges) {
+      Alert.alert(
+        "Unsaved Changes",
+        "You have unsaved changes. Are you sure you want to discard them?",
+        [
+          { text: "No", style: "cancel" },
+          {
+            text: "Yes",
+            style: "destructive",
+            onPress: () => {
+              setMacroModalVisible(false);
+              setEditingMacro(null);
+              setMacroTitle("");
+              setCalories("");
+              setProtein("");
+              setCarbs("");
+              setFats("");
+            },
+          },
+        ]
+      );
+    } else {
+      setMacroModalVisible(false);
+      setEditingMacro(null);
+      setMacroTitle("");
+      setCalories("");
+      setProtein("");
+      setCarbs("");
+      setFats("");
+    }
+  };
+  
   return (
     <ThemedView style={styles.container}>
       <ThemedText style={styles.title}>Progress Tracker</ThemedText>
@@ -543,6 +825,24 @@ const ProgressTracker = () => {
             <ThemedText>Workouts</ThemedText>
           </View>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => setSelectedTab("Macros")}
+          style={[
+            styles.addButton,
+            selectedTab === "Macros" && styles.selectedTabButton,
+          ]}
+        >
+          <View style={styles.buttonicons}>
+            <MaterialCommunityIcons
+              name="silverware-fork-knife"
+              size={24}
+              color="white"
+            />
+            <ThemedText>Macros</ThemedText>
+          </View>
+        </TouchableOpacity>
+
         <TouchableOpacity
           onPress={() => setSelectedTab("weight")}
           style={[
@@ -555,25 +855,7 @@ const ProgressTracker = () => {
             <ThemedText>Bodyweight</ThemedText>
           </View>
         </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => setSelectedTab("diet")}
-          style={[
-            styles.addButton,
-            selectedTab === "diet" && styles.selectedTabButton,
-          ]}
-        >
-          <View style={styles.buttonicons}>
-            <MaterialCommunityIcons
-              name="silverware-fork-knife"
-              size={24}
-              color="white"
-            />
-            <ThemedText>Diet</ThemedText>
-          </View>
-        </TouchableOpacity>
       </View>
-
       {selectedTab === "workouts" && (
         <>
           <View style={styles.header2}>
@@ -763,19 +1045,20 @@ const ProgressTracker = () => {
         </>
       )}
 
-      {selectedTab === "diet" && (
+      {selectedTab === "Macros" && (
         <>
           <View style={styles.header2}>
-            <ThemedText style={{ fontSize: 20 }}>Your Meals</ThemedText>
+            <ThemedText style={{ fontSize: 20 }}>Your Macros</ThemedText>
+
             <TouchableOpacity
-              onPress={() => router.push("/macro")}
+              onPress={() => setMacroModalVisible(true)}
               style={styles.addButton2}
             >
-              <ThemedText>+ New Meal</ThemedText>
+              <ThemedText>+ New Macros</ThemedText>
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => router.push("/progression")}
+              onPress={() => router.push("/macroProgress")}
               style={styles.addButton2}
             >
               <Ionicons name="bar-chart" size={18} color="white" />
@@ -787,10 +1070,246 @@ const ProgressTracker = () => {
             >
               <FontAwesome5 name="book-open" size={20} color="white" />
             </TouchableOpacity>
+
+            {/* DropDownPicker for Macro Year Filter */}
+            <DropDownPicker
+              open={openMacroYearDropdown}
+              value={selectedMacroYear}
+              items={macroYearOptions}
+              setOpen={setOpenMacroYearDropdown}
+              setValue={setSelectedMacroYear}
+              setItems={setMacroYearOptions}
+              placeholder="Select Year"
+              listMode="SCROLLVIEW"
+              dropDownDirection="BOTTOM"
+              maxHeight={200}
+              containerStyle={{ width: 100, zIndex: 1000 }}
+              style={{
+                height: 50,
+                backgroundColor: "#2c2c2c",
+                borderColor: "#444444",
+              }}
+              dropDownContainerStyle={{
+                backgroundColor: "#2c2c2c",
+                borderColor: "#444444",
+              }}
+              textStyle={{ color: "#fff" }}
+              labelStyle={{ color: "#fff" }}
+              selectedItemLabelStyle={{ fontWeight: "bold" }}
+              arrowIconStyle={{ tintColor: "#fff" }}
+              tickIconStyle={{ tintColor: "#fff" }}
+            />
           </View>
+
+          {macros.length === 0 ? (
+            <Text style={styles.graphPlaceholder}>
+              {allMacros.length === 0
+                ? "No macro entries available. Add an entry to get started!"
+                : `No macros for ${selectedMacroYear}.`}
+            </Text>
+          ) : (
+            <FlatList
+              data={macros}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => {
+                const isOpen = openedMacros.has(item.id);
+
+                // Handle createdAt timestamp or Date object
+                let createdDate = null;
+                if (item.createdAt) {
+                  if (item.createdAt.toDate) {
+                    createdDate = item.createdAt.toDate();
+                  } else if (item.createdAt instanceof Date) {
+                    createdDate = item.createdAt;
+                  } else {
+                    createdDate = new Date(item.createdAt);
+                  }
+                }
+
+                const now = new Date();
+                let dateStr = "";
+                let relativeStr = "";
+                if (createdDate) {
+                  const diffTime = Math.abs(now - createdDate);
+                  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+                  dateStr = createdDate.toLocaleDateString(undefined, {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  });
+
+                  relativeStr =
+                    diffDays === 0
+                      ? "Today"
+                      : diffDays === 1
+                      ? "1 day ago"
+                      : `${diffDays} days ago`;
+                }
+
+                return (
+                  <TouchableOpacity
+                    onPress={() => toggleMacro(item.id)}
+                    style={styles.card}
+                  >
+                    <Text style={styles.cardTitle}>{item.title}</Text>
+
+                    {createdDate && (
+                      <Text style={{ color: "#555", marginTop: 4 }}>
+                        {`${dateStr} Macros (${relativeStr})`}
+                      </Text>
+                    )}
+
+                    {isOpen && (
+                      <View style={{ marginTop: 8 }}>
+                        <Text>Total Calories: {item.calories} kcal</Text>
+                        <Text>Total Protein: {item.protein} g</Text>
+                        <Text>Total Carbs: {item.carbs} g</Text>
+                        <Text>Total Fats: {item.fats} g</Text>
+
+                        {/* Edit and Delete buttons */}
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            gap: 10,
+                            marginTop: 10,
+                          }}
+                        >
+                          <TouchableOpacity
+                            testID={`edit-button-${item.id}`}
+                            onPress={() => openEditMacro(item)}
+                          >
+                            <Ionicons
+                              name="pencil-outline"
+                              size={20}
+                              color="#007AFF"
+                            />
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            testID={`delete-button-${item.id}`}
+                            onPress={() => handleDeleteMacro(item.id)}
+                          >
+                            <Ionicons
+                              name="trash-outline"
+                              size={20}
+                              color="#ff3b30"
+                            />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              }}
+            />
+          )}
         </>
       )}
 
+      <Modal
+        visible={macroModalVisible}
+        transparent={true}
+        animationType="fade"
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.modalOverlay}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              style={{ flex: 1 }}
+              keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 0} // adjust if needed
+            >
+              <SafeAreaView
+                style={{
+                  flex: 1,
+                  justifyContent: "center",
+                  paddingHorizontal: 20,
+                }}
+              >
+                <View style={styles.modalContent}>
+                  <ThemedText style={styles.modalTitle}>
+                    Add New Macros
+                  </ThemedText>
+
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Add in your Macros Title"
+                    placeholderTextColor="grey"
+                    value={macroTitle}
+                    onChangeText={setMacroTitle}
+                  />
+
+                  {/* Date picker button */}
+                  <TouchableOpacity
+                    onPress={() => setShowMacroDatePicker(true)}
+                    style={styles.datePickerButton}
+                  >
+                    <Text style={{ color: "#eee" }}>
+                      Select Date: {macroDate.toLocaleDateString()}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {/* Show the date picker only if showMacroDatePicker is true */}
+                  {showMacroDatePicker && (
+                    <DateTimePicker
+                      value={macroDate}
+                      mode="date"
+                      display="default"
+                      onChange={(event, selectedDate) => {
+                        setShowMacroDatePicker(false);
+                        if (selectedDate) setMacroDate(selectedDate);
+                      }}
+                    />
+                  )}
+
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter Total Calories"
+                    placeholderTextColor="grey"
+                    value={calories}
+                    onChangeText={setCalories}
+                    keyboardType="numeric"
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter Total Protein (g)"
+                    placeholderTextColor="grey"
+                    value={protein}
+                    onChangeText={setProtein}
+                    keyboardType="numeric"
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter Total Carbs (g)"
+                    placeholderTextColor="grey"
+                    value={carbs}
+                    onChangeText={setCarbs}
+                    keyboardType="numeric"
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter Total Fats (g)"
+                    placeholderTextColor="grey"
+                    value={fats}
+                    onChangeText={setFats}
+                    keyboardType="numeric"
+                  />
+
+                  <View style={styles.modalButtonRow}>
+                    <ThemedButton onPress={handleSubmitMacros}>
+                      <ThemedText>Save</ThemedText>
+                    </ThemedButton>
+
+                    <ThemedButton onPress={handleCancelMacroEntry}>
+                      <ThemedText>Cancel</ThemedText>
+                    </ThemedButton>
+                  </View>
+                </View>
+              </SafeAreaView>
+            </KeyboardAvoidingView>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
       {selectedTab === "weight" && (
         <>
           <View style={styles.header3}>
@@ -801,8 +1320,8 @@ const ProgressTracker = () => {
                 setEditingWeight(null);
                 setWeightInput("");
                 setDate(new Date());
-                setOriginalWeightInput(""); // Reset original for new entry
-                setOriginalDate(new Date()); // Reset original for new entry
+                setOriginalWeightInput("");
+                setOriginalDate(new Date());
               }}
               style={styles.addButton2}
             >
@@ -882,7 +1401,6 @@ const ProgressTracker = () => {
           </View>
         </>
       )}
-
       <Modal
         visible={weightListModalVisible}
         animationType="fade"
@@ -951,7 +1469,6 @@ const ProgressTracker = () => {
           )}
         </View>
       </Modal>
-
       <Modal visible={modalVisible} transparent={true} animationType="fade">
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.modalOverlay}>
