@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "#000",
-    paddingTop: Platform.OS === "ios" ? 70 : 20,
+    paddingTop: 70
   },
   scrollContent: {
     padding: 20,
