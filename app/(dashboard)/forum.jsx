@@ -1029,7 +1029,7 @@ const styles = StyleSheet.create({
   innerContainer: {
     flex: 1,
     padding: 20,
-    paddingTop: Platform.OS === "ios" ? 70 : 30,
+    paddingTop: 70
   },
   title: {
     fontSize: 22,

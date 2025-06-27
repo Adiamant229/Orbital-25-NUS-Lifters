@@ -569,4 +569,6 @@ describe("ProgressTracker Component - Tabs", () => {
       expect(queryByText(/Add New Weight|Edit Weight Entry/)).toBeNull();
     });
   });*/
+
+  
 });

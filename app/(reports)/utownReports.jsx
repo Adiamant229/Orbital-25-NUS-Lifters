@@ -653,13 +653,13 @@ const UtownReports = () => {
 
                 <View style={{ flexDirection: "row", gap: 10 }}>
                   <ThemedButton onPress={pickImage}>
-                    <ThemedText style={{ color: "white" }}>
+                    <ThemedText>
                       Pick from Gallery
                     </ThemedText>
                   </ThemedButton>
 
                   <ThemedButton onPress={takePhoto}>
-                    <ThemedText style={{ color: "white" }}>
+                    <ThemedText>
                       Take Photo
                     </ThemedText>
                   </ThemedButton>

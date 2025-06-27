@@ -20,7 +20,7 @@ import {
 import { useRouter } from "expo-router";
 import DropDownPicker from "react-native-dropdown-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { LineChart } from "react-native-chart-kit";
+import { LineChart, PieChart } from "react-native-chart-kit";
 import { Ionicons } from "@expo/vector-icons";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
@@ -808,7 +808,7 @@ const ProgressTracker = () => {
       setFats("");
     }
   };
-  
+    
   return (
     <ThemedView style={styles.container}>
       <ThemedText style={styles.title}>Progress Tracker</ThemedText>
@@ -1153,7 +1153,6 @@ const ProgressTracker = () => {
                     style={styles.card}
                   >
                     <Text style={styles.cardTitle}>{item.title}</Text>
-
                     {createdDate && (
                       <Text style={{ color: "#555", marginTop: 4 }}>
                         {`${dateStr} Macros (${relativeStr})`}
@@ -1161,42 +1160,87 @@ const ProgressTracker = () => {
                     )}
 
                     {isOpen && (
-                      <View style={{ marginTop: 8 }}>
-                        <Text>Total Calories: {item.calories} kcal</Text>
-                        <Text>Total Protein: {item.protein} g</Text>
-                        <Text>Total Carbs: {item.carbs} g</Text>
-                        <Text>Total Fats: {item.fats} g</Text>
-
-                        {/* Edit and Delete buttons */}
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            gap: 10,
-                            marginTop: 10,
-                          }}
-                        >
-                          <TouchableOpacity
-                            testID={`edit-button-${item.id}`}
-                            onPress={() => openEditMacro(item)}
+                      <View style={styles.cardContentContainer}>
+                        {/* Left side: macro details and buttons */}
+                        <View>
+                          <Text style={{ fontWeight: "bold", color: "red" }}>
+                            Total Calories: {item.calories} kcal
+                          </Text>
+                          <Text
+                            style={{ fontWeight: "bold", color: "#4CAF50" }}
                           >
-                            <Ionicons
-                              name="pencil-outline"
-                              size={20}
-                              color="#007AFF"
-                            />
-                          </TouchableOpacity>
-
-                          <TouchableOpacity
-                            testID={`delete-button-${item.id}`}
-                            onPress={() => handleDeleteMacro(item.id)}
+                            Total Protein: {item.protein} g
+                          </Text>
+                          <Text
+                            style={{ fontWeight: "bold", color: "#2196F3" }}
                           >
-                            <Ionicons
-                              name="trash-outline"
-                              size={20}
-                              color="#ff3b30"
-                            />
-                          </TouchableOpacity>
+                            Total Carbs: {item.carbs} g
+                          </Text>
+                          <Text
+                            style={{ fontWeight: "bold", color: "#FFC107" }}
+                          >
+                            Total Fats: {item.fats} g
+                          </Text>
+
+                          <View style={styles.macroButtonsRow}>
+                            <TouchableOpacity
+                              testID={`edit-button-${item.id}`}
+                              onPress={() => openEditMacro(item)}
+                            >
+                              <Ionicons
+                                name="pencil-outline"
+                                size={20}
+                                color="#007AFF"
+                              />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              testID={`delete-button-${item.id}`}
+                              onPress={() => handleDeleteMacro(item.id)}
+                            >
+                              <Ionicons
+                                name="trash-outline"
+                                size={20}
+                                color="#ff3b30"
+                              />
+                            </TouchableOpacity>
+                          </View>
                         </View>
+
+                        {/* Right side: pie chart */}
+                        <PieChart
+                          data={[
+                            {
+                              name: "Protein",
+                              grams: Number(item.protein) || 0,
+                              color: "#4CAF50",
+                            },
+                            {
+                              name: "Carbs",
+                              grams: Number(item.carbs) || 0,
+                              color: "#2196F3",
+                            },
+                            {
+                              name: "Fats",
+                              grams: Number(item.fats) || 0,
+                              color: "#FFC107",
+                            },
+                          ]}
+                          width={200}
+                          height={150}
+                          chartConfig={{
+                            backgroundGradientFrom: "#1c1c1c",
+                            backgroundGradientTo: "#2c2c2c",
+                            color: (opacity = 1) =>
+                              `rgba(255, 255, 255, ${opacity})`,
+                            labelColor: () => "#fff",
+                          }}
+                          accessor="grams"
+                          backgroundColor="transparent"
+                          paddingLeft="10"
+                          center={[0, 0]}
+                          absolute
+                          hasLegend={false}
+                        />
                       </View>
                     )}
                   </TouchableOpacity>
@@ -1228,7 +1272,7 @@ const ProgressTracker = () => {
               >
                 <View style={styles.modalContent}>
                   <ThemedText style={styles.modalTitle}>
-                    Add New Macros
+                    {editingMacro ? "Edit Macro Entry" : "Add New Macro"}
                   </ThemedText>
 
                   <TextInput
@@ -1297,7 +1341,9 @@ const ProgressTracker = () => {
 
                   <View style={styles.modalButtonRow}>
                     <ThemedButton onPress={handleSubmitMacros}>
-                      <ThemedText>Save</ThemedText>
+                      <ThemedText>
+                        {editingMacro ? "Save" : "Submit"}
+                      </ThemedText>
                     </ThemedButton>
 
                     <ThemedButton onPress={handleCancelMacroEntry}>
@@ -1538,7 +1584,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 15,
-    paddingTop: Platform.OS === "ios" ? 70 : 30,
+    paddingTop: 70
   },
   title: {
     fontSize: 22,
@@ -1686,5 +1732,15 @@ const styles = StyleSheet.create({
   weightEntryButtons: {
     flexDirection: "row",
     gap: 10,
+  },
+  cardContentContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 35,
+  },
+  macroButtonsRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 10,
   },
 });
