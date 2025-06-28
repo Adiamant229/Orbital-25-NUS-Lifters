@@ -358,13 +358,7 @@
 <a name='L293'></a><a href='#L293'>293</a>
 <a name='L294'></a><a href='#L294'>294</a>
 <a name='L295'></a><a href='#L295'>295</a>
-<a name='L296'></a><a href='#L296'>296</a>
-<a name='L297'></a><a href='#L297'>297</a>
-<a name='L298'></a><a href='#L298'>298</a>
-<a name='L299'></a><a href='#L299'>299</a>
-<a name='L300'></a><a href='#L300'>300</a>
-<a name='L301'></a><a href='#L301'>301</a>
-<a name='L302'></a><a href='#L302'>302</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L296'></a><a href='#L296'>296</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -393,7 +387,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">228x</span>
 <span class="cline-any cline-yes">266x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -469,7 +462,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -486,7 +478,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -495,7 +486,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -510,10 +500,8 @@
 <span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-yes">31x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">38x</span>
 <span class="cline-any cline-yes">19x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">19x</span>
 <span class="cline-any cline-yes">19x</span>
@@ -665,7 +653,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// react and expo imports
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// react imports
 import { useEffect, useState } from "react";
 import { ScrollView, Dimensions, View, StyleSheet } from "react-native";
 import { LineChart } from "react-native-chart-kit";
@@ -712,7 +700,6 @@ const MacroProgress = () =&gt; {
     categoryPercentage: 0,
   };
 &nbsp;
-  // Fixed macro types
   const macroTypes = ["Calories", "Protein", "Carbs", "Fats"];
 &nbsp;
   const [macroData, setMacroData] = useState({});
@@ -770,7 +757,6 @@ const MacroProgress = () =&gt; {
             })
           : <span class="branch-1 cbranch-no" title="branch not covered" >"Unknown";</span>
 &nbsp;
-        // Push macro values by type with date and year for filtering
         dataByMacro.Calories.push({
           date: dateStr,
           value: macroEntry.calories,
@@ -793,11 +779,9 @@ const MacroProgress = () =&gt; {
         });
       });
 &nbsp;
-      // Sort years and update year dropdown items
       const yearArray = Array.from(yearSet).sort(<span class="fstat-no" title="function not covered" >(a</span>, b) =&gt; <span class="cstat-no" title="statement not covered" >a - b)</span>;
       setYearItems(yearArray.map((y) =&gt; ({ label: `${y}`, value: y })));
 &nbsp;
-      // If current selected year not in data, set to last available year
       <span class="missing-if-branch" title="if path not taken" >I</span>if (!yearSet.has(selectedYear) &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >yearArray.length &gt; 0)</span> {
 <span class="cstat-no" title="statement not covered" >        setSelectedYear(yearArray[yearArray.length - 1]);</span>
       }
@@ -811,11 +795,9 @@ const MacroProgress = () =&gt; {
   const renderChart = (title, data) =&gt; {
     if (!data || data.length === 0) return null;
 &nbsp;
-    // Filter data by selected year
     const filteredData = data.filter((entry) =&gt; entry.year === selectedYear);
     <span class="missing-if-branch" title="if path not taken" >I</span>if (filteredData.length === 0) <span class="cstat-no" title="statement not covered" >return null;</span>
 &nbsp;
-    // Sort by date
     const sortedData = filteredData.slice().sort((a, b) =&gt; {
       const [dayA, monthA] = a.date.split(" ");
       const [dayB, monthB] = b.date.split(" ");
@@ -973,7 +955,7 @@ const styles = StyleSheet.create({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-06-27T09:58:54.150Z
+                at 2025-06-28T14:28:12.529Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

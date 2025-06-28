@@ -1,9 +1,15 @@
-jest.mock("expo-router", () => ({
-  useRouter: () => ({
-    back: jest.fn(),
-  }),
-  useLocalSearchParams: jest.fn(() => ({})), // default empty object
-}));
+let mockBack;
+
+jest.mock("expo-router", () => {
+  mockBack = jest.fn();
+
+  return {
+    useRouter: () => ({
+      back: mockBack,
+    }),
+    useLocalSearchParams: jest.fn(() => ({})),
+  };
+});
 
 import * as ExpoRouter from "expo-router";
 import { render, fireEvent, waitFor, act } from "@testing-library/react-native";
@@ -464,7 +470,67 @@ describe("AddWorkout Component", () => {
       picker.props.onChange({}, newSelectedDate);
     });
 
-    expect(getByText(/25\/12\/2024|12\/25\/2024/)).toBeTruthy(); 
+    expect(getByText(/25\/12\/2024|12\/25\/2024/)).toBeTruthy();
   });
+  // NEW TEST: Error handling for workout fetch failure
+  describe("error handling when fetching workout", () => {
+    beforeEach(() => {
+      // Mock the param to simulate edit mode with invalid workout id
+      ExpoRouter.useLocalSearchParams.mockImplementation(() => ({
+        editWorkoutId: "invalidWorkoutId",
+      }));
 
+      // Reset mocks for getDoc and doc
+      mockGetDoc.mockReset();
+      mockDoc.mockReset();
+    });
+
+    test("alerts on fetch error", async () => {
+      // Arrange: getDoc throws error
+      mockGetDoc.mockRejectedValueOnce(new Error("Firestore fetch failed"));
+
+      // Spy on Alert.alert and mock router.back
+      const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+      const routerBackSpy = jest
+        .spyOn(ExpoRouter.useRouter(), "back")
+        .mockImplementation(jest.fn());
+
+      // Act: render triggers useEffect
+      render(<AddWorkout />);
+
+      // Assert: alert should be called with error message
+      await waitFor(() => {
+        expect(alertSpy).toHaveBeenCalledWith("Failed to fetch workout data.");
+      });
+
+      // router.back should NOT be called here because this is fetch error (not workout not found)
+      expect(routerBackSpy).not.toHaveBeenCalled();
+
+      alertSpy.mockRestore();
+      routerBackSpy.mockRestore();
+    });
+
+    test("alerts and navigates back when workout not found", async () => {
+      // Arrange: getDoc resolves with exists() false
+      mockGetDoc.mockResolvedValueOnce({
+        exists: () => false,
+      });
+      const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+      const routerBackSpy = jest
+        .spyOn(ExpoRouter.useRouter(), "back")
+        .mockImplementation(jest.fn());
+
+      // Act
+      render(<AddWorkout />);
+
+      // Assert alert and router.back
+      await waitFor(() => {
+        expect(alertSpy).toHaveBeenCalledWith("Workout not found.");
+        expect(routerBackSpy).toHaveBeenCalled();
+      });
+
+      alertSpy.mockRestore();
+      routerBackSpy.mockRestore();
+    });
+  });
 });

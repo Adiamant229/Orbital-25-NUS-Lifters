@@ -107,6 +107,84 @@ describe("Signup Component", () => {
     );
   });
 
+  test("shows Firebase alert for auth/invalid-email", async () => {
+    mockCreateUserWithEmailAndPassword.mockRejectedValueOnce({
+      code: "auth/invalid-email",
+    });
+
+    const { getByPlaceholderText, getByText } = render(<Signup />);
+    fireEvent.changeText(getByPlaceholderText("Username"), "testuser");
+    fireEvent.changeText(getByPlaceholderText("Email"), "test@example.com");
+    fireEvent.changeText(getByPlaceholderText("Password"), "password123");
+    fireEvent.changeText(
+      getByPlaceholderText("Confirm Password"),
+      "password123"
+    );
+
+    await act(async () => {
+      fireEvent.press(getByText("Create"));
+    });
+
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Sign Up Failed",
+        "Please enter a valid email address."
+      );
+    });
+  });
+  
+  
+  test("shows Firebase alert for auth/weak-password", async () => {
+    mockCreateUserWithEmailAndPassword.mockRejectedValueOnce({
+      code: "auth/weak-password",
+    });
+
+    const { getByPlaceholderText, getByText } = render(<Signup />);
+    fireEvent.changeText(getByPlaceholderText("Username"), "testuser");
+    fireEvent.changeText(getByPlaceholderText("Email"), "test@example.com");
+    fireEvent.changeText(getByPlaceholderText("Password"), "123456");
+    fireEvent.changeText(getByPlaceholderText("Confirm Password"), "123456");
+
+    await act(async () => {
+      fireEvent.press(getByText("Create"));
+    });
+
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Sign Up Failed",
+        "Password should be at least 6 characters."
+      );
+    });
+  });
+  
+
+  test("shows Firebase alert if email is already in use", async () => {
+    mockCreateUserWithEmailAndPassword.mockRejectedValueOnce({
+      code: "auth/email-already-in-use",
+    });
+
+    const { getByPlaceholderText, getByText } = render(<Signup />);
+    fireEvent.changeText(getByPlaceholderText("Username"), "testuser");
+    fireEvent.changeText(getByPlaceholderText("Email"), "test@example.com");
+    fireEvent.changeText(getByPlaceholderText("Password"), "password123");
+    fireEvent.changeText(
+      getByPlaceholderText("Confirm Password"),
+      "password123"
+    );
+
+    await act(async () => {
+      fireEvent.press(getByText("Create"));
+    });
+
+    await waitFor(() =>
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Sign Up Failed",
+        "This email address is already in use."
+      )
+    );
+  });
+  
+  
   test("successful signup calls Firebase methods and shows success alert", async () => {
     const { getByPlaceholderText, getByText } = render(<Signup />);
     fireEvent.changeText(getByPlaceholderText("Username"), "testuser");

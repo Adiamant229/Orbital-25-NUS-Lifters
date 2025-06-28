@@ -6,8 +6,8 @@ import { StatusBar } from "expo-status-bar";
 
 const RootLayout = () => {
   //use light or dark theme based on system
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme] ?? Colors.light;
+  const colorScheme = useColorScheme(); //returns light or dark or null
+  const theme = Colors[colorScheme] ?? Colors.light; //defaults to light
 
   return (
     <>

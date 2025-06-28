@@ -22,7 +22,7 @@ import ThemedButton from "../../components/themedButton";
 import ThemedTextInput from "../../components/themedTextInput";
 
 //firebase imports
-import { db, auth } from "../../firebaseConfig"; // Import auth
+import { db, auth } from "../../firebaseConfig"; 
 import { collection, addDoc, doc, getDoc, updateDoc } from "firebase/firestore";
 
 const AddWorkout = () => {
@@ -153,7 +153,6 @@ const AddWorkout = () => {
     }
   }, [editWorkoutId]);
 
-  // Add new exercise with unique id
   const handleAddExercise = () => {
     setExercises((prev) => [
       ...prev,
@@ -167,7 +166,6 @@ const AddWorkout = () => {
     setExercises(updated);
   };
 
-  // Add new set with unique id to exercise
   const handleAddSetToExercise = (exerciseIndex) => {
     setExercises((prevExercises) => {
       const updated = [...prevExercises];
@@ -292,7 +290,6 @@ const AddWorkout = () => {
 
   const changesDone = () => {
     if (!originalWorkout) {
-      // if no original data (adding new workout), consider dirty if any field is filled
       return (
         workoutName.trim() !== "" ||
         workoutNotes.trim() !== "" ||
@@ -312,16 +309,12 @@ const AddWorkout = () => {
       );
     }
 
-    // compare current state to originalWorkout
-
     if (workoutName !== originalWorkout.name) return true;
     if (workoutNotes !== originalWorkout.workoutNotes) return true;
     if (workoutTimePeriod !== originalWorkout.timePeriod) return true;
 
-    // Compare exercises deeply - quick way is stringify comparison
     if (!isDeepEqual(exercises, originalWorkout.exercises)) return true;
-
-    // No differences found
+    
     return false;
   };
 

@@ -1,4 +1,4 @@
-// react and expo imports
+// react imports
 import { useEffect, useState } from "react";
 import { ScrollView, Dimensions, View, StyleSheet } from "react-native";
 import { LineChart } from "react-native-chart-kit";
@@ -45,7 +45,6 @@ const MacroProgress = () => {
     categoryPercentage: 0,
   };
 
-  // Fixed macro types
   const macroTypes = ["Calories", "Protein", "Carbs", "Fats"];
 
   const [macroData, setMacroData] = useState({});
@@ -103,7 +102,6 @@ const MacroProgress = () => {
             })
           : "Unknown";
 
-        // Push macro values by type with date and year for filtering
         dataByMacro.Calories.push({
           date: dateStr,
           value: macroEntry.calories,
@@ -126,11 +124,9 @@ const MacroProgress = () => {
         });
       });
 
-      // Sort years and update year dropdown items
       const yearArray = Array.from(yearSet).sort((a, b) => a - b);
       setYearItems(yearArray.map((y) => ({ label: `${y}`, value: y })));
 
-      // If current selected year not in data, set to last available year
       if (!yearSet.has(selectedYear) && yearArray.length > 0) {
         setSelectedYear(yearArray[yearArray.length - 1]);
       }
@@ -144,11 +140,9 @@ const MacroProgress = () => {
   const renderChart = (title, data) => {
     if (!data || data.length === 0) return null;
 
-    // Filter data by selected year
     const filteredData = data.filter((entry) => entry.year === selectedYear);
     if (filteredData.length === 0) return null;
 
-    // Sort by date
     const sortedData = filteredData.slice().sort((a, b) => {
       const [dayA, monthA] = a.date.split(" ");
       const [dayB, monthB] = b.date.split(" ");

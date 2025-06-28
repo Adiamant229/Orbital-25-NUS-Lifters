@@ -48,14 +48,13 @@ const Forum = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newCategory, setNewCategory] = useState(categories[0]);
-  const [newContent, setNewContent] = useState(""); // New state for content
+  const [newContent, setNewContent] = useState(""); 
 
   const [currentUserId, setCurrentUserId] = useState(null);
 
-  const [selectedThread, setSelectedThread] = useState(null); // State for thread detail modal
+  const [selectedThread, setSelectedThread] = useState(null); 
   const [comments, setComments] = useState([]);
 
-  // Edit thread states
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editThread, setEditThread] = useState(null);
   const [editTitle, setEditTitle] = useState("");
@@ -73,7 +72,6 @@ const Forum = () => {
       setCurrentUserId(user.uid);
     }
 
-    // Real-time listener for threads
     let q;
     if (selectedCategory === "All") {
       q = query(collection(db, "threads"));
@@ -92,7 +90,6 @@ const Forum = () => {
         snapshot.forEach((doc) => {
           threadsList.push({ id: doc.id, ...doc.data() });
         });
-        // Sort threads by createdAt in descending order (newest first)
         threadsList.sort(
           (a, b) => b.createdAt?.toMillis() - a.createdAt?.toMillis()
         );
@@ -114,7 +111,6 @@ const Forum = () => {
       return;
     }
 
-    // Real-time listener for the selected thread
     const threadUnsubscribe = onSnapshot(
       doc(db, "threads", selectedThread.id),
       (snapshot) => {
@@ -136,7 +132,6 @@ const Forum = () => {
       }
     );
 
-    // Real-time listener for comments of the selected thread
     const commentUnsubscribe = onSnapshot(
       collection(db, "threads", selectedThread.id, "comments"),
       (snapshot) => {
@@ -144,7 +139,7 @@ const Forum = () => {
         snapshot.forEach((doc) => {
           updatedComments.push({ id: doc.id, ...doc.data() });
         });
-        // Sort comments by createdAt in ascending order
+
         updatedComments.sort(
           (a, b) => a.createdAt.toMillis() - b.createdAt.toMillis()
         );
@@ -178,9 +173,7 @@ const Forum = () => {
         {
           text: "Cancel",
           style: "cancel",
-          onPress: () => {
-            // Do nothing, just dismiss
-          },
+          onPress: () => {},
         },
         {
           text: "Create",
@@ -193,7 +186,6 @@ const Forum = () => {
                 return;
               }
 
-              // Fetch fresh username from Firestore:
               const userDocRef = doc(db, "users", user.uid);
               const userDocSnap = await getDoc(userDocRef);
               const freshUserName = userDocSnap.exists()
@@ -239,9 +231,9 @@ const Forum = () => {
             try {
               await deleteDoc(doc(db, "threads", threadId));
               Alert.alert("Deleted", "Thread removed successfully.");
-              // onSnapshot listener will automatically update the threads state
+
               if (selectedThread?.id === threadId) {
-                setSelectedThread(null); // Close the detail modal if the current thread is deleted
+                setSelectedThread(null); 
               }
             } catch (error) {
               console.error("Error deleting thread: ", error);
@@ -253,7 +245,6 @@ const Forum = () => {
     );
   };
 
-  // Open edit modal and prefill fields
   const openEditModal = (thread) => {
     setEditThread(thread);
     setEditTitle(thread.title);
@@ -262,7 +253,6 @@ const Forum = () => {
     setEditModalVisible(true);
   };
 
-  // Update thread in Firestore
   const updateThread = () => {
     if (!editTitle.trim()) {
       Alert.alert("Error", "Please enter a thread title.");
@@ -280,9 +270,7 @@ const Forum = () => {
         {
           text: "Cancel",
           style: "cancel",
-          onPress: () => {
-            // Do nothing, just dismiss
-          },
+          onPress: () => {},
         },
         {
           text: "Save",
@@ -534,8 +522,6 @@ const Forum = () => {
                 );
               }
               await deleteDoc(commentRef);
-              // The onSnapshot listener will automatically update the comments state
-              // No need to manually filter here.
             } catch (err) {
               console.error("Error deleting comment: ", err);
               Alert.alert("Error", "Could not delete comment.");
@@ -756,6 +742,7 @@ const Forum = () => {
           </KeyboardAvoidingView>
         </TouchableWithoutFeedback>
       </Modal>
+
       {/* Edit Thread Modal */}
       <Modal
         visible={editModalVisible}
@@ -841,18 +828,18 @@ const Forum = () => {
         onRequestClose={() => {
           setSelectedThread(null);
           setComments([]);
-          setEditingComment(null); // Reset editing comment state
-          setEditingCommentContent(""); // Clear editing comment content
-          setCommentInput(""); // Clear comment input
+          setEditingComment(null); 
+          setEditingCommentContent(""); 
+          setCommentInput(""); 
         }}
       >
         <TouchableWithoutFeedback
           onPress={() => {
             setSelectedThread(null);
             setComments([]);
-            setEditingComment(null); // Reset editing comment state
-            setEditingCommentContent(""); // Clear editing comment content
-            setCommentInput(""); // Clear comment input
+            setEditingComment(null);
+            setEditingCommentContent(""); 
+            setCommentInput(""); 
           }}
         >
           <KeyboardAvoidingView
@@ -879,7 +866,7 @@ const Forum = () => {
                         <Text style={styles.commentHead}>Comments:</Text>
                         <FlatList
                           data={comments}
-                          extraData={editingComment} // Ensure FlatList re-renders when editingComment changes
+                          extraData={editingComment}
                           keyExtractor={(item) => item.id}
                           renderItem={({ item }) => {
                             return editingComment !== null &&
@@ -890,8 +877,8 @@ const Forum = () => {
                                     styles.input,
                                     { height: 100, textAlignVertical: "top" },
                                   ]}
-                                  value={editingCommentContent} // Use the new state for comment editing
-                                  onChangeText={setEditingCommentContent} // Use the new setter
+                                  value={editingCommentContent} 
+                                  onChangeText={setEditingCommentContent} 
                                   multiline={true}
                                 />
                                 <View
@@ -906,7 +893,7 @@ const Forum = () => {
                                       editComment(
                                         selectedThread.id,
                                         item.id,
-                                        editingCommentContent // Use the correct state for comment editing here
+                                        editingCommentContent 
                                       )
                                     }
                                     style={{ flex: 1, marginRight: 10 }}
@@ -951,7 +938,7 @@ const Forum = () => {
                                     <Pressable
                                       onPress={() => {
                                         setEditingComment(item.id);
-                                        setEditingCommentContent(item.content); // Prefill the edit input
+                                        setEditingCommentContent(item.content); 
                                       }}
                                       testID="edit-comment-button"
                                     >

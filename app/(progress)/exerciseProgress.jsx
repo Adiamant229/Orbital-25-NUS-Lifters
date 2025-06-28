@@ -1,11 +1,14 @@
+//react imports 
 import { useEffect, useState } from "react";
 import { ScrollView, Dimensions, View, StyleSheet } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import DropDownPicker from "react-native-dropdown-picker";
 
+//themed components
 import ThemedView from "../../components/themedView";
 import ThemedText from "../../components/themedText";
 
+//firebase imports 
 import { query, collection, orderBy, where, getDocs } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { db } from "../../firebaseConfig";
@@ -46,7 +49,6 @@ const ExerciseProgress = () => {
   const [yearDropdownOpen, setYearDropdownOpen] = useState(false);
 
   useEffect(() => {
-    // Initialize years dropdown options: current year ± 1 year
     const currentYear = new Date().getFullYear();
     const years = [currentYear - 1, currentYear, currentYear + 1];
     setYearItems(years.map((y) => ({ label: `${y}`, value: y })));
@@ -114,7 +116,6 @@ const ExerciseProgress = () => {
           }))
         );
 
-        // Select all exercises by default
         setSelectedExercises(exerciseArray);
 
         setExerciseData(dataByExercise);

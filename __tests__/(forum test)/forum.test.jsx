@@ -1,10 +1,7 @@
-// Basic imports
-import React from "react";
 import { render, fireEvent, waitFor, act } from "@testing-library/react-native";
 import { Alert } from "react-native";
 import Forum from "../../app/(dashboard)/forum";
 
-// Mocks
 jest.mock("../../firebaseConfig", () => ({
   auth: {},
   db: {},
@@ -38,14 +35,11 @@ jest.mock("firebase/firestore", () => {
     query: jest.fn((ref) => ref),
     where: jest.fn(() => {}),
     onSnapshot: jest.fn((ref, callback) => {
-      // Threads list
       if (Array.isArray(ref)) {
         callback({
           forEach: (fn) => fn({ id: "1", data: () => mockData }),
         });
       }
-
-      // Selected thread document
       else if (ref.id === "1") {
         callback({
           exists: () => true,
@@ -53,8 +47,6 @@ jest.mock("firebase/firestore", () => {
           data: () => mockData,
         });
       }
-
-      // Comments subcollection
       else if (
         typeof ref === "object" &&
         ref._path &&
@@ -75,7 +67,7 @@ jest.mock("firebase/firestore", () => {
         });
       }
 
-      return jest.fn(); // Unsubscribe function
+      return jest.fn(); 
     }),
   };
 });
