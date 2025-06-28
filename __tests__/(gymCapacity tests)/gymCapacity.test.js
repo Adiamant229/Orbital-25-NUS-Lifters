@@ -6,7 +6,7 @@ const fetchMock = jest.fn(() =>
       Promise.resolve({
         timestamp: { _seconds: 1719300000 },
         gym_capacity: [
-          {}, // index 0 unused
+          {}, 
           { name: "USC", capacity: 35, maxCapacity: 50 },
           { name: "UTown", capacity: 100, maxCapacity: 120 },
         ],
@@ -14,7 +14,6 @@ const fetchMock = jest.fn(() =>
   })
 );
 
-// Mock safe-area context for test compatibility
 jest.mock("react-native-safe-area-context", () => {
   const React = require("react");
   return {
@@ -24,7 +23,6 @@ jest.mock("react-native-safe-area-context", () => {
   };
 });
 
-// Mock expo-router with push mock
 const mockPush = jest.fn();
 jest.mock("expo-router", () => ({
   useRouter: () => ({

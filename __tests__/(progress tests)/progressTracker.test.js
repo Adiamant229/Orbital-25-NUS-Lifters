@@ -86,8 +86,21 @@ jest.mock("firebase/firestore", () => {
     },
   ];
 
+  const macroDocs = [
+    {
+      id: "mock-added-doc-id",
+      title: "Bulk Day 1",
+      calories: 600,
+      protein: 30,
+      carbs: 50,
+      fats: 20,
+      timestamp: mockTimestamp.fromDate(new Date("2024-06-28T08:00:00Z")),
+      userId: "testUserId",
+    },
+  ];
+  
   return {
-    collection: jest.fn(() => ({})),
+    collection: jest.fn((db, path) => ({ path })),
     query: jest.fn(() => ({})),
     orderBy: jest.fn(() => ({})),
     where: jest.fn(() => ({})),
@@ -95,41 +108,40 @@ jest.mock("firebase/firestore", () => {
     Timestamp: mockTimestamp,
 
     onSnapshot: jest.fn((q, callback) => {
-      // Simulate onSnapshot based on the collection being queried
-      // This is a simplified logic. For more complex tests (e.g., year filtering),
-      // you'll use mockImplementationOnce as shown in the previous comprehensive mock.
-      // For now, let's return a mix of data if no specific query is identified.
       let docsToReturn = [];
-      const collectionPath = q && q.path; // Assuming query object has a path
-      if (typeof q === "object" && q.path && q.path.includes("workouts")) {
+      const collectionPath = q && q.path;
+
+      if (collectionPath.includes("workouts")) {
         docsToReturn = workoutDocs;
-      } else if (
-        typeof q === "object" &&
-        q.path &&
-        q.path.includes("weights")
-      ) {
+      } else if (collectionPath.includes("weights")) {
         docsToReturn = weightDocs;
-      } else {
-        // Default for initial loads if path is not easily discernible or if it's a general mock
-        docsToReturn = [...workoutDocs, ...weightDocs]; // Or just default to one type if more common
+      } else if (collectionPath.includes("macros")) {
+        docsToReturn = macroDocs;
       }
 
       const snapshot = {
         docs: docsToReturn.map((doc) => ({
           id: doc.id,
-          data: () => ({ ...doc, createdAt: doc.createdAt || doc.date }), // Ensure createdAt/date is set
+          data: () => ({
+            ...doc,
+            createdAt: doc.createdAt || doc.date || doc.timestamp,
+          }),
         })),
         forEach: (fn) =>
           docsToReturn.forEach((doc) =>
             fn({
               id: doc.id,
-              data: () => ({ ...doc, createdAt: doc.createdAt || doc.date }),
+              data: () => ({
+                ...doc,
+                createdAt: doc.createdAt || doc.date || doc.timestamp,
+              }),
             })
           ),
         empty: docsToReturn.length === 0,
       };
+
       callback(snapshot);
-      return jest.fn(); // unsubscribe function
+      return jest.fn(); // unsubscribe
     }),
 
     addDoc: jest.fn(() => Promise.resolve({ id: "mock-added-doc-id" })),
@@ -543,7 +555,7 @@ describe("ProgressTracker Component - Tabs", () => {
     });
   });
   
-  /*test("opens edit weight modal with pre-filled data after tapping graph and edit", async () => {
+  test("opens edit weight modal with pre-filled data after tapping graph and edit", async () => {
     const {
       getByText,
       getByTestId,
@@ -568,7 +580,46 @@ describe("ProgressTracker Component - Tabs", () => {
     await waitFor(() => {
       expect(queryByText(/Add New Weight|Edit Weight Entry/)).toBeNull();
     });
-  });*/
+  });
 
+  test("opening macro modal works", async () => {
+    const { getByText, getByPlaceholderText } = render(<ProgressTracker />);
+    fireEvent.press(getByText("Macros"));
+  
+    const addMacroBtn = getByText("+ New Macros");
+    fireEvent.press(addMacroBtn);
+  
+    await waitFor(() => {
+      expect(getByText("Add New Macro")).toBeTruthy();
+      expect(getByPlaceholderText("Add in your Macros Title")).toBeTruthy();
+      expect(getByPlaceholderText("Enter Total Calories")).toBeTruthy();
+    });
+  });
+  
+  test("submits new macro when all fields are filled and confirmed", async () => {
+    const { getByText, getByPlaceholderText } = render(<ProgressTracker />);
+    fireEvent.press(getByText("Macros"));
+    fireEvent.press(getByText("+ New Macros"));
+
+    fireEvent.changeText(
+      getByPlaceholderText("Add in your Macros Title"),
+      "Bulk Day 1"
+    );
+
+    fireEvent.changeText(getByPlaceholderText("Enter Total Calories"), "600");
+    fireEvent.changeText(getByPlaceholderText("Enter Total Protein (g)"), "30");
+    fireEvent.changeText(getByPlaceholderText("Enter Total Carbs (g)"), "50");
+    fireEvent.changeText(getByPlaceholderText("Enter Total Fats (g)"), "20");
+
+    fireEvent.press(getByText("Submit"));
+
+    const firestore = require("firebase/firestore");
+    await waitFor(() => {
+      expect(firestore.addDoc).toHaveBeenCalledTimes(1);
+      const payload = firestore.addDoc.mock.calls[0][1];
+      expect(payload.title).toBe("Bulk Day 1");
+    });
+  });
+  
   
 });

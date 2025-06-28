@@ -7,14 +7,12 @@ jest.mock("../../firebaseConfig", () => ({
 
 jest.mock("firebase/auth", () => ({
   onAuthStateChanged: jest.fn((auth, callback) => {
-    // Simulate user not logged in by default
     callback(null);
-    // Return a no-op unsubscribe function
     return () => {};
   }),
 
   signInWithEmailAndPassword: jest.fn((auth, email, password) => {
-    if (!email || !password) {
+    if (!email.includes("@")) {
       return Promise.reject({
         code: "auth/invalid-email",
         message: "Invalid email",
@@ -62,7 +60,7 @@ describe("Login Component", () => {
     );
   });
 
-  test("shows alert on invalid login", async () => {
+  test("shows alert on invalid login due to wrong password", async () => {
     const { getByText, getByPlaceholderText } = render(<Index />);
 
     fireEvent.changeText(getByPlaceholderText("Email"), "wrong@example.com");
@@ -80,6 +78,25 @@ describe("Login Component", () => {
     });
   });
   
+  test("shows alert on invalid login due to invalid email format", async () => {
+    const { getByText, getByPlaceholderText } = render(<Index />);
+
+    fireEvent.changeText(getByPlaceholderText("Email"), "invalidEmailFormat");
+    fireEvent.changeText(getByPlaceholderText("Password"), "somepassword");
+
+    await act(async () => {
+      fireEvent.press(getByText("Login"));
+    });
+
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Login Error",
+        "Please enter a valid email address."
+      );
+    });
+  });
+  
+
   test("successful login calls Firebase and redirects", async () => {
     const { getByText, getByPlaceholderText } = render(<Index />);
 
@@ -97,10 +114,8 @@ describe("Login Component", () => {
 
   test("redirects immediately if user is already authenticated", async () => {
     const { onAuthStateChanged } = require("firebase/auth");
-
-    // Mock before render to simulate logged-in user on initial mount
     onAuthStateChanged.mockImplementationOnce((auth, callback) => {
-      callback({ uid: "test-uid" }); // simulate logged in user
+      callback({ uid: "test-uid" }); 
       return () => {};
     });
 

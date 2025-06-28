@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 // themed components
 import ThemedText from "../../components/themedText";
@@ -13,8 +15,6 @@ import ThemedTextInput from "../../components/themedTextInput";
 import ThemedView from "../../components/themedView";
 import Spacer from "../../components/spacer";
 import ThemedButton from "../../components/themedButton";
-import { MaterialIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 
 // firebase imports
 import { auth, db } from "../../firebaseConfig";

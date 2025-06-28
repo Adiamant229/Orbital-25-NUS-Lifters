@@ -43,7 +43,6 @@ import {
   doc,
   updateDoc,
   where,
-  Timestamp, // <--- Import Timestamp here so your component can access the mocked version
 } from "firebase/firestore";
 
 const ProgressTracker = () => {
@@ -60,12 +59,10 @@ const ProgressTracker = () => {
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // For weights - REVERTED TO ORIGINAL LOGIC, PLUS FIX FOR YEAR OPTIONS
   const [openYearDropdown, setOpenYearDropdown] = useState(false);
-  // Initial selectedYear set to null, will be updated by effect
   const [selectedYear, setSelectedYear] = useState(null);
   const [yearOptions, setYearOptions] = useState([]);
-  const [allWeights, setAllWeights] = useState([]); // State to hold all weights for year dropdown
+  const [allWeights, setAllWeights] = useState([]); 
 
   const [openWorkoutYearDropdown, setOpenWorkoutYearDropdown] = useState(false);
   const [selectedWorkoutYear, setSelectedWorkoutYear] = useState("all");
@@ -73,11 +70,10 @@ const ProgressTracker = () => {
 
   const [weightListModalVisible, setWeightListModalVisible] = useState(false);
   const [editingWeight, setEditingWeight] = useState(null);
-  const user = auth.currentUser; // Get the current user
+  const user = auth.currentUser; 
 
-  const [allWorkouts, setAllWorkouts] = useState([]); // For generating workout year dropdown
+  const [allWorkouts, setAllWorkouts] = useState([]); 
 
-  // NEW STATE: To track original values for edit mode comparison
   const [originalWeightInput, setOriginalWeightInput] = useState("");
   const [originalDate, setOriginalDate] = useState(new Date());
 
@@ -211,8 +207,6 @@ const ProgressTracker = () => {
     });
   };
   
-  
-  // NEW: Effect to fetch ALL weights for year dropdown generation (unfiltered)
   useEffect(() => {
     if (!user) {
       setAllWeights([]);
@@ -220,7 +214,7 @@ const ProgressTracker = () => {
     }
 
     const weightsCollection = collection(db, "users", user.uid, "weights");
-    const q = query(weightsCollection, orderBy("date", "desc")); // Order by date to get recent years easily
+    const q = query(weightsCollection, orderBy("date", "desc")); 
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map((doc) => ({
@@ -233,40 +227,35 @@ const ProgressTracker = () => {
     return () => unsubscribe();
   }, [user]);
 
-  // Effect to populate year options for weights - NOW uses allWeights, no default current year
   useEffect(() => {
     if (allWeights.length === 0) {
       setYearOptions([]);
-      setSelectedYear(null); // No year selected if no data
+      setSelectedYear(null); 
       return;
     }
 
     const uniqueYears = [
       ...new Set(
         allWeights.map((w) => {
-          // This line is the focus of the error
           const d =
             typeof w.date === "string"
               ? new Date(w.date)
-              : w.date.toDate?.() || new Date(); // w.date.toDate() will now be defined due to mock
+              : w.date.toDate?.() || new Date();
           return d.getFullYear();
         })
       ),
-    ].sort((a, b) => b - a); // Sort descending for most recent year first
-
+    ].sort((a, b) => b - a); 
     const options = uniqueYears.map((year) => ({
       label: year.toString(),
       value: year,
     }));
     setYearOptions(options);
 
-    // If selectedYear is null or not in the new options, default to the most recent year available
     if (selectedYear === null || !uniqueYears.includes(selectedYear)) {
       setSelectedYear(uniqueYears[0]);
     }
-  }, [allWeights, selectedYear]); // Dependency on allWeights and selectedYear
+  }, [allWeights, selectedYear]); 
 
-  // Effect to fetch ALL workouts for year dropdown generation (unfiltered) - REMAINS
   useEffect(() => {
     if (!user) {
       setAllWorkouts([]);
@@ -290,7 +279,6 @@ const ProgressTracker = () => {
     return () => unsubscribe();
   }, [user]);
 
-  // Effect to populate year options for workouts (uses allWorkouts) - REMAINS
   useEffect(() => {
     if (!user || allWorkouts.length === 0) {
       setWorkoutYearOptions([{ label: "All", value: "all" }]);
@@ -328,7 +316,6 @@ const ProgressTracker = () => {
     }
   }, [allWorkouts, user]);
 
-  // Effect to fetch workouts based on selectedWorkoutYear (filters from Firebase) - REMAINS
   useEffect(() => {
     if (!user) {
       setWorkouts([]);
@@ -368,23 +355,22 @@ const ProgressTracker = () => {
     return () => unsubscribe();
   }, [user, selectedWorkoutYear]);
 
-  // Effect to fetch weights (filters by selectedYear for the graph/list display)
+
   useEffect(() => {
     if (!user || selectedYear === null) {
-      setWeights([]); // Clear weights if no year is selected (no data)
+      setWeights([]); 
       return;
     }
 
     const weightsCollection = collection(db, "users", user.uid, "weights");
 
-    // Calculate start and end of the selected year for the query
-    const startOfYear = new Date(selectedYear, 0, 1); // January 1st of the selected year
-    const endOfYear = new Date(selectedYear + 1, 0, 1); // January 1st of the *next* year
+    const startOfYear = new Date(selectedYear, 0, 1); 
+    const endOfYear = new Date(selectedYear + 1, 0, 1);
 
     const q = query(
       weightsCollection,
-      where("date", ">=", startOfYear), // Filter documents created on or after startOfYear
-      where("date", "<", endOfYear), // Filter documents created before endOfYear
+      where("date", ">=", startOfYear), 
+      where("date", "<", endOfYear), 
       orderBy("date", "desc")
     );
 
@@ -397,7 +383,7 @@ const ProgressTracker = () => {
     });
 
     return () => unsubscribe();
-  }, [user, selectedYear]); // Re-run effect when user or selectedYear changes
+  }, [user, selectedYear]);
 
   const handleDeleteWorkout = (id) => {
     Alert.alert(
@@ -418,11 +404,11 @@ const ProgressTracker = () => {
                   return newSet;
                 });
               } else {
-                alert("You must be logged in to delete workouts.");
+                Alert.alert("You must be logged in to delete workouts.");
               }
             } catch (error) {
               console.error("Failed to delete workout:", error);
-              alert("Failed to delete workout");
+              Alert.alert("Failed to delete workout");
             }
           },
         },
@@ -451,14 +437,14 @@ const ProgressTracker = () => {
 
   const handleSubmitWeight = async () => {
     if (!weightInput) {
-      alert("Please enter your weight");
+      Alert.alert("Please enter your weight");
       return;
     }
 
     const weightValue = parseFloat(weightInput);
 
     if (isNaN(weightValue)) {
-      alert("Enter a numerical weight");
+      Alert.alert("Enter a numerical weight");
       return;
     }
 
@@ -484,11 +470,11 @@ const ProgressTracker = () => {
         setWeightInput("");
         setDate(new Date());
         setEditingWeight(null);
-        setOriginalWeightInput(""); // Reset original values on successful submission
-        setOriginalDate(new Date()); // Reset original values on successful submission
+        setOriginalWeightInput(""); 
+        setOriginalDate(new Date()); 
       } catch (error) {
         console.error("Error submitting weight:", error);
-        alert("Failed to submit weight.");
+        Alert.alert("Failed to submit weight.");
       }
     };
 
@@ -508,9 +494,7 @@ const ProgressTracker = () => {
     );
   };
 
-  // filteredWeights now refers to the `weights` state which is already filtered by selectedYear
   const filteredWeights = weights;
-
   const sortedFilteredWeightsForChart = [...filteredWeights]
     .map((w) => ({
       ...w,
@@ -548,11 +532,11 @@ const ProgressTracker = () => {
   };
 
   const chartConfig = {
-    backgroundGradientFrom: "#2c2c2c", // Dark background start
-    backgroundGradientTo: "#1c1c1c", // Dark background end
+    backgroundGradientFrom: "#2c2c2c", 
+    backgroundGradientTo: "#1c1c1c", 
     decimalPlaces: 1,
-    color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`, // Vibrant blue line
-    labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`, // White labels
+    color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
+    labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`, 
     style: {
       borderRadius: 16,
     },
@@ -593,7 +577,7 @@ const ProgressTracker = () => {
               await deleteDoc(doc(db, "users", user.uid, "weights", id));
             } catch (error) {
               console.error("Failed to delete weight:", error);
-              alert("Failed to delete weight");
+              Alert.alert("Failed to delete weight");
             }
           },
         },
@@ -606,22 +590,19 @@ const ProgressTracker = () => {
     const initialDate =
       typeof w.date === "string" ? new Date(w.date) : w.date.toDate();
     setDate(initialDate);
-    setOriginalDate(initialDate); // Set original date for comparison
+    setOriginalDate(initialDate);
     setWeightInput(w.weight.toString());
-    setOriginalWeightInput(w.weight.toString()); // Set original weight input for comparison
+    setOriginalWeightInput(w.weight.toString()); 
     setModalVisible(true);
   };
 
   const handleCancelWeightEntry = () => {
-    // Check for changes based on whether it's an edit or new entry
     let hasChanges = false;
     if (editingWeight) {
-      // Editing an existing entry
       const weightChanged = weightInput !== originalWeightInput;
-      const dateChanged = date.toDateString() !== originalDate.toDateString(); // Compare dates ignoring time
+      const dateChanged = date.toDateString() !== originalDate.toDateString(); 
       hasChanges = weightChanged || dateChanged;
     } else {
-      // New entry
       hasChanges = weightInput.length > 0;
     }
 
@@ -641,26 +622,25 @@ const ProgressTracker = () => {
               setEditingWeight(null);
               setWeightInput("");
               setDate(new Date());
-              setOriginalWeightInput(""); // Reset original values
-              setOriginalDate(new Date()); // Reset original values
+              setOriginalWeightInput(""); 
+              setOriginalDate(new Date()); 
             },
           },
         ]
       );
     } else {
-      // No changes, just close the modal
       setModalVisible(false);
       setEditingWeight(null);
       setWeightInput("");
       setDate(new Date());
-      setOriginalWeightInput(""); // Reset original values
-      setOriginalDate(new Date()); // Reset original values
+      setOriginalWeightInput(""); 
+      setOriginalDate(new Date()); 
     }
   };
 
   const handleSubmitMacros = async () => {
     if (!macroTitle || !calories || !protein || !carbs || !fats) {
-      alert("Please fill in all fields.");
+      Alert.alert("Please fill in all fields.");
       return;
     }
 
@@ -670,7 +650,7 @@ const ProgressTracker = () => {
     const fatsVal = parseInt(fats);
 
     if ([caloriesVal, proteinVal, carbsVal, fatsVal].some(isNaN)) {
-      alert("All macros must be numeric values.");
+      Alert.alert("All macros must be numeric values.");
       return;
     }
 
@@ -708,7 +688,7 @@ const ProgressTracker = () => {
         setEditingMacro(null);
       } catch (error) {
         console.error("Error saving macro entry:", error);
-        alert("Failed to save macro entry.");
+        Alert.alert("Failed to save macro entry.");
       }
     };
 
@@ -737,7 +717,6 @@ const ProgressTracker = () => {
     setCarbs(macro.carbs.toString());
     setFats(macro.fats.toString());
 
-    // Store original values for change detection on cancel
     setOriginalMacroTitle(macro.title);
     setOriginalCalories(macro.calories.toString());
     setOriginalProtein(macro.protein.toString());
@@ -761,7 +740,7 @@ const ProgressTracker = () => {
               await deleteDoc(doc(db, "users", user.uid, "macros", id));
             } catch (error) {
               console.error("Failed to delete macro entry:", error);
-              alert("Failed to delete macro entry");
+              Alert.alert("Failed to delete macro entry");
             }
           },
         },
@@ -1149,6 +1128,7 @@ const ProgressTracker = () => {
 
                 return (
                   <TouchableOpacity
+                  testID="macro-card-button"
                     onPress={() => toggleMacro(item.id)}
                     style={styles.card}
                   >
@@ -1261,7 +1241,7 @@ const ProgressTracker = () => {
             <KeyboardAvoidingView
               behavior={Platform.OS === "ios" ? "padding" : "height"}
               style={{ flex: 1 }}
-              keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 0} // adjust if needed
+              keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 0} 
             >
               <SafeAreaView
                 style={{

@@ -1,5 +1,6 @@
 import { render, fireEvent, waitFor, act } from "@testing-library/react-native";
-import { Alert, Linking } from "react-native";
+import { Alert } from "react-native";
+import * as uuid from "uuid";
 
 jest.mock("../../firebaseConfig", () => ({
   auth: {},
@@ -73,7 +74,10 @@ jest.mock("firebase/auth", () => ({
 
 jest.mock("expo-image-picker", () => ({
   launchImageLibraryAsync: jest.fn(() =>
-    Promise.resolve({ canceled: false, assets: [{ uri: "mock-image-uri" }] })
+    Promise.resolve({
+      canceled: false,
+      assets: [{ uri: "file://mock-image-uri" }],
+    })
   ),
   launchCameraAsync: jest.fn(() =>
     Promise.resolve({ canceled: false, assets: [{ uri: "mock-camera-uri" }] })
@@ -110,11 +114,6 @@ jest.mock("react-native-dropdown-picker", () => {
     );
 });
 
-jest.mock("react-native/Libraries/Linking/Linking", () => ({
-  openURL: jest.fn(),
-}));
-
-
 jest.spyOn(Alert, "alert").mockImplementation((title, message, buttons) => {
   if (buttons) {
     const positiveButton = buttons.find(
@@ -125,6 +124,13 @@ jest.spyOn(Alert, "alert").mockImplementation((title, message, buttons) => {
     }
   }
 });
+jest.mock("uuid", () => ({
+  v4: jest.fn(() => "fixed-uuid"),
+}));
+
+jest.mock("react-native/Libraries/Linking/Linking", () => ({
+  openURL: jest.fn(),
+}));
 
 import UtownReports from "../../app/(reports)/utownReports";
 
@@ -424,5 +430,446 @@ describe("UtownReports component", () => {
 
     consoleSpy.mockRestore();
   });
-  
+
+  describe("UtownReports component - image URL logic in submit", () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+      jest
+        .spyOn(Alert, "alert")
+        .mockImplementation((title, message, buttons) => {
+          if (buttons) {
+            const positiveButton = buttons.find(
+              (b) => b.style !== "cancel" && typeof b.onPress === "function"
+            );
+            if (positiveButton) {
+              positiveButton.onPress();
+            }
+          }
+        });
+    });
+
+    test("uploads new local image and deletes old image when editing report", async () => {
+      global.fetch = jest.fn(() =>
+        Promise.resolve({
+          blob: () => Promise.resolve("blob-data"),
+        })
+      );
+
+      const firestore = require("firebase/firestore");
+      const storage = require("firebase/storage");
+
+      firestore.getDoc.mockResolvedValueOnce({
+        exists: () => true,
+        data: () => ({ imageUrl: "https://fakeimage.url/oldimage.jpg" }),
+      });
+
+      // Mock uuid.v4 to return fixed string for upload path
+      jest.spyOn(uuid, "v4").mockReturnValue("fixed-uuid");
+
+      const { getByText, getByTestId, queryByTestId } = render(<UtownReports />);
+
+      // Open modal and enter edit mode by pressing existing report
+      await waitFor(() => getByText("Bench Press - Damaged"));
+      fireEvent.press(getByText("Bench Press - Damaged"));
+
+      const editIcon = await waitFor(() => getByTestId("edit-icon-1"));
+      fireEvent.press(editIcon);
+
+      // Pick a new image - this triggers async update of imageUri in state
+      await act(async () => {
+        fireEvent.press(getByText("Pick from Gallery"));
+      });
+
+      // Wait for the image preview to appear (indicating imageUri is set)
+      await waitFor(() => getByTestId("image-preview"));
+
+      // Now submit
+      await act(async () => {
+        fireEvent.press(getByText("Save"));
+      });
+
+      // Check fetch called to get blob from local file URI
+      expect(global.fetch).toHaveBeenCalled();
+
+      // Check uploadBytes called (upload new image)
+      expect(storage.uploadBytes).toHaveBeenCalled();
+
+      // Check getDownloadURL called (get new uploaded image URL)
+      expect(storage.getDownloadURL).toHaveBeenCalled();
+
+      // Check deleteObject called (delete old image)
+      expect(storage.deleteObject).toHaveBeenCalled();
+
+      // Check updateDoc called (update firestore document with new imageUrl)
+      expect(firestore.updateDoc).toHaveBeenCalled();
+
+      // Check success alert shown
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Success",
+        expect.stringContaining("updated")
+      );
+    });
+
+    test("deletes old image when imageDeletedLocally is true during edit", async () => {
+      const firestore = require("firebase/firestore");
+      const storage = require("firebase/storage");
+
+      firestore.getDoc.mockResolvedValueOnce({
+        exists: () => true,
+        data: () => ({ imageUrl: "https://fakeimage.url/oldimage.jpg" }),
+      });
+
+      const { getByText, getByTestId } = render(<UtownReports />);
+      await waitFor(() => getByText("Bench Press - Damaged"));
+      fireEvent.press(getByText("Bench Press - Damaged"));
+
+      const editIcon = await waitFor(() => getByTestId("edit-icon-1"));
+      fireEvent.press(editIcon);
+
+      fireEvent.press(getByTestId("removeImage"));
+
+      await act(async () => {
+        fireEvent.press(getByText("Save"));
+      });
+
+      expect(storage.deleteObject).toHaveBeenCalled();
+      expect(firestore.updateDoc).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({ imageUrl: firestore.deleteField() })
+      );
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Success",
+        expect.stringContaining("updated")
+      );
+    });
+
+    test("keeps existing image URL unchanged when editing without changing image", async () => {
+      const firestore = require("firebase/firestore");
+
+      firestore.getDoc.mockResolvedValueOnce({
+        exists: () => true,
+        data: () => ({ imageUrl: "https://fakeimage.url/existing.jpg" }),
+      });
+
+      const { getByText, getByTestId } = render(<UtownReports />);
+      await waitFor(() => getByText("Bench Press - Damaged"));
+      fireEvent.press(getByText("Bench Press - Damaged"));
+
+      const editIcon = await waitFor(() => getByTestId("edit-icon-1"));
+      fireEvent.press(editIcon);
+
+      // Wait for Save button to be ready before pressing
+      await waitFor(() => fireEvent.press(getByText("Save")));
+
+      expect(firestore.updateDoc).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({
+          imageUrl: "https://fakeimage.url/image.jpg", // match onSnapshot mock
+        })
+      );
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Success",
+        expect.stringContaining("updated")
+      );
+    });
+
+    test("creates new report with image upload", async () => {
+      global.fetch = jest.fn(() =>
+        Promise.resolve({
+          blob: () => Promise.resolve("blob-data"),
+        })
+      );
+
+      const firestore = require("firebase/firestore");
+      const storage = require("firebase/storage");
+
+      // Mock uuid.v4
+      jest.spyOn(uuid, "v4").mockReturnValue("fixed-uuid");
+
+      const { getByText, getByTestId } = render(<UtownReports />);
+      fireEvent.press(getByText("+"));
+
+      fireEvent.press(getByTestId("select-bench-press"));
+      fireEvent.press(getByTestId("select-damaged"));
+
+      // Pick image (simulate image pick)
+      fireEvent.press(getByText("Pick from Gallery"));
+
+      // Wait for image URI state to update and image preview to render
+      await waitFor(() => {
+        expect(getByTestId("image-preview")).toBeTruthy();
+      });
+
+      // Now submit
+      await act(async () => {
+        fireEvent.press(getByText("Submit"));
+      });
+
+      expect(global.fetch).toHaveBeenCalled();
+      expect(storage.uploadBytes).toHaveBeenCalled();
+      expect(storage.getDownloadURL).toHaveBeenCalled();
+      expect(firestore.addDoc).toHaveBeenCalled();
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Success",
+        expect.stringContaining("submitted")
+      );
+    });
+
+    test("creates new report without image", async () => {
+      const firestore = require("firebase/firestore");
+
+      const { getByText, getByTestId } = render(<UtownReports />);
+      fireEvent.press(getByText("+"));
+
+      fireEvent.press(getByTestId("select-bench-press"));
+      fireEvent.press(getByTestId("select-damaged"));
+
+      await act(async () => {
+        fireEvent.press(getByText("Submit"));
+      });
+
+      expect(firestore.addDoc).toHaveBeenCalled();
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Success",
+        expect.stringContaining("submitted")
+      );
+    });
+  });
+
+  test("warns when deleting old image fails during new image upload on edit", async () => {
+    const consoleWarnSpy = jest
+      .spyOn(console, "warn")
+      .mockImplementation(() => {});
+
+    // Setup getDoc with old image URL
+    const firestore = require("firebase/firestore");
+    const storage = require("firebase/storage");
+
+    firestore.getDoc.mockResolvedValueOnce({
+      exists: () => true,
+      data: () => ({ imageUrl: "https://fakeimage.url/oldimage.jpg" }),
+    });
+
+    // Make deleteObject throw error to simulate failure
+    storage.deleteObject.mockRejectedValueOnce(
+      new Error("Storage delete failed")
+    );
+
+    // Mock fetch blob for upload
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        blob: () => Promise.resolve("blob-data"),
+      })
+    );
+
+    // Setup uuid.v4
+    const uuid = require("uuid");
+    jest.spyOn(uuid, "v4").mockReturnValue("fixed-uuid");
+
+    const { getByText, getByTestId } = render(<UtownReports />);
+
+    await waitFor(() => getByText("Bench Press - Damaged"));
+    fireEvent.press(getByText("Bench Press - Damaged"));
+
+    const editIcon = await waitFor(() => getByTestId("edit-icon-1"));
+    fireEvent.press(editIcon);
+
+    // Pick a new image (to trigger upload and deletion)
+    await act(async () => {
+      fireEvent.press(getByText("Pick from Gallery"));
+    });
+
+    await waitFor(() => getByTestId("image-preview"));
+
+    // Submit to trigger deletion of old image (which will fail)
+    await act(async () => {
+      fireEvent.press(getByText("Save"));
+    });
+
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      "Failed to delete old image:",
+      expect.any(Error)
+    );
+
+    consoleWarnSpy.mockRestore();
+  });
+
+  test("warns when deleting old image locally fails during edit", async () => {
+    const consoleWarnSpy = jest
+      .spyOn(console, "warn")
+      .mockImplementation(() => {});
+
+    const firestore = require("firebase/firestore");
+    const storage = require("firebase/storage");
+
+    firestore.getDoc.mockResolvedValueOnce({
+      exists: () => true,
+      data: () => ({ imageUrl: "https://fakeimage.url/oldimage.jpg" }),
+    });
+
+    // deleteObject rejects
+    storage.deleteObject.mockRejectedValueOnce(
+      new Error("Local delete failed")
+    );
+
+    const { getByText, getByTestId } = render(<UtownReports />);
+    await waitFor(() => getByText("Bench Press - Damaged"));
+    fireEvent.press(getByText("Bench Press - Damaged"));
+
+    const editIcon = await waitFor(() => getByTestId("edit-icon-1"));
+    fireEvent.press(editIcon);
+
+    // Remove image locally
+    fireEvent.press(getByTestId("removeImage"));
+
+    await act(async () => {
+      fireEvent.press(getByText("Save"));
+    });
+
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      "Failed to delete old image locally:",
+      expect.any(Error)
+    );
+
+    consoleWarnSpy.mockRestore();
+  });
+
+  test("sets imageUrl to deleteField() when editing report with old image and image removed", async () => {
+    const firestore = require("firebase/firestore");
+    firestore.getDoc.mockResolvedValueOnce({
+      exists: () => true,
+      data: () => ({ imageUrl: "https://fakeimage.url/oldimage.jpg" }),
+    });
+
+    // spy on updateDoc
+    const updateDocSpy = jest.spyOn(firestore, "updateDoc");
+
+    const { getByText, getByTestId } = render(<UtownReports />);
+    await waitFor(() => getByText("Bench Press - Damaged"));
+    fireEvent.press(getByText("Bench Press - Damaged"));
+
+    const editIcon = await waitFor(() => getByTestId("edit-icon-1"));
+    fireEvent.press(editIcon);
+
+    // Remove image locally
+    fireEvent.press(getByTestId("removeImage"));
+
+    await act(async () => {
+      fireEvent.press(getByText("Save"));
+    });
+
+    expect(updateDocSpy).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({ imageUrl: firestore.deleteField() })
+    );
+  });
+  test("alerts if media library permission denied on pickImage", async () => {
+    const alertSpy = jest.spyOn(Alert, "alert");
+    require("expo-image-picker").requestMediaLibraryPermissionsAsync.mockImplementationOnce(
+      () => Promise.resolve({ granted: false })
+    );
+
+    const { getByText } = render(<UtownReports />);
+    fireEvent.press(getByText("+"));
+
+    await act(async () => {
+      fireEvent.press(getByText("Pick from Gallery"));
+    });
+
+    expect(alertSpy).toHaveBeenCalledWith(
+      "Permission to access media library is required!"
+    );
+  });
+
+  test("alerts if camera permission denied on takePhoto", async () => {
+    const alertSpy = jest.spyOn(Alert, "alert");
+
+    require("expo-image-picker").requestCameraPermissionsAsync.mockImplementationOnce(
+      () => Promise.resolve({ granted: false })
+    );
+
+    const { getByText } = render(<UtownReports />);
+    fireEvent.press(getByText("+"));
+
+    await act(async () => {
+      fireEvent.press(getByText("Take Photo"));
+    });
+
+    expect(alertSpy).toHaveBeenCalledWith(
+      "Permission to access camera is required!"
+    );
+  });
+
+  test("sets imageUri state when pickImage succeeds", async () => {
+    require("expo-image-picker").requestMediaLibraryPermissionsAsync.mockImplementationOnce(
+      () => Promise.resolve({ granted: true })
+    );
+    require("expo-image-picker").launchImageLibraryAsync.mockImplementationOnce(
+      () =>
+        Promise.resolve({
+          canceled: false,
+          assets: [{ uri: "file://mock-image-uri-pick" }],
+        })
+    );
+
+    const { getByText, getByTestId } = render(<UtownReports />);
+    fireEvent.press(getByText("+"));
+
+    await act(async () => {
+      fireEvent.press(getByText("Pick from Gallery"));
+    });
+
+    expect(getByTestId("image-preview")).toBeTruthy();
+  });
+
+  test("sets imageUri state when takePhoto succeeds", async () => {
+    require("expo-image-picker").requestCameraPermissionsAsync.mockImplementationOnce(
+      () => Promise.resolve({ granted: true })
+    );
+    require("expo-image-picker").launchCameraAsync.mockImplementationOnce(() =>
+      Promise.resolve({
+        canceled: false,
+        assets: [{ uri: "file://mock-image-uri-camera" }],
+      })
+    );
+
+    const { getByText, getByTestId } = render(<UtownReports />);
+    fireEvent.press(getByText("+"));
+
+    await act(async () => {
+      fireEvent.press(getByText("Take Photo"));
+    });
+
+    expect(getByTestId("image-preview")).toBeTruthy();
+  });
+
+  test("does not set imageUri when pickImage is cancelled", async () => {
+    require("expo-image-picker").launchImageLibraryAsync.mockImplementationOnce(
+      () => Promise.resolve({ canceled: true })
+    );
+
+    const { getByText, queryByTestId } = render(<UtownReports />);
+    fireEvent.press(getByText("+"));
+
+    await act(async () => {
+      fireEvent.press(getByText("Pick from Gallery"));
+    });
+
+    expect(queryByTestId("image-preview")).toBeNull();
+  });
+
+  test("does not set imageUri when takePhoto is cancelled", async () => {
+    require("expo-image-picker").launchCameraAsync.mockImplementationOnce(() =>
+      Promise.resolve({ canceled: true })
+    );
+
+    const { getByText, queryByTestId } = render(<UtownReports />);
+    fireEvent.press(getByText("+"));
+
+    await act(async () => {
+      fireEvent.press(getByText("Take Photo"));
+    });
+
+    expect(queryByTestId("image-preview")).toBeNull();
+  });
 });
