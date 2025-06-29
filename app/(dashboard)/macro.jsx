@@ -5,9 +5,12 @@ import {
     Keyboard,
     KeyboardAvoidingView,
     Modal,
-    Platform, Pressable, SafeAreaView, ScrollView,
+    Platform,
+    Pressable,
+    SafeAreaView,
     StyleSheet,
-    Text, TextInput,
+    Text,
+    TextInput,
     TouchableWithoutFeedback,
     View
 } from "react-native";
@@ -18,7 +21,7 @@ import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import Spacer from "../../components/spacer";
 import ThemedButton from "../../components/themedButton";
-import {MaterialIcons} from "@expo/vector-icons";
+import {Ionicons, MaterialIcons} from "@expo/vector-icons";
 import {useEffect, useRef, useState} from "react";
 import {APIKey} from "../../firebaseConfig";
 
@@ -57,11 +60,7 @@ const Macro = () => {
     const [query, setQuery] = useState('');
     const [debounced, setDebounced] = useState('');
     const [mealList, setMealList] = useState([]);
-    const summation = (parameter) => {
-        return mealList.reduce((total, food) => {
-            return total + parseInt(food[parameter]);
-        }, 0)
-    }
+    const manualSearchTrigger = useRef(false);
 
     useEffect(() => {
         const typingTimeout = setTimeout(() => {
@@ -77,6 +76,26 @@ const Macro = () => {
         }
     }, [debounced]);
 
+    const updateServings = (id) => {
+        return (serving) => {
+            serving = (Math.abs(parseInt(serving)));
+            const updated = [...mealList];
+            updated[id].servings = serving;
+            setMealList(updated);
+        };
+    };
+
+    const summation = (parameter) => {
+        return (mealList.reduce((total, food) => {
+            return total + (parseInt(food[parameter]) * food.id / 100);
+        }, 0)).toFixed(2)
+    };
+
+    const deleteItem = (id) => {
+        const updated = [...mealList].filter((item) => item.id !== id);
+        setMealList(updated);
+    }
+
     return (
             <SafeAreaView style={{flex:1}}>
                 <ThemedView style={styles.container}>
@@ -84,7 +103,7 @@ const Macro = () => {
                     Macro Tracker
                 </ThemedText>
 
-                <Spacer/>
+                <Spacer height={20}/>
 
                 <ThemedButton style={styles.searchButton} onPress={() => setSearching(true)}>
                     <View style={styles.searchContent}>
@@ -93,7 +112,7 @@ const Macro = () => {
                     </View>
                 </ThemedButton>
 
-                <Spacer/>
+                <Spacer height={20}/>
 
                 <View style={styles.infoBox}>
                     <View style={styles.row}>
@@ -115,14 +134,18 @@ const Macro = () => {
                         <Text style={styles.value}>{summation("carbs")}g</Text>
                     </View>
                 </View>
+                    <Spacer/>
                 <View style={styles.mealbox}>
                     {mealList.length < 1
                         ? (
-                            <ThemedText style={styles.emptyText}>Add foods with the "Search" Button!</ThemedText>
+                            <View style={{alignItems:'center', justifyContent:"center", flex:1}}>
+                                <ThemedText style={{...styles.contentText, textAlign:"center"}}>Add foods with the "Search Food" Button!</ThemedText>
+                            </View>
                         )
                         : (
                             <FlatList
                                 data={mealList}
+                                keyExtractor={(item) => item.id.toString()}
                                 ItemSeparatorComponent={() => (
                                     <View
                                         style={{
@@ -136,15 +159,21 @@ const Macro = () => {
                                     return (
                                         <>
                                             <View style={styles.rowBox}>
-                                                <View>
-                                                    <ThemedText
-                                                        style={{color: 'white'}}> {item?.item.description} </ThemedText>
-                                                    <ThemedText
-                                                        style={{color: 'white'}}> Calories: {item?.item.calories};
-                                                        Fat: {item?.item.fat}; Protein: {item?.item.protein};
-                                                        Carbohydrates: {item?.item.carbs}</ThemedText>
+                                                    <Text
+                                                        style={styles.label}>{item?.item.description} </Text>
+                                                    <Text
+                                                        style={styles.value}>Calories: {(item?.item.calories * item?.item.servings / 100).toFixed(2)};
+                                                        Fat: {(item?.item.fat * item?.item.servings / 100).toFixed(2)}; Protein: {(item?.item.protein * item?.item.servings / 100).toFixed(2)};
+                                                        Carbohydrates: {(item?.item.carbs * item?.item.servings / 100).toFixed(2)}</Text>
+                                                <View style={{justifyContent:"space-between", flexDirection:"row"}}>
+                                                    <View style={{flexDirection:"row"}}>
+                                                        <TextInput style={styles.textbox} keyboardType={"numeric"} defaultValue={"100"} onChangeText={updateServings(item.item.id)}/>
+                                                        <Text style={styles.contentText}>g</Text>
+                                                    </View>
+                                                    <Pressable onPress={() => deleteItem(item.item.id)}>
+                                                        <Ionicons name={"close-outline"} color={"red"} size={20}/>
+                                                    </Pressable>
                                                 </View>
-                                                {/*<TextInput style={{color:'white', backgroundColor:'grey', width:40}} defaultValue={'100'}/>*/}
                                             </View>
                                         </>
                                     )
@@ -202,13 +231,17 @@ const Macro = () => {
                                                                 const mealItem = item.item.foodNutrients
                                                                     .filter(nutrient => wanted.hasOwnProperty(nutrient.nutrientName))
                                                                     .reduce((food, nutrient) => {
-                                                                        food[wanted[nutrient.nutrientName]] = nutrient.nutrientNumber
+                                                                        food[wanted[nutrient.nutrientName]] = nutrient.value;
                                                                         return food;
                                                                     }, {
                                                                         description: item.item.description,
-                                                                        serving: 100
+                                                                        servings: 100
                                                                     });
-                                                                setMealList(prev => [...prev, mealItem])
+                                                                const newMealList = [...mealList, mealItem].map((item, index) => ({
+                                                                    ...item,
+                                                                    id:index
+                                                                }));
+                                                                setMealList(newMealList);
                                                             }}>
                                                                 <View style={styles.resultsBox}>
                                                                     <ThemedText
@@ -294,16 +327,28 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     mealbox: {
+        width:"100%",
         flex:1,
         padding: 10,
-        justifyContent:"space-between"
+        justifyContent:"space-between",
+        backgroundColor: "#eee",
+        borderRadius: 12,
     },
     rowBox: {
-        justifyContent: "space-between"
+        padding:10,
+        justifyContent: "space-between",
     },
-    emptyText: {
-        alignItems: "center",
-        padding: 30
+    contentText: {
+        fontSize:16,
+        color:'black',
+        fontStyle: "normal"
+    },
+    textbox: {
+        backgroundColor:'rgba(52,52,52,0.1)',
+        color:"black",
+        paddingHorizontal:4,
+        width:"auto",
+        fontSize:16,
     },
     modalContainer: {
         backgroundColor: "white",
