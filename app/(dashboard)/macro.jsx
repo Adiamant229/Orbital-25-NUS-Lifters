@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     padding: 20,
-    paddingTop: 70,
+    paddingTop: 80,
   },
   title: {
     fontSize: 22,
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    alignSelf: "flex-start",
+    alignSelf: "center",
   },
   searchContent: {
     flexDirection: "row",
