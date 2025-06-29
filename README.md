@@ -26,7 +26,7 @@ An all-in-one mobile app for NUS gym-goers — track gym capacity, report equipm
 
 You can try the app directly by downloading the APK:
 
-➡️ [Download Latest APK](https://expo.dev/accounts/sengernest/projects/nus-lifters/builds/0710c0c6-3f3c-4b48-95e8-09fd8012b15b)
+➡️ [Download Latest APK](https://expo.dev/accounts/sengernest/projects/nus-lifters/builds/e8596334-30bf-43ee-a8f3-0c8540d3bca4)
 
 
 No installation steps needed — just open the link and install the file on any Android device.
