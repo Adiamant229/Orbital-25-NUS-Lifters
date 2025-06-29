@@ -19,6 +19,8 @@ const firebaseConfig = {
   appId: "1:962344894507:web:76d3059bafb802678aaa6e",
   measurementId: "G-QPDRWZTXRQ",
 };
+const APIKey = "4j4b8esUycdw4DpH2UamWkubDirsyaQ2Cwe7jHrI";
+export {APIKey};
 
 const app = initializeApp(firebaseConfig);
 
@@ -32,4 +34,4 @@ const auth =
 const db = getFirestore(app);
 const functions = getFunctions(app);
 const storage = getStorage(app); 
-export {app, auth, db, functions, storage}
+export {app, auth, db, functions, storage};
