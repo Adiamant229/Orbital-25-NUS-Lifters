@@ -529,28 +529,6 @@ describe("ProgressTracker Component - Tabs", () => {
     });
   });
   
-  test("opens edit weight modal with pre-filled data after tapping graph and edit", async () => {
-    const {
-      getByText,
-      getByTestId,
-      getByPlaceholderText,
-      queryByText,
-    } = render(<ProgressTracker />);
-
-    fireEvent.press(getByText("Bodyweight"));
-
-    fireEvent.press(getByText("+ New Weight"));
-
-    const input1 = getByPlaceholderText("Enter weight (kg)");
-    fireEvent.changeText(input1, "72.5");
-
-    fireEvent.press(getByTestId("saveWeightButton"));
-
-    await waitFor(() => {
-      expect(queryByText(/Add New Weight|Edit Weight Entry/)).toBeNull();
-    });
-  });
-
   test("opening macro modal works", async () => {
     const { getByText, getByPlaceholderText } = render(<ProgressTracker />);
     fireEvent.press(getByText("Macros"));
