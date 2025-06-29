@@ -1016,7 +1016,7 @@ const styles = StyleSheet.create({
   innerContainer: {
     flex: 1,
     padding: 20,
-    paddingTop: 70
+    paddingTop: 80
   },
   title: {
     fontSize: 22,

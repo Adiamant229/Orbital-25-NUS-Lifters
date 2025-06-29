@@ -932,10 +932,23 @@ const ProgressTracker = () => {
 
                           const createdDate = item.createdAt.toDate();
                           const now = new Date();
-                          const diffTime = Math.abs(now - createdDate);
-                          const diffDays = Math.floor(
-                            diffTime / (1000 * 60 * 60 * 24)
-                          );
+
+                          function calendarDaysDiff(d1, d2) {
+                            const date1 = new Date(
+                              d1.getFullYear(),
+                              d1.getMonth(),
+                              d1.getDate()
+                            );
+                            const date2 = new Date(
+                              d2.getFullYear(),
+                              d2.getMonth(),
+                              d2.getDate()
+                            );
+                            const diffTime = date2.getTime() - date1.getTime();
+                            return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                          }
+
+                          const diffDays = calendarDaysDiff(createdDate, now);
 
                           const dateStr = createdDate.toLocaleDateString(
                             undefined,
@@ -949,6 +962,7 @@ const ProgressTracker = () => {
                           const timePeriodStr = item.timePeriod
                             ? ` ${item.timePeriod} Workout`
                             : " Workout";
+
                           const relativeStr =
                             diffDays === 0
                               ? "Today"
@@ -1110,7 +1124,20 @@ const ProgressTracker = () => {
                 let relativeStr = "";
                 if (createdDate) {
                   const diffTime = Math.abs(now - createdDate);
-                  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                  const diffDays = (() => {
+                    const d1 = new Date(
+                      createdDate.getFullYear(),
+                      createdDate.getMonth(),
+                      createdDate.getDate()
+                    );
+                    const d2 = new Date(
+                      now.getFullYear(),
+                      now.getMonth(),
+                      now.getDate()
+                    );
+                    return Math.floor((d2 - d1) / (1000 * 60 * 60 * 24));
+                  })();
+                  
 
                   dateStr = createdDate.toLocaleDateString(undefined, {
                     day: "2-digit",
