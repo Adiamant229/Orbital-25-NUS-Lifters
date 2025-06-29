@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1751120892625" clover="3.2.0">
-  <project timestamp="1751120892625" name="All files">
-    <metrics statements="1514" coveredstatements="1155" conditionals="801" coveredconditionals="493" methods="331" coveredmethods="229" elements="2646" coveredelements="1877" complexity="0" loc="1514" ncloc="1514" packages="8" files="18" classes="18"/>
+<coverage generated="1751200581867" clover="3.2.0">
+  <project timestamp="1751200581867" name="All files">
+    <metrics statements="1520" coveredstatements="1158" conditionals="801" coveredconditionals="493" methods="333" coveredmethods="230" elements="2654" coveredelements="1881" complexity="0" loc="1520" ncloc="1520" packages="8" files="18" classes="18"/>
     <package name="app">
       <metrics statements="35" coveredstatements="35" conditionals="20" coveredconditionals="16" methods="5" coveredmethods="5"/>
       <file name="index.jsx" path="C:\Users\senge\Ernest\VSCODE\Orbital25\app\index.jsx">
@@ -103,7 +103,7 @@
       </file>
     </package>
     <package name="app.(dashboard)">
-      <metrics statements="747" coveredstatements="434" conditionals="346" coveredconditionals="166" methods="184" coveredmethods="97"/>
+      <metrics statements="753" coveredstatements="437" conditionals="346" coveredconditionals="166" methods="186" coveredmethods="98"/>
       <file name="forum.jsx" path="C:\Users\senge\Ernest\VSCODE\Orbital25\app\(dashboard)\forum.jsx">
         <metrics statements="267" coveredstatements="146" conditionals="96" coveredconditionals="48" methods="62" coveredmethods="33"/>
         <line num="41" count="1" type="stmt"/>
@@ -465,7 +465,7 @@
         <line num="183" count="1" type="stmt"/>
       </file>
       <file name="progressTracker.jsx" path="C:\Users\senge\Ernest\VSCODE\Orbital25\app\(dashboard)\progressTracker.jsx">
-        <metrics statements="396" coveredstatements="209" conditionals="208" coveredconditionals="82" methods="104" coveredmethods="49"/>
+        <metrics statements="402" coveredstatements="212" conditionals="208" coveredconditionals="82" methods="106" coveredmethods="50"/>
         <line num="48" count="1" type="stmt"/>
         <line num="49" count="74" type="stmt"/>
         <line num="50" count="74" type="stmt"/>
@@ -803,65 +803,71 @@
         <line num="931" count="68" type="cond" truecount="1" falsecount="1"/>
         <line num="933" count="68" type="stmt"/>
         <line num="934" count="68" type="stmt"/>
-        <line num="935" count="68" type="stmt"/>
-        <line num="936" count="68" type="stmt"/>
-        <line num="940" count="68" type="stmt"/>
-        <line num="949" count="68" type="cond" truecount="1" falsecount="1"/>
-        <line num="953" count="68" type="cond" truecount="1" falsecount="1"/>
-        <line num="959" count="68" type="stmt"/>
-        <line num="977" count="6" type="stmt"/>
-        <line num="982" count="12" type="stmt"/>
-        <line num="993" count="1" type="stmt"/>
-        <line num="1008" count="1" type="stmt"/>
-        <line num="1033" count="2" type="stmt"/>
-        <line num="1040" count="0" type="stmt"/>
-        <line num="1047" count="0" type="stmt"/>
-        <line num="1092" count="0" type="stmt"/>
-        <line num="1094" count="0" type="stmt"/>
-        <line num="1097" count="0" type="stmt"/>
-        <line num="1098" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="1099" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="1100" count="0" type="stmt"/>
-        <line num="1101" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="1102" count="0" type="stmt"/>
-        <line num="1104" count="0" type="stmt"/>
+        <line num="937" count="68" type="stmt"/>
+        <line num="942" count="68" type="stmt"/>
+        <line num="947" count="68" type="stmt"/>
+        <line num="948" count="68" type="stmt"/>
+        <line num="951" count="68" type="stmt"/>
+        <line num="953" count="68" type="stmt"/>
+        <line num="962" count="68" type="cond" truecount="1" falsecount="1"/>
+        <line num="967" count="68" type="cond" truecount="1" falsecount="1"/>
+        <line num="973" count="68" type="stmt"/>
+        <line num="991" count="6" type="stmt"/>
+        <line num="996" count="12" type="stmt"/>
+        <line num="1007" count="1" type="stmt"/>
+        <line num="1022" count="1" type="stmt"/>
+        <line num="1047" count="2" type="stmt"/>
+        <line num="1054" count="0" type="stmt"/>
+        <line num="1061" count="0" type="stmt"/>
+        <line num="1106" count="0" type="stmt"/>
         <line num="1108" count="0" type="stmt"/>
-        <line num="1109" count="0" type="stmt"/>
-        <line num="1110" count="0" type="stmt"/>
-        <line num="1111" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="1112" count="0" type="stmt"/>
-        <line num="1113" count="0" type="stmt"/>
-        <line num="1115" count="0" type="stmt"/>
-        <line num="1121" count="0" type="stmt"/>
-        <line num="1129" count="0" type="stmt"/>
-        <line num="1132" count="0" type="stmt"/>
-        <line num="1168" count="0" type="stmt"/>
-        <line num="1178" count="0" type="stmt"/>
-        <line num="1214" count="0" type="stmt"/>
-        <line num="1215" count="0" type="stmt"/>
-        <line num="1268" count="0" type="stmt"/>
-        <line num="1283" count="0" type="stmt"/>
-        <line num="1284" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="1345" count="3" type="stmt"/>
-        <line num="1346" count="3" type="stmt"/>
-        <line num="1347" count="3" type="stmt"/>
-        <line num="1348" count="3" type="stmt"/>
-        <line num="1349" count="3" type="stmt"/>
-        <line num="1350" count="3" type="stmt"/>
-        <line num="1358" count="0" type="stmt"/>
-        <line num="1410" count="0" type="stmt"/>
-        <line num="1433" count="0" type="stmt"/>
+        <line num="1111" count="0" type="stmt"/>
+        <line num="1112" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="1113" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="1114" count="0" type="stmt"/>
+        <line num="1115" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="1116" count="0" type="stmt"/>
+        <line num="1118" count="0" type="stmt"/>
+        <line num="1122" count="0" type="stmt"/>
+        <line num="1123" count="0" type="stmt"/>
+        <line num="1124" count="0" type="stmt"/>
+        <line num="1125" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="1126" count="0" type="stmt"/>
+        <line num="1127" count="0" type="stmt"/>
+        <line num="1128" count="0" type="stmt"/>
+        <line num="1133" count="0" type="stmt"/>
+        <line num="1138" count="0" type="stmt"/>
+        <line num="1142" count="0" type="stmt"/>
+        <line num="1148" count="0" type="stmt"/>
+        <line num="1156" count="0" type="stmt"/>
+        <line num="1159" count="0" type="stmt"/>
+        <line num="1195" count="0" type="stmt"/>
+        <line num="1205" count="0" type="stmt"/>
+        <line num="1241" count="0" type="stmt"/>
+        <line num="1242" count="0" type="stmt"/>
+        <line num="1295" count="0" type="stmt"/>
+        <line num="1310" count="0" type="stmt"/>
+        <line num="1311" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="1372" count="3" type="stmt"/>
+        <line num="1373" count="3" type="stmt"/>
+        <line num="1374" count="3" type="stmt"/>
+        <line num="1375" count="3" type="stmt"/>
+        <line num="1376" count="3" type="stmt"/>
+        <line num="1377" count="3" type="stmt"/>
+        <line num="1385" count="0" type="stmt"/>
         <line num="1437" count="0" type="stmt"/>
-        <line num="1455" count="0" type="stmt"/>
-        <line num="1461" count="0" type="stmt"/>
-        <line num="1470" count="0" type="stmt"/>
-        <line num="1471" count="0" type="stmt"/>
-        <line num="1472" count="0" type="stmt"/>
+        <line num="1460" count="0" type="stmt"/>
+        <line num="1464" count="0" type="stmt"/>
         <line num="1482" count="0" type="stmt"/>
-        <line num="1511" count="0" type="stmt"/>
-        <line num="1525" count="0" type="stmt"/>
-        <line num="1526" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="1563" count="1" type="stmt"/>
+        <line num="1488" count="0" type="stmt"/>
+        <line num="1497" count="0" type="stmt"/>
+        <line num="1498" count="0" type="stmt"/>
+        <line num="1499" count="0" type="stmt"/>
+        <line num="1509" count="0" type="stmt"/>
+        <line num="1538" count="0" type="stmt"/>
+        <line num="1552" count="0" type="stmt"/>
+        <line num="1553" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="1590" count="1" type="stmt"/>
       </file>
     </package>
     <package name="app.(progress)">
