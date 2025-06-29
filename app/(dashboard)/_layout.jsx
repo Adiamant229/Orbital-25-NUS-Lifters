@@ -1,15 +1,15 @@
 // react and expo imports
 import { Tabs } from "expo-router";
-import { useColorScheme } from "react-native";
-import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-
-// themed imports
-import { Colors } from "../../constants/colors";
 import {
   Ionicons,
   MaterialCommunityIcons,
   MaterialIcons,
 } from "@expo/vector-icons";
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import { useColorScheme } from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+
+import { Colors } from "../../constants/colors";
 
 const DashboardLayout = () => {
   const colorScheme = useColorScheme(); //returns light or dark or null
@@ -17,7 +17,10 @@ const DashboardLayout = () => {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor:'black' }} edges={["bottom", "left", "right"]}>
+      <SafeAreaView
+        style={{ flex: 1, backgroundColor: "black" }}
+        edges={["bottom", "left", "right"]}
+      >
         <Tabs
           screenOptions={{
             headerShown: false,
@@ -25,7 +28,6 @@ const DashboardLayout = () => {
               backgroundColor: theme.navBackground,
               paddingTop: 5,
               height: 75,
-             
             },
             tabBarActiveTintColor: theme.iconColorFocused,
             tabBarInactiveTintColor: theme.iconColor,
@@ -78,9 +80,9 @@ const DashboardLayout = () => {
             options={{
               title: "Progress",
               tabBarIcon: ({ focused }) => (
-                <MaterialCommunityIcons
+                <FontAwesome6
+                  name="chart-line"
                   size={24}
-                  name="dumbbell"
                   color={focused ? theme.iconColorFocused : theme.iconColor}
                 />
               ),
