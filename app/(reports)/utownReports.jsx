@@ -526,7 +526,7 @@ const UtownReports = () => {
             <ThemedText>Operating Hours:</ThemedText>
             <ThemedText>Monday to Friday 0700hr to 2200hr</ThemedText>
 
-            <ThemedText>Weekends and Public Holidays 0700hr</ThemedText>
+            <ThemedText>Weekends and Public Holidays 0700hr to 2200hr</ThemedText>
 
             <Spacer height={10} />
 
