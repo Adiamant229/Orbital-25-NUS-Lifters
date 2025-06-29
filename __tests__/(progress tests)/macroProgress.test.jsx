@@ -1,6 +1,4 @@
-import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
-import { View, TouchableOpacity, Text } from "react-native"; // Needed for dropdown mock
 import MacroProgress from "../../app/(progress)/macroProgress";
 import { getAuth } from "firebase/auth";
 import { query, collection, orderBy, onSnapshot } from "firebase/firestore";
@@ -40,9 +38,7 @@ jest.mock("react-native-dropdown-picker", () => {
               .toLowerCase()
               .replace(/\s/g, "-")}`,
             onPress: () => {
-              // If multiple selection, props.setValue should handle array, simulate that:
               if (Array.isArray(props.value)) {
-                // toggle item value in array
                 const newVal = props.value.includes(item.value)
                   ? props.value.filter((v) => v !== item.value)
                   : [...props.value, item.value];
@@ -72,7 +68,6 @@ describe("MacroProgress Component", () => {
     orderBy.mockImplementation(() => ({ orderByField: "createdAt" }));
     query.mockImplementation(() => "queryMock");
 
-    // Prepare fake snapshot docs for macro entries
     const fakeDocs = [
       {
         data: () => ({
@@ -94,7 +89,6 @@ describe("MacroProgress Component", () => {
       },
     ];
 
-    // Mock onSnapshot to immediately call the callback with fake snapshot
     onSnapshot.mockImplementation((query, callback) => {
       callback({ docs: fakeDocs });
       return jest.fn(); // unsubscribe function
@@ -106,7 +100,6 @@ describe("MacroProgress Component", () => {
 
     expect(getByText("Macro Progress")).toBeTruthy();
 
-    // macros are fixed, check some macro dropdown items
     await waitFor(() => {
       expect(getByText("Calories")).toBeTruthy();
       expect(getByText("Protein")).toBeTruthy();
@@ -114,7 +107,6 @@ describe("MacroProgress Component", () => {
       expect(getByText("Fats")).toBeTruthy();
     });
 
-    // check year dropdown items (current year and +/- 1 year)
     const currentYear = new Date().getFullYear().toString();
     await waitFor(() => {
       expect(getByText(currentYear)).toBeTruthy();
@@ -124,18 +116,15 @@ describe("MacroProgress Component", () => {
   test("selects and deselects macros and renders corresponding charts", async () => {
     const { getByText, queryByText, getByTestId } = render(<MacroProgress />);
 
-    // Initially all macros selected, check one chart
     await waitFor(() => {
       expect(getByText(/Calories \(\d{4}\)/)).toBeTruthy();
     });
 
-    // Deselect "Calories"
     fireEvent.press(getByTestId("select-calories"));
     await waitFor(() => {
       expect(queryByText(/Calories \(\d{4}\)/)).toBeNull();
     });
 
-    // Select "Calories" again
     fireEvent.press(getByTestId("select-calories"));
     await waitFor(() => {
       expect(getByText(/Calories \(\d{4}\)/)).toBeTruthy();

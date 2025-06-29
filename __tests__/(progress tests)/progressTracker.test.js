@@ -1,25 +1,20 @@
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
-import ProgressTracker from "../../app/(dashboard)/progressTracker"; // Ensure correct path
+import ProgressTracker from "../../app/(dashboard)/progressTracker"; 
 import { Alert } from "react-native"
-// Mock firebaseConfig if you import it
+
 jest.mock("../../firebaseConfig", () => ({
   auth: { currentUser: { uid: "testUserId" } },
   db: {},
 }));
 
-// Mock Firestore methods and data
 jest.mock("firebase/firestore", () => {
-  // IMPORTANT: Define Timestamp and provide fromDate, now, and toDate implementations
   const mockTimestamp = {
-    // This mocks how you'd create a timestamp in your component
     fromDate: (date) => ({
-      _toDate: date, // Store the date internally
-      toDate: () => date, // Provide a toDate method
-      // You might want to add seconds, nanoseconds if your component uses them
+      _toDate: date, 
+      toDate: () => date, 
       seconds: Math.floor(date.getTime() / 1000),
       nanoseconds: (date.getTime() % 1000) * 1000000,
     }),
-    // If your component uses Timestamp.now()
     now: () => {
       const now = new Date();
       return {
@@ -35,7 +30,6 @@ jest.mock("firebase/firestore", () => {
     {
       id: "w1",
       name: "Workout A",
-      // Use the mockTimestamp.fromDate here to ensure createdAt is a "Timestamp" object
       createdAt: mockTimestamp.fromDate(new Date("2023-06-01T12:00:00Z")),
       workoutNotes: "Notes A",
       exercises: [
@@ -54,8 +48,8 @@ jest.mock("firebase/firestore", () => {
           ],
         },
       ],
-      timePeriod: "Morning", // Added timePeriod for component consistency
-      userId: "testUserId", // Added userId for queries
+      timePeriod: "Morning", 
+      userId: "testUserId", 
     },
     {
       id: "w2",
@@ -68,11 +62,6 @@ jest.mock("firebase/firestore", () => {
     },
   ];
 
-  // For `allWorkouts` and `filteredWorkouts` in the component, the onSnapshot callback
-  // can be controlled per test using mockImplementationOnce if needed.
-  // For the default mock, we'll return the initial workoutDocs.
-
-  // Mock for weights data as well, as your component fetches them
   const weightDocs = [
     {
       id: "wgt1",
@@ -104,7 +93,7 @@ jest.mock("firebase/firestore", () => {
     query: jest.fn(() => ({})),
     orderBy: jest.fn(() => ({})),
     where: jest.fn(() => ({})),
-    // Export the mockTimestamp as 'Timestamp' from 'firebase/firestore'
+  
     Timestamp: mockTimestamp,
 
     onSnapshot: jest.fn((q, callback) => {
@@ -141,20 +130,19 @@ jest.mock("firebase/firestore", () => {
       };
 
       callback(snapshot);
-      return jest.fn(); // unsubscribe
+      return jest.fn(); 
     }),
 
     addDoc: jest.fn(() => Promise.resolve({ id: "mock-added-doc-id" })),
     deleteDoc: jest.fn(() => Promise.resolve()),
     doc: jest.fn((dbRef, ...paths) => {
-      const id = paths[paths.length - 1]; // Last part of the path is usually the ID
-      return { id: id, _isMockDocRef: true, path: paths.join("/") }; // Return a mock doc ref
+      const id = paths[paths.length - 1]; 
+      return { id: id, _isMockDocRef: true, path: paths.join("/") }; 
     }),
     updateDoc: jest.fn(() => Promise.resolve()),
   };
 });
 
-// Mock router push/replace
 const mockReplace = jest.fn();
 const mockPush = jest.fn();
 
@@ -166,7 +154,6 @@ jest.mock("expo-router", () => ({
   Link: ({ children }) => <>{children}</>,
 }));
 
-// Mock Alert.alert globally for all tests that trigger it
 beforeEach(() => {
     jest.clearAllMocks();
   
@@ -184,14 +171,11 @@ beforeEach(() => {
   });
   
 describe("ProgressTracker Component - Tabs", () => {
-  // Clear all mocks before each test
   beforeEach(() => {
     jest.clearAllMocks();
-    // Ensure Alert.alert is mocked for all tests
 
-    // Reset the `onSnapshot` mock for each test to avoid interference
     const firestore = require("firebase/firestore");
-    const mockTimestamp = firestore.Timestamp; // Use the mocked Timestamp
+    const mockTimestamp = firestore.Timestamp;
 
     const workoutDocs = [
       {
@@ -246,16 +230,13 @@ describe("ProgressTracker Component - Tabs", () => {
 
     firestore.onSnapshot.mockImplementation((q, callback) => {
       let docsToReturn = [];
-      // Basic check for `collection` calls to distinguish between workouts and weights
       const collectionPath = firestore.collection.mock.lastCall
         ? firestore.collection.mock.lastCall[1]
         : "";
 
       if (collectionPath === "workouts") {
-        // Apply year filter for workouts
         const queryArgs = firestore.query.mock.lastCall;
         if (queryArgs && queryArgs.length > 2) {
-          // Check if 'where' clauses are present
           const whereClauses = queryArgs
             .slice(2)
             .filter(
@@ -283,14 +264,12 @@ describe("ProgressTracker Component - Tabs", () => {
               return docDate >= startOfYear && docDate < endOfYear;
             });
           } else {
-            docsToReturn = workoutDocs; // No specific year filter, return all
+            docsToReturn = workoutDocs; 
           }
         } else {
-          docsToReturn = workoutDocs; // No specific query or where clauses, return all
+          docsToReturn = workoutDocs; 
         }
       } else if (collectionPath.includes("weights")) {
-        // Check for 'weights' collection
-        // Apply year filter for weights
         const queryArgs = firestore.query.mock.lastCall;
         if (queryArgs && queryArgs.length > 2) {
           const whereClauses = queryArgs
@@ -319,13 +298,13 @@ describe("ProgressTracker Component - Tabs", () => {
               return docDate >= startOfYear && docDate < endOfYear;
             });
           } else {
-            docsToReturn = weightDocs; // No specific year filter, return all
+            docsToReturn = weightDocs; 
           }
         } else {
-          docsToReturn = weightDocs; // No specific query or where clauses, return all
+          docsToReturn = weightDocs; 
         }
       } else {
-        docsToReturn = []; // Default if collection is unknown
+        docsToReturn = []; 
       }
 
       const snapshot = {
@@ -343,7 +322,7 @@ describe("ProgressTracker Component - Tabs", () => {
         empty: docsToReturn.length === 0,
       };
       callback(snapshot);
-      return jest.fn(); // unsubscribe function
+      return jest.fn();
     });
   });
 
@@ -358,7 +337,6 @@ describe("ProgressTracker Component - Tabs", () => {
   test("switches tabs when pressing buttons", () => {
     const { getByText, queryByText } = render(<ProgressTracker />);
 
-    // Default tab is workouts
     expect(getByText("Your Workouts")).toBeTruthy();
 
     fireEvent.press(getByText("Bodyweight"));
@@ -423,7 +401,6 @@ describe("ProgressTracker Component - Tabs", () => {
   });
 
   test("displays workout date fetched from Firebase and correctly formatted", async () => {
-    // Define the helper function inside the test
     function calendarDaysDiff(d1, d2) {
       const date1 = new Date(d1.getFullYear(), d1.getMonth(), d1.getDate());
       const date2 = new Date(d2.getFullYear(), d2.getMonth(), d2.getDate());
@@ -462,17 +439,13 @@ describe("ProgressTracker Component - Tabs", () => {
   test("opens workout details when workout card is pressed", async () => {
     const { getByText, queryByText } = render(<ProgressTracker />);
 
-    // Wait for workout title to appear
     const workoutTitle = await waitFor(() => getByText("Workout A"));
 
-    // Before press, exercises details are not visible
     expect(queryByText("Squat")).toBeNull();
     expect(queryByText("Bench Press")).toBeNull();
 
-    // Press the workout card (title)
     fireEvent.press(workoutTitle);
 
-    // After press, details appear
     await waitFor(() => {
       expect(getByText("Squat")).toBeTruthy();
       expect(getByText("Bench Press")).toBeTruthy();
@@ -507,15 +480,12 @@ describe("ProgressTracker Component - Tabs", () => {
   
     mockPush.mockClear();
   
-    // Expand the workout card
     const workoutTitle = await waitFor(() => getByText("Workout A"));
     fireEvent.press(workoutTitle);
   
-    // Click the edit button
     const editButton = await waitFor(() => getByTestId("edit-button-w1"));
     fireEvent.press(editButton);
-  
-    // Assert the correct route and params are passed
+
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith({
         pathname: "/addWorkout",
@@ -527,19 +497,15 @@ describe("ProgressTracker Component - Tabs", () => {
   test('pressing "delete" button calls handleDeleteWorkout with the correct workout ID', async () => {
     const { getByText, getByTestId } = render(<ProgressTracker />);
 
-    // Expand the workout card first (if the delete button is only visible after that)
     const workoutTitle = await waitFor(() => getByText("Workout A"));
     fireEvent.press(workoutTitle);
 
-    // Click the delete button
     const deleteButton = await waitFor(() => getByTestId("delete-button-w1"));
     fireEvent.press(deleteButton);
 
-    // Confirm that deleteDoc (or the actual delete logic) was called
     const firestore = require("firebase/firestore");
     await waitFor(() => {
       expect(firestore.deleteDoc).toHaveBeenCalled();
-      // Optional: confirm correct ID is involved
       expect(firestore.deleteDoc.mock.calls[0][0].id).toBe("w1");
     });
   });
@@ -571,20 +537,15 @@ describe("ProgressTracker Component - Tabs", () => {
       queryByText,
     } = render(<ProgressTracker />);
 
-    // 1. Switch to Bodyweight tab
     fireEvent.press(getByText("Bodyweight"));
 
-    // 2. Open the "Add New Weight" modal
     fireEvent.press(getByText("+ New Weight"));
 
-    // 3. Enter new weight
     const input1 = getByPlaceholderText("Enter weight (kg)");
     fireEvent.changeText(input1, "72.5");
 
-    // 4. Press Save button
     fireEvent.press(getByTestId("saveWeightButton"));
 
-    // 5. Wait for the "Add New Weight" modal to close by checking modal title no longer present
     await waitFor(() => {
       expect(queryByText(/Add New Weight|Edit Weight Entry/)).toBeNull();
     });
@@ -628,6 +589,4 @@ describe("ProgressTracker Component - Tabs", () => {
       expect(payload.title).toBe("Bulk Day 1");
     });
   });
-  
-  
 });

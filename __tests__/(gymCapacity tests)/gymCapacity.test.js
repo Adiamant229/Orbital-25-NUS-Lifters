@@ -1,4 +1,4 @@
-import { render, waitFor, fireEvent, act } from "@testing-library/react-native";
+import { render, waitFor, fireEvent } from "@testing-library/react-native";
 
 const fetchMock = jest.fn(() =>
   Promise.resolve({

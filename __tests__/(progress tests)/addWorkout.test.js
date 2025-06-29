@@ -1,3 +1,8 @@
+import * as ExpoRouter from "expo-router";
+import { render, fireEvent, waitFor, act } from "@testing-library/react-native";
+import AddWorkout from "../../app/(progress)/addWorkout";
+import { Alert } from "react-native";
+
 let mockBack;
 
 jest.mock("expo-router", () => {
@@ -10,11 +15,6 @@ jest.mock("expo-router", () => {
     useLocalSearchParams: jest.fn(() => ({})),
   };
 });
-
-import * as ExpoRouter from "expo-router";
-import { render, fireEvent, waitFor, act } from "@testing-library/react-native";
-import AddWorkout from "../../app/(progress)/addWorkout";
-import { Alert } from "react-native";
 
 jest.mock("@react-native-community/datetimepicker", () => "DateTimePicker");
 
