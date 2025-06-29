@@ -1,6 +1,5 @@
 //react and expo imports
 import {
-    Dimensions,
     FlatList,
     Keyboard,
     KeyboardAvoidingView,
@@ -21,8 +20,9 @@ import ThemedView from "../../components/themedView";
 import Spacer from "../../components/spacer";
 import ThemedButton from "../../components/themedButton";
 import {Ionicons, MaterialIcons} from "@expo/vector-icons";
-import {useEffect, useRef, useState} from "react";
+import {useEffect, useState} from "react";
 import {APIKey} from "../../firebaseConfig";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const searchOptions = (query) => {
     return {
@@ -56,7 +56,18 @@ const Macro = () => {
     const [query, setQuery] = useState('');
     const [debounced, setDebounced] = useState('');
     const [mealList, setMealList] = useState([]);
-    const manualSearchTrigger = useRef(false);
+
+    useEffect(() => {
+        const loadMealList = async () => {
+                AsyncStorage.getItem('mealList')
+                    .then(data => {
+                        if (data) {
+                            setMealList(JSON.parse(data))
+                        }
+                    }).catch(err => console.error('Failed to load meal list:', err));
+        }
+        loadMealList();
+    }, []);
 
     useEffect(() => {
         const typingTimeout = setTimeout(() => {
@@ -71,6 +82,17 @@ const Macro = () => {
             }).catch((err) => console.error("Retrieval error: ", err));
         }
     }, [debounced]);
+
+    useEffect(() => {
+        const saveMealList = () => {
+            try {
+                AsyncStorage.setItem('mealList', JSON.stringify(mealList));
+            } catch (err) {
+                console.error('Persistence Error: ', err);
+            }
+        }
+        saveMealList();
+    }, [mealList]);
 
     const updateServings = (id) => {
       return (serving) => {
@@ -97,7 +119,6 @@ const Macro = () => {
     .toFixed(2);
 };
 
-  
 
     const deleteItem = (id) => {
         const updated = [...mealList].filter((item) => item.id !== id);
