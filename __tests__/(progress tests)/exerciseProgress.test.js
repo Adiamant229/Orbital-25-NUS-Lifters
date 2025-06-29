@@ -1,6 +1,4 @@
-import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
-import { View, TouchableOpacity, Text } from "react-native"; // Needed for dropdown mock
 import ExerciseProgress from "../../app/(progress)/exerciseProgress";
 import { getAuth } from "firebase/auth";
 import { query, collection, orderBy, where, getDocs } from "firebase/firestore";
