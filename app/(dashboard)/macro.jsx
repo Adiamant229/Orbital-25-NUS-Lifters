@@ -12,17 +12,21 @@ import {
     TouchableWithoutFeedback,
     View
 } from "react-native";
+import { useEffect, useState } from "react";
 import {Searchbar} from "react-native-paper";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+
+//firebase imports
+import { APIKey } from "../../firebaseConfig";
 
 //themed components
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import Spacer from "../../components/spacer";
 import ThemedButton from "../../components/themedButton";
-import {Ionicons, MaterialIcons} from "@expo/vector-icons";
-import {useEffect, useState} from "react";
-import {APIKey} from "../../firebaseConfig";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+
+
 
 const searchOptions = (query) => {
     return {
@@ -144,7 +148,7 @@ const Macro = () => {
 
           <View style={styles.infoBox}>
             <View style={styles.row}>
-              <Text style={styles.label}> Total Calories:</Text>
+              <Text style={styles.label}>Total Calories:</Text>
               <Text style={styles.value}>
                 {summation("calories")}
                 cal
@@ -227,9 +231,12 @@ const Macro = () => {
                           <ThemedText style={styles.contentText}>g</ThemedText>
                         </View>
 
-                        <Pressable onPress={() => deleteItem(item.id)}>
+                        <Pressable
+                          testID="delete-button"
+                          onPress={() => deleteItem(item.id)}
+                        >
                           <Ionicons
-                            name={"close-outline"}
+                            name={"trash-outline"}
                             color={"red"}
                             size={24}
                           />
