@@ -423,6 +423,14 @@ describe("ProgressTracker Component - Tabs", () => {
   });
 
   test("displays workout date fetched from Firebase and correctly formatted", async () => {
+    // Define the helper function inside the test
+    function calendarDaysDiff(d1, d2) {
+      const date1 = new Date(d1.getFullYear(), d1.getMonth(), d1.getDate());
+      const date2 = new Date(d2.getFullYear(), d2.getMonth(), d2.getDate());
+      const diffTime = date2.getTime() - date1.getTime();
+      return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    }
+
     const { getByText } = render(<ProgressTracker />);
 
     const createdDate = new Date("2023-06-01T12:00:00Z");
@@ -434,8 +442,7 @@ describe("ProgressTracker Component - Tabs", () => {
     });
 
     const now = new Date();
-    const diffTime = Math.abs(now - createdDate);
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = calendarDaysDiff(createdDate, now);
 
     const relativeStr =
       diffDays === 0
@@ -450,6 +457,7 @@ describe("ProgressTracker Component - Tabs", () => {
       expect(getByText(expectedText)).toBeTruthy();
     });
   });
+  
 
   test("opens workout details when workout card is pressed", async () => {
     const { getByText, queryByText } = render(<ProgressTracker />);
