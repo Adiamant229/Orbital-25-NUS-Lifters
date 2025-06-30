@@ -17,7 +17,7 @@ import {
   Dimensions,
   ScrollView,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import DropDownPicker from "react-native-dropdown-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { LineChart, PieChart } from "react-native-chart-kit";
@@ -738,6 +738,13 @@ const ProgressTracker = () => {
           onPress: async () => {
             try {
               await deleteDoc(doc(db, "users", user.uid, "macros", id));
+
+              setImportedMacroHandled(true);
+
+              setMacroModalVisible(false);
+              setEditingMacro(null);
+              
+              router.replace("/(dashboard)/progressTracker");
             } catch (error) {
               console.error("Failed to delete macro entry:", error);
               Alert.alert("Failed to delete macro entry");
@@ -773,6 +780,7 @@ const ProgressTracker = () => {
               setProtein("");
               setCarbs("");
               setFats("");
+              setImportedMacroHandled(false);
             },
           },
         ]
@@ -785,9 +793,45 @@ const ProgressTracker = () => {
       setProtein("");
       setCarbs("");
       setFats("");
+      setImportedMacroHandled(false);
     }
   };
     
+  const { importedMacro, importedSelectedTab, importedCalories, importedProtein, importedFat, importedCarbs } = useLocalSearchParams();
+  const [importedMacroHandled, setImportedMacroHandled] = useState(false);
+ 
+  useEffect(() => {
+
+    if (importedMacro === "true" && importedMacroHandled) {
+      setImportedMacroHandled(false);
+    }
+
+    if (!importedMacroHandled && importedMacro === "true") {
+      if (importedSelectedTab === "Macros") {
+        setSelectedTab("Macros");
+      }
+
+      setCalories(importedCalories || "");
+      setProtein(importedProtein || "");
+      setFats(importedFat || "");
+      setCarbs(importedCarbs || "");
+      setMacroDate(new Date());
+      setMacroModalVisible(true);
+      setImportedMacroHandled(true);
+
+       router.replace("/(dashboard)/progressTracker");
+    }
+  }, [
+    importedMacro,
+    importedSelectedTab,
+    importedCalories,
+    importedProtein,
+    importedFat,
+    importedCarbs,
+    importedMacroHandled,
+  ]);
+  
+
   return (
     <ThemedView style={styles.container}>
       <ThemedText style={styles.title}>Progress Tracker</ThemedText>
