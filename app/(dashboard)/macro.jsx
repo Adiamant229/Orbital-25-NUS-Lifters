@@ -15,6 +15,7 @@ import {
 import { useEffect, useState } from "react";
 import {Searchbar} from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 
 //firebase imports
@@ -54,6 +55,7 @@ const searchDB = async (query) => {
         return [];
     }
 }
+
 const Macro = () => {
     const [searching, setSearching] = useState(false); //modal controller
     const [foodList, setFoodList] = useState([]); //search results to be rendered
@@ -97,6 +99,27 @@ const Macro = () => {
         }
         saveMealList();
     }, [mealList]);
+
+    const router = useRouter();
+
+    const handleSendToProgress = () => {
+      const importedCalories = summation("calories");
+      const importedProtein = summation("protein");
+      const importedFat = summation("fat");
+      const importedCarbs = summation("carbs");
+
+      router.push({
+        pathname: "/progressTracker",
+        params: {
+          importedMacro: "true",
+          importedSelectedTab: "Macros",
+          importedCalories,
+          importedProtein,
+          importedFat,
+          importedCarbs,
+        },
+      });
+    };
 
     const updateServings = (id) => {
       return (serving) => {
@@ -166,6 +189,9 @@ const Macro = () => {
               <Text style={styles.label}>Total Carbs:</Text>
               <Text style={styles.value}>{summation("carbs")}g</Text>
             </View>
+            <ThemedButton onPress={handleSendToProgress} style={styles.sendButton}>
+              <ThemedText>Save to Progress Tracker</ThemedText>
+            </ThemedButton>
           </View>
           <Spacer />
           <View style={styles.mealbox}>
@@ -389,6 +415,16 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 4,
   },
+  sendButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20, 
+    minWidth: 250, 
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center", 
+  },
+
   row: {
     flexDirection: "row",
     justifyContent: "space-between",

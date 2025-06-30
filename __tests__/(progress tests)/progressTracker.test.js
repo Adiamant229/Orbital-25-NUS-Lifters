@@ -151,8 +151,17 @@ jest.mock("expo-router", () => ({
     replace: mockReplace,
     push: mockPush,
   }),
+  useLocalSearchParams: () => ({
+    importedMacro: "false",
+    importedSelectedTab: "",
+    importedCalories: "",
+    importedProtein: "",
+    importedFat: "",
+    importedCarbs: "",
+  }),
   Link: ({ children }) => <>{children}</>,
 }));
+
 
 beforeEach(() => {
     jest.clearAllMocks();
