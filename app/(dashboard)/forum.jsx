@@ -14,6 +14,7 @@ import {
   Platform,
   View,
 } from "react-native";
+import { useRouter } from "expo-router";
 
 //firebase imports
 import {
@@ -25,7 +26,7 @@ import {
   query,
   updateDoc,
   where,
-  onSnapshot, 
+  onSnapshot,
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { db } from "../../firebaseConfig";
@@ -48,11 +49,11 @@ const Forum = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newCategory, setNewCategory] = useState(categories[0]);
-  const [newContent, setNewContent] = useState(""); 
+  const [newContent, setNewContent] = useState("");
 
   const [currentUserId, setCurrentUserId] = useState(null);
 
-  const [selectedThread, setSelectedThread] = useState(null); 
+  const [selectedThread, setSelectedThread] = useState(null);
   const [comments, setComments] = useState([]);
 
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -63,7 +64,10 @@ const Forum = () => {
 
   const [commentInput, setCommentInput] = useState("");
   const [editingComment, setEditingComment] = useState(null);
-  const [editingCommentContent, setEditingCommentContent] = useState(""); 
+  const [editingCommentContent, setEditingCommentContent] = useState("");
+
+  // New state to store user names dynamically
+  const [userNames, setUserNames] = useState({});
 
   useEffect(() => {
     const auth = getAuth();
@@ -71,6 +75,21 @@ const Forum = () => {
     if (user) {
       setCurrentUserId(user.uid);
     }
+
+    // Listener for all user names
+    const unsubscribeUsers = onSnapshot(
+      collection(db, "users"),
+      (snapshot) => {
+        const names = {};
+        snapshot.forEach((doc) => {
+          names[doc.id] = doc.data().name || "Anonymous";
+        });
+        setUserNames(names);
+      },
+      (error) => {
+        console.error("Error fetching user names in real-time: ", error);
+      }
+    );
 
     let q;
     if (selectedCategory === "All") {
@@ -83,7 +102,7 @@ const Forum = () => {
     }
 
     setLoading(true);
-    const unsubscribe = onSnapshot(
+    const unsubscribeThreads = onSnapshot( // Renamed for clarity
       q,
       (snapshot) => {
         const threadsList = [];
@@ -102,9 +121,12 @@ const Forum = () => {
       }
     );
 
-   
-    return () => unsubscribe();
-  }, [selectedCategory]); 
+    // Return a cleanup function that unsubscribes from both listeners
+    return () => {
+      unsubscribeUsers();
+      unsubscribeThreads();
+    };
+  }, [selectedCategory]);
 
   useEffect(() => {
     if (!selectedThread) {
@@ -121,10 +143,10 @@ const Forum = () => {
           });
         } else {
           console.warn("Thread document no longer exists");
-          setSelectedThread(null); 
+          setSelectedThread(null);
           setComments([]);
-          setEditingComment(null); 
-          setCommentInput(""); 
+          setEditingComment(null);
+          setCommentInput("");
         }
       },
       (error) => {
@@ -154,7 +176,7 @@ const Forum = () => {
       commentUnsubscribe();
       threadUnsubscribe();
     };
-  }, [selectedThread?.id]); 
+  }, [selectedThread?.id]);
 
   const addThread = () => {
     if (!newTitle.trim()) {
@@ -186,17 +208,11 @@ const Forum = () => {
                 return;
               }
 
-              const userDocRef = doc(db, "users", user.uid);
-              const userDocSnap = await getDoc(userDocRef);
-              const freshUserName = userDocSnap.exists()
-                ? userDocSnap.data().name
-                : "Anonymous";
-
+              // No need to fetch freshUserName here, just store authorId
               await addDoc(collection(db, "threads"), {
                 title: newTitle,
                 category: newCategory,
-                author: freshUserName,
-                authorId: user.uid,
+                authorId: user.uid, // Store only the ID
                 content: newContent,
                 createdAt: new Date(),
               });
@@ -205,7 +221,7 @@ const Forum = () => {
               setModalVisible(false);
               setNewTitle("");
               setNewCategory(categories[0]);
-              setNewContent(""); 
+              setNewContent("");
             } catch (error) {
               console.error("Error adding thread: ", error);
               Alert.alert("Error", "Could not create thread.");
@@ -216,7 +232,7 @@ const Forum = () => {
       { cancelable: true }
     );
   };
-  
+
 
   const deleteThread = async (threadId) => {
     Alert.alert(
@@ -233,7 +249,7 @@ const Forum = () => {
               Alert.alert("Deleted", "Thread removed successfully.");
 
               if (selectedThread?.id === threadId) {
-                setSelectedThread(null); 
+                setSelectedThread(null);
               }
             } catch (error) {
               console.error("Error deleting thread: ", error);
@@ -249,7 +265,7 @@ const Forum = () => {
     setEditThread(thread);
     setEditTitle(thread.title);
     setEditCategory(thread.category);
-    setEditContent(thread.content); 
+    setEditContent(thread.content);
     setEditModalVisible(true);
   };
 
@@ -325,7 +341,7 @@ const Forum = () => {
       setModalVisible(false);
     }
   };
-  
+
   const cancelEditThread = () => {
     if (!editThread) {
       setEditModalVisible(false);
@@ -362,7 +378,7 @@ const Forum = () => {
       setEditThread(null);
     }
   };
-  
+
   const addComment = async (threadID, content) => {
     if (!content.trim()) {
       Alert.alert("Error", "Please enter a comment");
@@ -389,11 +405,7 @@ const Forum = () => {
                 Alert.alert("Error", "User not logged in.");
                 return;
               }
-              const userDocRef = doc(db, "users", user?.uid);
-              const userDocSnap = await getDoc(userDocRef);
-              const commenter = userDocSnap.exists()
-                ? userDocSnap.data().name
-                : "Anonymous";
+
               const threadRef = doc(db, "threads", threadID);
               const threadSnap = await getDoc(threadRef);
               if (!threadSnap.exists()) {
@@ -402,15 +414,14 @@ const Forum = () => {
               }
               const commentsRef = collection(threadRef, "comments");
               const comment = {
-                commenter: commenter,
-                commenterID: user.uid,
+                commenterID: user.uid, // Store only the ID
                 content: content,
                 createdAt: new Date(),
                 editedAt: null,
               };
               await addDoc(commentsRef, comment);
-              setCommentInput(""); 
-              Keyboard.dismiss(); 
+              setCommentInput("");
+              Keyboard.dismiss();
             } catch (err) {
               console.error("Error adding comment: ", err);
               Alert.alert("Error", "Could not add comment.");
@@ -421,7 +432,7 @@ const Forum = () => {
       { cancelable: true }
     );
   };
-  
+
   const editComment = async (threadID, commentID, content) => {
     const trimmedContent = content.trim();
 
@@ -486,7 +497,7 @@ const Forum = () => {
       Alert.alert("Error", "Could not fetch comment.");
     }
   };
-  
+
   const deleteComment = async (threadID, commentID) => {
     Alert.alert(
       "Delete Comment",
@@ -564,7 +575,9 @@ const Forum = () => {
       setEditingCommentContent("");
     }
   };
-  
+
+  const router = useRouter();
+
   return (
     <ThemedView style={styles.innerContainer}>
       <ThemedText style={styles.title} title={true}>
@@ -617,7 +630,11 @@ const Forum = () => {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.threadTitle}>{item.title}</Text>
                     <Text style={styles.threadMeta}>
-                      by {item.author} · {item.category}
+                      by{" "}
+                      {item.authorId === currentUserId
+                        ? "You"
+                        : userNames[item.authorId] || "Loading..."}{" "}
+                      · {item.category}
                     </Text>
                     <Text
                       style={styles.threadSnippet}
@@ -627,6 +644,7 @@ const Forum = () => {
                       {item.content}
                     </Text>
                   </View>
+
                   {item.authorId === currentUserId && (
                     <View style={{ flexDirection: "row", gap: 10 }}>
                       <Pressable
@@ -828,9 +846,9 @@ const Forum = () => {
         onRequestClose={() => {
           setSelectedThread(null);
           setComments([]);
-          setEditingComment(null); 
-          setEditingCommentContent(""); 
-          setCommentInput(""); 
+          setEditingComment(null);
+          setEditingCommentContent("");
+          setCommentInput("");
         }}
       >
         <TouchableWithoutFeedback
@@ -838,8 +856,8 @@ const Forum = () => {
             setSelectedThread(null);
             setComments([]);
             setEditingComment(null);
-            setEditingCommentContent(""); 
-            setCommentInput(""); 
+            setEditingCommentContent("");
+            setCommentInput("");
           }}
         >
           <KeyboardAvoidingView
@@ -853,9 +871,35 @@ const Forum = () => {
                     <Text style={styles.threadTitle}>
                       {selectedThread.title}
                     </Text>
-                    <Text style={styles.threadMeta}>
-                      by {selectedThread.author} · {selectedThread.category}
-                    </Text>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                      }}
+                    >
+                      <Pressable
+                        onPress={() => {
+                          router.push(`/(profiles)/${selectedThread.authorId}`);
+                          setSelectedThread(null);
+                          setComments([]);
+                          setEditingComment(null);
+                          setEditingCommentContent("");
+                          setCommentInput("");
+                        }}
+                      >
+                        <Text style={[styles.threadMeta, { color: "#007AFF" }]}>
+                          by{" "}
+                          {selectedThread.authorId === currentUserId
+                            ? "You"
+                            : userNames[selectedThread.authorId] ||
+                              "Loading..."}
+                        </Text>
+
+                      </Pressable>
+                      <Text style={styles.threadMeta}>
+                        {" · "}
+                        {selectedThread.category}
+                      </Text>
+                    </View>
                     <Spacer height={20} />
                     <Text style={styles.threadContent}>
                       {selectedThread.content}
@@ -877,8 +921,8 @@ const Forum = () => {
                                     styles.input,
                                     { height: 100, textAlignVertical: "top" },
                                   ]}
-                                  value={editingCommentContent} 
-                                  onChangeText={setEditingCommentContent} 
+                                  value={editingCommentContent}
+                                  onChangeText={setEditingCommentContent}
                                   multiline={true}
                                 />
                                 <View
@@ -893,7 +937,7 @@ const Forum = () => {
                                       editComment(
                                         selectedThread.id,
                                         item.id,
-                                        editingCommentContent 
+                                        editingCommentContent
                                       )
                                     }
                                     style={{ flex: 1, marginRight: 10 }}
@@ -916,17 +960,52 @@ const Forum = () => {
                                 <Text style={styles.commentContent}>
                                   - {item.content}
                                 </Text>
-                                <Text style={styles.commentAuthor}>
-                                  by {item.commenter}
+
+                                <View
+                                  style={{
+                                    flexDirection: "row",
+                                    flexWrap: "wrap",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <Pressable
+                                    onPress={() => {
+                                      router.push(
+                                        `/(profiles)/${item.commenterID}`
+                                      );
+                                      setSelectedThread(null);
+                                      setComments([]);
+                                      setEditingComment(null);
+                                      setEditingCommentContent("");
+                                      setCommentInput("");
+                                    }}
+                                  >
+                                    <Text
+                                      style={[
+                                        styles.commentAuthor,
+                                        { color: "#007AFF" },
+                                      ]}
+                                    >
+                                      by{" "}
+                                      {item.commenterID === currentUserId
+                                        ? "You"
+                                        : userNames[item.commenterID] ||
+                                          "Loading..."}
+                                    </Text>
+                                  </Pressable>
                                   {item.editedAt && (
                                     <Text
-                                      style={{ fontSize: 10, color: "#888" }}
+                                      style={{
+                                        fontSize: 10,
+                                        color: "#888",
+                                        marginLeft: 4,
+                                      }}
                                     >
-                                      {" "}
                                       (edited)
                                     </Text>
                                   )}
-                                </Text>
+                                </View>
+
                                 <Spacer height={10} />
                                 {item.commenterID === currentUserId && (
                                   <View
@@ -938,7 +1017,7 @@ const Forum = () => {
                                     <Pressable
                                       onPress={() => {
                                         setEditingComment(item.id);
-                                        setEditingCommentContent(item.content); 
+                                        setEditingCommentContent(item.content);
                                       }}
                                       testID="edit-comment-button"
                                     >
@@ -1021,6 +1100,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: "bold",
+    textAlign: "center"
   },
   filterContainer: {
     flexDirection: "row",
