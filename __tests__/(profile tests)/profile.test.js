@@ -1,5 +1,10 @@
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import { Alert } from "react-native";
+import Profile from "../../app/(dashboard)/profile";
+
+const mockSignOut = jest.fn();
+const mockReplace = jest.fn();
+const mockOnSnapshot = jest.fn();
 
 jest.mock("../../firebaseConfig", () => ({
   auth: {
@@ -8,28 +13,21 @@ jest.mock("../../firebaseConfig", () => ({
   db: {},
 }));
 
-const mockGetDoc = jest.fn();
-const mockUpdateDoc = jest.fn();
-const mockSignOut = jest.fn();
-
 jest.mock("firebase/firestore", () => ({
   doc: jest.fn(() => ({})),
-  getDoc: (...args) => mockGetDoc(...args),
-  updateDoc: (...args) => mockUpdateDoc(...args),
+  onSnapshot: (...args) => mockOnSnapshot(...args),
 }));
 
 jest.mock("firebase/auth", () => ({
   signOut: (...args) => mockSignOut(...args),
 }));
 
-const mockReplace = jest.fn();
 jest.mock("expo-router", () => ({
   useRouter: () => ({
     replace: mockReplace,
+    push: jest.fn(),
   }),
 }));
-
-import Profile from "../../app/(dashboard)/profile";
 
 describe("Profile Component", () => {
   beforeEach(() => {
@@ -37,21 +35,41 @@ describe("Profile Component", () => {
     jest.spyOn(Alert, "alert").mockImplementation(() => {});
   });
 
-  test("loads and displays username from Firestore", async () => {
-    mockGetDoc.mockResolvedValueOnce({
+  test("displays user data from Firestore snapshot", async () => {
+    const snapshotMock = {
       exists: () => true,
-      data: () => ({ name: "Test User" }),
+      data: () => ({
+        name: "Snapshot User",
+        bio: "Test bio",
+        height: 180,
+        weight: 75,
+        age: 25,
+      }),
+    };
+
+    mockOnSnapshot.mockImplementation((docRef, onSuccess, onError) => {
+      onSuccess(snapshotMock);
+      return jest.fn(); 
     });
 
     const { getByText } = render(<Profile />);
     await waitFor(() => {
-      expect(getByText("Test User")).toBeTruthy();
+      expect(getByText("Snapshot User")).toBeTruthy();
+      expect(getByText("Bio")).toBeTruthy();
+      expect(getByText("Height: 180 cm")).toBeTruthy();
+      expect(getByText("Weight: 75 kg")).toBeTruthy();
+      expect(getByText("Age: 25")).toBeTruthy();
     });
   });
 
-  test("shows 'No user data' if doc does not exist", async () => {
-    mockGetDoc.mockResolvedValueOnce({
+  test("displays 'No user data' if snapshot does not exist", async () => {
+    const snapshotMock = {
       exists: () => false,
+    };
+
+    mockOnSnapshot.mockImplementation((docRef, onSuccess, onError) => {
+      onSuccess(snapshotMock);
+      return jest.fn();
     });
 
     const { getByText } = render(<Profile />);
@@ -60,150 +78,26 @@ describe("Profile Component", () => {
     });
   });
 
-  test("shows 'Error' if fetching data fails", async () => {
-    mockGetDoc.mockRejectedValueOnce(new Error("Firestore error"));
+  test("shows error if snapshot fails", async () => {
+    mockOnSnapshot.mockImplementation((docRef, onSuccess, onError) => {
+      onError(new Error("Firestore error"));
+      return jest.fn();
+    });
 
     const { getByText } = render(<Profile />);
     await waitFor(() => {
-      expect(getByText("Error")).toBeTruthy();
-    });
-  });
-
-  test("entering edit mode shows input and buttons", async () => {
-    mockGetDoc.mockResolvedValueOnce({
-      exists: () => true,
-      data: () => ({ name: "Test User" }),
-    });
-
-    const { getByText, getByPlaceholderText, getByTestId } = render(
-      <Profile />
-    );
-
-    await waitFor(() => getByText("Test User"));
-
-    fireEvent.press(getByTestId("editButton"));
-
-    expect(getByPlaceholderText("Enter new name")).toBeTruthy();
-  });
-
-  test("cancel editing resets input and exits edit mode", async () => {
-    mockGetDoc.mockResolvedValueOnce({
-      exists: () => true,
-      data: () => ({ name: "Test User" }),
-    });
-
-    const {
-      getByText,
-      getByPlaceholderText,
-      getByTestId,
-      queryByPlaceholderText,
-    } = render(<Profile />);
-    await waitFor(() => getByText("Test User"));
-
-    fireEvent.press(getByTestId("editButton"));
-
-    const input = getByPlaceholderText("Enter new name");
-    fireEvent.changeText(input, "New Name");
-
-    fireEvent.press(getByTestId("cancelButton"));
-
-    // After cancel, input should be gone (not in edit mode)
-    expect(queryByPlaceholderText("Enter new name")).toBeNull();
-
-    // Username text should revert to original
-    expect(getByText("Test User")).toBeTruthy();
-  });
-
-  test("shows alert if save with empty input", async () => {
-    mockGetDoc.mockResolvedValueOnce({
-      exists: () => true,
-      data: () => ({ name: "Test User" }),
-    });
-
-    const { getByText, getByPlaceholderText, getByTestId } = render(
-      <Profile />
-    );
-    await waitFor(() => getByText("Test User"));
-
-    fireEvent.press(getByTestId("editButton"));
-    const input = getByPlaceholderText("Enter new name");
-    fireEvent.changeText(input, "   "); // empty after trim
-
-    fireEvent.press(getByTestId("saveButton"));
-
-    expect(Alert.alert).toHaveBeenCalledWith(
-      "Error",
-      "Please enter a new name."
-    );
-  });
-
-  test("save successfully updates username and exits edit mode", async () => {
-    mockGetDoc.mockResolvedValueOnce({
-      exists: () => true,
-      data: () => ({ name: "Old Name" }),
-    });
-    mockUpdateDoc.mockResolvedValueOnce();
-
-    const { getByText, getByPlaceholderText, getByTestId, queryByText } =
-      render(<Profile />);
-    await waitFor(() => getByText("Old Name"));
-
-    fireEvent.press(getByTestId("editButton"));
-    const input = getByPlaceholderText("Enter new name");
-    fireEvent.changeText(input, "New Name");
-
-    Alert.alert.mockImplementationOnce((title, msg, buttons) => {
-      const saveButton = buttons.find((btn) => btn.text === "Save");
-      saveButton.onPress();
-    });
-
-    fireEvent.press(getByTestId("saveButton"));
-
-    await waitFor(() => {
-      expect(mockUpdateDoc).toHaveBeenCalledWith(expect.anything(), {
-        name: "New Name",
-      });
-      expect(queryByText("New Name")).toBeTruthy();
-    });
-  });
-
-  test("save failure shows error alert", async () => {
-    mockGetDoc.mockResolvedValueOnce({
-      exists: () => true,
-      data: () => ({ name: "Old Name" }),
-    });
-    mockUpdateDoc.mockRejectedValueOnce(new Error("Update failed"));
-
-    const { getByText, getByPlaceholderText, getByTestId } = render(
-      <Profile />
-    );
-    await waitFor(() => getByText("Old Name"));
-
-    fireEvent.press(getByTestId("editButton"));
-    const input = getByPlaceholderText("Enter new name");
-    fireEvent.changeText(input, "New Name");
-
-    Alert.alert.mockImplementationOnce((title, msg, buttons) => {
-      const saveButton = buttons.find((btn) => btn.text === "Save");
-      saveButton.onPress();
-    });
-
-    fireEvent.press(getByTestId("saveButton"));
-
-    await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith(
-        "Error",
-        "Failed to save your name. Please try again."
-      );
+      expect(getByText("Error loading data")).toBeTruthy();
     });
   });
 
   test("logout flow calls signOut and redirects", async () => {
-    mockGetDoc.mockResolvedValueOnce({
-      exists: () => true,
-      data: () => ({ name: "Test User" }),
+    mockOnSnapshot.mockImplementation((docRef, onSuccess) => {
+      onSuccess({
+        exists: () => true,
+        data: () => ({ name: "Test User" }),
+      });
+      return jest.fn();
     });
-    mockSignOut.mockResolvedValueOnce();
 
     const { getByText } = render(<Profile />);
     await waitFor(() => getByText("Test User"));
@@ -222,10 +116,14 @@ describe("Profile Component", () => {
   });
 
   test("logout failure shows error alert", async () => {
-    mockGetDoc.mockResolvedValueOnce({
-      exists: () => true,
-      data: () => ({ name: "Test User" }),
+    mockOnSnapshot.mockImplementation((docRef, onSuccess) => {
+      onSuccess({
+        exists: () => true,
+        data: () => ({ name: "Test User" }),
+      });
+      return jest.fn();
     });
+
     mockSignOut.mockRejectedValueOnce(new Error("Logout failed"));
 
     const { getByText } = render(<Profile />);
@@ -239,10 +137,35 @@ describe("Profile Component", () => {
     fireEvent.press(getByText("Logout"));
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith(
-        "Error",
-        "Failed to logout. Please try again."
-      );
+      expect(Alert.alert).toHaveBeenCalledWith("Error", "Failed to logout.");
     });
   });
+
+  test("modal opens and closes on profile picture press", async () => {
+    mockOnSnapshot.mockImplementation((docRef, onSuccess) => {
+      onSuccess({
+        exists: () => true,
+        data: () => ({
+          name: "Modal Tester",
+          profilePicUrl: "https://example.com/pic.jpg",
+        }),
+      });
+      return jest.fn();
+    });
+
+    const { getByTestId, queryByTestId } = render(<Profile />);
+
+    await waitFor(() => getByTestId("avatar-icon"));
+
+    expect(queryByTestId("profile-modal")).toBeNull();
+
+    fireEvent.press(getByTestId("avatar-icon"));
+    expect(getByTestId("profile-modal")).toBeTruthy();
+    
+    fireEvent.press(getByTestId("modal-overlay"));
+    await waitFor(() => {
+      expect(queryByTestId("profile-modal")).toBeNull();
+    });
+  });
+  
 });
