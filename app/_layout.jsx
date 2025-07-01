@@ -35,6 +35,11 @@ const RootLayout = () => {
           name="(guide)"
           options={{ title: "Gym Info and Guide" }}
         />
+
+        <Stack.Screen
+          name="(profiles)"
+          options={{ title: "" }}
+        />
       </Stack>
     </>
   );
