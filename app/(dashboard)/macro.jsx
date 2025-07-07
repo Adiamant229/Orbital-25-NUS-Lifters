@@ -117,6 +117,7 @@ const Macro = () => {
           importedProtein,
           importedFat,
           importedCarbs,
+          
         },
       });
     };
@@ -189,7 +190,10 @@ const Macro = () => {
               <Text style={styles.label}>Total Carbs:</Text>
               <Text style={styles.value}>{summation("carbs")}g</Text>
             </View>
-            <ThemedButton onPress={handleSendToProgress} style={styles.sendButton}>
+            <ThemedButton
+              onPress={handleSendToProgress}
+              style={styles.sendButton}
+            >
               <ThemedText>Save to Progress Tracker</ThemedText>
             </ThemedButton>
           </View>
@@ -278,92 +282,92 @@ const Macro = () => {
             visible={searching}
             animationType="fade"
             transparent={true}
-            onRequestClose={() => {}}
+            onRequestClose={() => setSearching(false)}
           >
             <TouchableWithoutFeedback
               onPress={() => {
+                Keyboard.dismiss();
                 setSearching(false);
               }}
             >
-              <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={styles.modalBackdrop}
-              >
-                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                  <View style={styles.modalContainer}>
-                    <Searchbar
-                      placeholder={"Search Food"}
-                      onChangeText={setQuery}
-                      value={query}
-                    />
-                    {foodList.length >= 1 && (
-                      <View>
-                        <FlatList
-                          data={foodList}
-                          ItemSeparatorComponent={() => (
-                            <View
-                              style={{
-                                height: 1,
-                                backgroundColor: "#e0e0e0",
-                                marginHorizontal: 10,
-                              }}
-                            />
-                          )}
-                          renderItem={(item) => {
-                            return (
-                              <>
-                                <Pressable
-                                  onPress={() => {
-                                    setSearching(false);
-                                    const wanted = {
-                                      Protein: "protein",
-                                      "Carbohydrate, by difference": "carbs",
-                                      Energy: "calories",
-                                      "Total lipid (fat)": "fat",
-                                    };
-                                    const mealItem = item.item.foodNutrients
-                                      .filter((nutrient) =>
-                                        wanted.hasOwnProperty(
-                                          nutrient.nutrientName
-                                        )
+              <View style={styles.modalBackdrop}>
+                <KeyboardAvoidingView
+                  behavior={Platform.OS === "ios" ? "padding" : "height"}
+                  keyboardVerticalOffset={Platform.OS === "android" ? 40 : 0}
+                  style={{ flex: 1, justifyContent: "center" }}
+                >
+                  <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                    <View style={styles.modalContainer}>
+                      <Searchbar
+                        placeholder={"Search Food"}
+                        onChangeText={setQuery}
+                        value={query}
+                      />
+                      {foodList.length >= 1 && (
+                        <View style={{ maxHeight: 300, flexShrink: 1 }}>
+                          <FlatList
+                            data={foodList}
+                            keyboardShouldPersistTaps="handled"
+                            ItemSeparatorComponent={() => (
+                              <View
+                                style={{
+                                  height: 1,
+                                  backgroundColor: "#e0e0e0",
+                                  marginHorizontal: 10,
+                                }}
+                              />
+                            )}
+                            renderItem={({ item }) => (
+                              <Pressable
+                                onPress={() => {
+                                  setSearching(false);
+                                  const wanted = {
+                                    Protein: "protein",
+                                    "Carbohydrate, by difference": "carbs",
+                                    Energy: "calories",
+                                    "Total lipid (fat)": "fat",
+                                  };
+                                  const mealItem = item.foodNutrients
+                                    .filter((nutrient) =>
+                                      wanted.hasOwnProperty(
+                                        nutrient.nutrientName
                                       )
-                                      .reduce(
-                                        (food, nutrient) => {
-                                          food[wanted[nutrient.nutrientName]] =
-                                            nutrient.value;
-                                          return food;
-                                        },
-                                        {
-                                          description: item.item.description,
-                                          servings: 100,
-                                        }
-                                      );
-                                    const newMealList = [
-                                      ...mealList,
-                                      mealItem,
-                                    ].map((item, index) => ({
-                                      ...item,
-                                      id: index,
-                                    }));
-                                    setMealList(newMealList);
-                                  }}
-                                >
-                                  <View style={styles.resultsBox}>
-                                    <ThemedText style={{ color: "black" }}>
-                                      {" "}
-                                      {item?.item.description}{" "}
-                                    </ThemedText>
-                                  </View>
-                                </Pressable>
-                              </>
-                            );
-                          }}
-                        />
-                      </View>
-                    )}
-                  </View>
-                </TouchableWithoutFeedback>
-              </KeyboardAvoidingView>
+                                    )
+                                    .reduce(
+                                      (food, nutrient) => {
+                                        food[wanted[nutrient.nutrientName]] =
+                                          nutrient.value;
+                                        return food;
+                                      },
+                                      {
+                                        description: item.description,
+                                        servings: 100,
+                                      }
+                                    );
+                                  const newMealList = [
+                                    ...mealList,
+                                    mealItem,
+                                  ].map((item, index) => ({
+                                    ...item,
+                                    id: index,
+                                  }));
+                                  setMealList(newMealList);
+                                }}
+                              >
+                                <View style={styles.resultsBox}>
+                                  <ThemedText style={{ color: "black" }}>
+                                    {item.description}
+                                  </ThemedText>
+                                </View>
+                              </Pressable>
+                            )}
+                          />
+                        </View>
+                      )}
+                    </View>
+                  </TouchableWithoutFeedback>
+                </KeyboardAvoidingView>
+              </View>
             </TouchableWithoutFeedback>
           </Modal>
         </ThemedView>

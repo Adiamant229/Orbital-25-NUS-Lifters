@@ -888,7 +888,7 @@ const ProgressTracker = () => {
               onPress={() => router.push("/addWorkout")}
               style={styles.addButton2}
             >
-              <ThemedText>+ New Workout</ThemedText>
+              <ThemedText>+</ThemedText>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -1091,7 +1091,7 @@ const ProgressTracker = () => {
               onPress={() => setMacroModalVisible(true)}
               style={styles.addButton2}
             >
-              <ThemedText>+ New Macros</ThemedText>
+              <ThemedText>+</ThemedText>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -1181,7 +1181,6 @@ const ProgressTracker = () => {
                     );
                     return Math.floor((d2 - d1) / (1000 * 60 * 60 * 24));
                   })();
-                  
 
                   dateStr = createdDate.toLocaleDateString(undefined, {
                     day: "2-digit",
@@ -1199,7 +1198,7 @@ const ProgressTracker = () => {
 
                 return (
                   <TouchableOpacity
-                  testID="macro-card-button"
+                    testID="macro-card-button"
                     onPress={() => toggleMacro(item.id)}
                     style={styles.card}
                   >
@@ -1312,7 +1311,7 @@ const ProgressTracker = () => {
             <KeyboardAvoidingView
               behavior={Platform.OS === "ios" ? "padding" : "height"}
               style={{ flex: 1 }}
-              keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 0} 
+              keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 0}
             >
               <SafeAreaView
                 style={{
@@ -1350,6 +1349,7 @@ const ProgressTracker = () => {
                       value={macroDate}
                       mode="date"
                       display="default"
+                      maximumDate={new Date()}
                       onChange={(event, selectedDate) => {
                         setShowMacroDatePicker(false);
                         if (selectedDate) setMacroDate(selectedDate);
@@ -1422,7 +1422,7 @@ const ProgressTracker = () => {
               }}
               style={styles.addButton2}
             >
-              <ThemedText>+ New Weight</ThemedText>
+              <ThemedText>+</ThemedText>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -1592,6 +1592,7 @@ const ProgressTracker = () => {
                     value={date}
                     mode="date"
                     display="default"
+                    maximumDate={new Date()}
                     onChange={(event, selectedDate) => {
                       setShowDatePicker(false);
                       if (selectedDate) setDate(selectedDate);

@@ -426,6 +426,8 @@ const UtownReports = () => {
     );
   };
 
+  const dropdownListMode = Platform.OS === "android" ? "MODAL" : "SCROLLVIEW";
+
   return (
     <ThemedView style={styles.container}>
       <FlatList
@@ -526,7 +528,9 @@ const UtownReports = () => {
             <ThemedText>Operating Hours:</ThemedText>
             <ThemedText>Monday to Friday 0700hr to 2200hr</ThemedText>
 
-            <ThemedText>Weekends and Public Holidays 0700hr to 2200hr</ThemedText>
+            <ThemedText>
+              Weekends and Public Holidays 0700hr to 2200hr
+            </ThemedText>
 
             <Spacer height={10} />
 
@@ -574,7 +578,7 @@ const UtownReports = () => {
                   maxHeight={150}
                   style={styles.dropdown}
                   dropDownContainerStyle={styles.dropdownContainer}
-                  listMode="SCROLLVIEW"
+                  listMode={dropdownListMode}
                 />
               </View>
 
@@ -593,7 +597,7 @@ const UtownReports = () => {
                   maxHeight={150}
                   style={styles.dropdown}
                   dropDownContainerStyle={styles.dropdownContainer}
-                  listMode="SCROLLVIEW"
+                  listMode={dropdownListMode}
                 />
               </View>
 
@@ -603,6 +607,8 @@ const UtownReports = () => {
                 placeholderTextColor={"grey"}
                 value={remarks}
                 onChangeText={setRemarks}
+                multiline
+                numberOfLines={3}
               />
 
               <View style={{ marginBottom: 20 }}>
