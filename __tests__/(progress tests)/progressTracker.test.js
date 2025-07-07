@@ -360,7 +360,7 @@ describe("ProgressTracker Component - Tabs", () => {
   test("opens modal when adding new weight", () => {
     const { getByText, getByPlaceholderText } = render(<ProgressTracker />);
     fireEvent.press(getByText("Bodyweight"));
-    fireEvent.press(getByText("+ New Weight"));
+    fireEvent.press(getByText("+"));
 
     expect(getByText("Add New Weight")).toBeTruthy();
     expect(getByPlaceholderText("Enter weight (kg)")).toBeTruthy();
@@ -368,7 +368,7 @@ describe("ProgressTracker Component - Tabs", () => {
 
   test('pressing "+ New Workout" button calls router.push with "/addWorkout"', async () => {
     const { getByText } = render(<ProgressTracker />);
-    const newWorkoutButton = getByText("+ New Workout");
+    const newWorkoutButton = getByText("+");
     fireEvent.press(newWorkoutButton);
 
     await waitFor(() => {
@@ -522,7 +522,7 @@ describe("ProgressTracker Component - Tabs", () => {
   test("submits new weight when valid input is entered and Save is confirmed", async () => {
     const { getByText, getByPlaceholderText, getByTestId } = render(<ProgressTracker />);
     fireEvent.press(getByText("Bodyweight"));
-    fireEvent.press(getByText("+ New Weight"));
+    fireEvent.press(getByText("+"));
   
     const input = getByPlaceholderText("Enter weight (kg)");
     fireEvent.changeText(input, "72.5");
@@ -542,7 +542,7 @@ describe("ProgressTracker Component - Tabs", () => {
     const { getByText, getByPlaceholderText } = render(<ProgressTracker />);
     fireEvent.press(getByText("Macros"));
   
-    const addMacroBtn = getByText("+ New Macros");
+    const addMacroBtn = getByText("+");
     fireEvent.press(addMacroBtn);
   
     await waitFor(() => {
@@ -555,7 +555,7 @@ describe("ProgressTracker Component - Tabs", () => {
   test("submits new macro when all fields are filled and confirmed", async () => {
     const { getByText, getByPlaceholderText } = render(<ProgressTracker />);
     fireEvent.press(getByText("Macros"));
-    fireEvent.press(getByText("+ New Macros"));
+    fireEvent.press(getByText("+"));
 
     fireEvent.changeText(
       getByPlaceholderText("Add in your Macros Title"),

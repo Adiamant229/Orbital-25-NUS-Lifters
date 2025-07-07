@@ -86,7 +86,7 @@ const PublicProfile = () => {
 
       <View style={styles.section}>
         <ThemedText style={styles.sectionTitle}>Bio</ThemedText>
-        <ThemedText>{profileData.bio || "No bio available."}</ThemedText>
+        <ThemedText>{profileData.bio || "Not set"}</ThemedText>
       </View>
 
       <View style={styles.section}>
