@@ -424,7 +424,9 @@ const UscReports = () => {
       console.error("Failed to open URL:", err)
     );
   };
-
+  
+  const dropdownListMode = Platform.OS === "android" ? "MODAL" : "SCROLLVIEW";
+  
   return (
     <ThemedView style={styles.container}>
       <FlatList
@@ -510,7 +512,7 @@ const UscReports = () => {
         ListFooterComponent={
           <View
             style={{
-              backgroundColor: "#7d015c", 
+              backgroundColor: "#7d015c",
               borderRadius: 20,
               padding: 15,
               marginTop: 20,
@@ -525,7 +527,9 @@ const UscReports = () => {
             <ThemedText>Operating Hours:</ThemedText>
             <ThemedText>Monday to Friday 0700hr to 2200hr</ThemedText>
 
-            <ThemedText>Weekends and Public Holidays 0700hr to 2200hr</ThemedText>
+            <ThemedText>
+              Weekends and Public Holidays 0700hr to 2200hr
+            </ThemedText>
 
             <Spacer height={10} />
 
@@ -573,7 +577,7 @@ const UscReports = () => {
                   maxHeight={150}
                   style={styles.dropdown}
                   dropDownContainerStyle={styles.dropdownContainer}
-                  listMode="SCROLLVIEW"
+                  listMode={dropdownListMode}
                 />
               </View>
 
@@ -592,7 +596,7 @@ const UscReports = () => {
                   maxHeight={150}
                   style={styles.dropdown}
                   dropDownContainerStyle={styles.dropdownContainer}
-                  listMode="SCROLLVIEW"
+                  listMode={dropdownListMode}
                 />
               </View>
 
@@ -602,6 +606,8 @@ const UscReports = () => {
                 placeholderTextColor={"grey"}
                 value={remarks}
                 onChangeText={setRemarks}
+                multiline
+                numberOfLines={3}
               />
 
               <View style={{ marginBottom: 20 }}>
@@ -636,8 +642,10 @@ const UscReports = () => {
                       }}
                       testID="image-preview"
                     />
-                    <TouchableOpacity onPress={handleRemoveImage}
-                    testID="removeImage">
+                    <TouchableOpacity
+                      onPress={handleRemoveImage}
+                      testID="removeImage"
+                    >
                       <Ionicons
                         name="trash-outline"
                         size={20}
