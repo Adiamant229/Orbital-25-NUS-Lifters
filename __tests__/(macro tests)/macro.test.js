@@ -102,7 +102,7 @@ describe("Macro Component", () => {
     fireEvent.changeText(input, "200");
 
     await waitFor(() => {
-      expect(getByText("330.00cal")).toBeTruthy();
+      expect(getByText("330.00 cal")).toBeTruthy();
       expect(getByText("62.00g")).toBeTruthy();
     });
   });
