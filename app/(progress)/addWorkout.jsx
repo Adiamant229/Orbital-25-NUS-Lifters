@@ -371,6 +371,7 @@ const AddWorkout = () => {
                 value={date}
                 mode="date"
                 onChange={onChangeDate}
+                maximumDate={new Date()}
                 testID="date-picker"
               />
             )}
