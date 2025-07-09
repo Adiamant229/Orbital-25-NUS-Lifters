@@ -86,64 +86,54 @@ const Index = () => {
   }
 
   const spacerHeight = Platform.OS === "ios" ? 10 : 3;
-  const logoWidthAndHeight = Platform.OS === "ios" ? 350 : 330;
+  const logoSize = Platform.OS === "ios" ? 350 : 330;
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
+        style={styles.flexContainer}
       >
- 
-          <ThemedView style={styles.container}>
-            <Image
-              source={Logo}
-              style={[
-                styles.img,
-                { width: logoWidthAndHeight, height: logoWidthAndHeight },
-              ]}
-            />
-            <ThemedText style={{ fontSize: 16, fontStyle: "italic" }}>
-              For the Lifters, By the Lifters in NUS
-            </ThemedText>
+        <ThemedView style={styles.container}>
+          <Image
+            source={Logo}
+            style={[styles.logo, { width: logoSize, height: logoSize }]}
+          />
 
-            <Spacer height={spacerHeight} />
+          <ThemedText style={styles.tagline}>
+            For the Lifters, By the Lifters in NUS
+          </ThemedText>
 
-     
+          <Spacer height={spacerHeight} />
 
-            <ThemedTextInput
-              style={{ width: "80%", marginBottom: 20 }}
-              placeholder="Email"
-              keyboardType="email-address"
-              placeholderTextColor={"grey"}
-              onChangeText={setEmail}
-              value={email}
-            />
+          <ThemedTextInput
+            style={styles.input}
+            placeholder="Email"
+            keyboardType="email-address"
+            placeholderTextColor={"grey"}
+            onChangeText={setEmail}
+            value={email}
+          />
 
-            <ThemedTextInput
-              style={{ width: "80%", marginBottom: 20 }}
-              placeholder="Password"
-              placeholderTextColor={"grey"}
-              onChangeText={setPassword}
-              value={password}
-              secureTextEntry
-            />
+          <ThemedTextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor={"grey"}
+            onChangeText={setPassword}
+            value={password}
+            secureTextEntry
+          />
 
-            <ThemedButton onPress={handleSubmit}>
-              <ThemedText style={{ color: "#f2f2f2", fontWeight: "bold" }}>
-                Login
-              </ThemedText>
-            </ThemedButton>
+          <ThemedButton onPress={handleSubmit}>
+            <ThemedText style={styles.buttonText}>Login</ThemedText>
+          </ThemedButton>
 
-            <Spacer height={spacerHeight} />
+          <Spacer height={spacerHeight} />
 
-            <Link href="/signup">
-              <ThemedText style={{ textAlign: "center" }}>
-                Create new Account
-              </ThemedText>
-            </Link>
-          </ThemedView>
-    
+          <Link href="/signup" style={styles.link}>
+            <ThemedText>Create new Account</ThemedText>
+          </Link>
+        </ThemedView>
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );
@@ -151,9 +141,9 @@ const Index = () => {
 
 export default Index;
 
-export const styles = StyleSheet.create({
-  scrollContainer: {
-    flexGrow: 1,
+const styles = StyleSheet.create({
+  flexContainer: {
+    flex: 1,
   },
   container: {
     flex: 1,
@@ -161,15 +151,26 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 20,
   },
-  title: {
-    textAlign: "center",
-    fontSize: 18,
-    marginBottom: 30,
-  },
-  img: {
+  logo: {
     resizeMode: "contain",
     borderRadius: 20,
     marginVertical: 10,
+  },
+  tagline: {
+    fontSize: 16,
+    fontStyle: "italic",
+    textAlign: "center",
+  },
+  input: {
+    width: "80%",
+    marginBottom: 20,
+  },
+  buttonText: {
+    color: "#f2f2f2",
+    fontWeight: "bold",
+  },
+  link: {
+    textAlign: "center",
   },
   loadingContainer: {
     flex: 1,

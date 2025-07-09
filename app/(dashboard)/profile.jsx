@@ -8,13 +8,14 @@ import {
   Modal,
   Pressable,
 } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
+import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import Spacer from "../../components/spacer";
 import ThemedButton from "../../components/themedButton";
+import { useThemeContext } from "../../components/themedContext";
 
 import { auth, db } from "../../firebaseConfig";
 import { doc, onSnapshot } from "firebase/firestore";
@@ -34,6 +35,8 @@ const Profile = () => {
 
   // For modal visibility
   const [modalVisible, setModalVisible] = useState(false);
+
+  const { theme, toggleTheme } = useThemeContext();
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -87,6 +90,18 @@ const Profile = () => {
 
   return (
     <ThemedView style={styles.container}>
+      <TouchableOpacity
+        onPress={toggleTheme}
+        style={styles.themeToggleBtn}
+        testID="theme-toggle-button"
+      >
+        <MaterialCommunityIcons
+          name="theme-light-dark" 
+          size={28}
+          color={theme === "light" ? "#f5e900" : "#fff"}
+        />
+      </TouchableOpacity>
+
       <ThemedText style={styles.title} title>
         Your Profile
       </ThemedText>
@@ -113,31 +128,31 @@ const Profile = () => {
 
       <View style={styles.section}>
         <ThemedText style={styles.sectionTitle}>Bio</ThemedText>
-        <ThemedText>{userData.bio}</ThemedText>
+        <ThemedText style={{ color: "white" }}>{userData.bio}</ThemedText>
       </View>
 
       <View style={styles.section}>
         <ThemedText style={styles.sectionTitle}>Stats</ThemedText>
-        <ThemedText>
+        <ThemedText style={{ color: "white" }}>
           Height: {userData.height ? `${userData.height} cm` : "Not set"}
         </ThemedText>
-        <ThemedText>
+        <ThemedText style={{ color: "white" }}>
           Weight: {userData.weight ? `${userData.weight} kg` : "Not set"}
         </ThemedText>
-        <ThemedText>
+        <ThemedText style={{ color: "white" }}>
           Age: {userData.age ? `${userData.age}` : "Not set"}
         </ThemedText>
       </View>
 
       <View style={styles.buttonRow}>
         <ThemedButton onPress={() => router.push("/editProfile")}>
-          <ThemedText>Edit</ThemedText>
+          <ThemedText style={{ color: "white" }}>Edit</ThemedText>
         </ThemedButton>
 
         <View style={{ width: 10 }} />
 
         <ThemedButton onPress={handleLogout}>
-          <ThemedText>Logout</ThemedText>
+          <ThemedText style={{ color: "white" }}>Logout</ThemedText>
         </ThemedButton>
       </View>
 
@@ -190,7 +205,7 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 50,
     borderWidth: 2,
-    borderColor: "#ccc",
+    borderColor: "grey",
     justifyContent: "center",
     alignItems: "center",
     overflow: "hidden",
@@ -214,8 +229,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: "bold",
     marginBottom: 5,
+    color: "white",
   },
   buttonRow: {
     flexDirection: "row",
@@ -239,5 +254,15 @@ const styles = StyleSheet.create({
     width: 250,
     height: 250,
     borderRadius: 125,
+  },
+
+  themeToggleBtn: {
+    position: "absolute",
+    top: 60,
+    right: 20,
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "#2196f3",
+    zIndex: 10,
   },
 });
