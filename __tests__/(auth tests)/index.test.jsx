@@ -39,6 +39,17 @@ jest.mock("expo-router", () => ({
   },
 }));
 
+jest.mock("@react-native-async-storage/async-storage", () => ({
+  setItem: jest.fn(),
+  getItem: jest.fn(),
+  removeItem: jest.fn(),
+  clear: jest.fn(),
+}));
+
+jest.mock("../../components/themedContext", () => ({
+  useThemeContext: () => ({ theme: "light", setTheme: jest.fn() }),
+}));
+
 import Index from "../../app/index";
 
 describe("Login Component", () => {

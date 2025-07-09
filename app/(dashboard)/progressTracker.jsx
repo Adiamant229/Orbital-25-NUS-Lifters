@@ -890,7 +890,7 @@ const ProgressTracker = () => {
         >
           <View style={styles.buttonicons}>
             <FontAwesome6 name="dumbbell" size={20} color="white" />
-            <ThemedText>Workouts</ThemedText>
+            <ThemedText style={{ color: "white" }}>Workouts</ThemedText>
           </View>
         </TouchableOpacity>
 
@@ -907,7 +907,7 @@ const ProgressTracker = () => {
               size={24}
               color="white"
             />
-            <ThemedText>Macros</ThemedText>
+            <ThemedText style={{ color: "white" }}>Macros</ThemedText>
           </View>
         </TouchableOpacity>
 
@@ -920,7 +920,7 @@ const ProgressTracker = () => {
         >
           <View style={styles.buttonicons}>
             <Ionicons name="body" size={20} color="white" />
-            <ThemedText>Bodyweight</ThemedText>
+            <ThemedText style={{ color: "white" }}>Bodyweight</ThemedText>
           </View>
         </TouchableOpacity>
       </View>
@@ -933,7 +933,7 @@ const ProgressTracker = () => {
               onPress={() => router.push("/addWorkout")}
               style={styles.addButton2}
             >
-              <ThemedText>+</ThemedText>
+              <ThemedText style={{ color: "white" }}>+</ThemedText>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -1136,7 +1136,7 @@ const ProgressTracker = () => {
               onPress={() => setMacroModalVisible(true)}
               style={styles.addButton2}
             >
-              <ThemedText>+</ThemedText>
+              <ThemedText style={{ color: "white" }}>+</ThemedText>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -1372,7 +1372,9 @@ const ProgressTracker = () => {
 
                   {/* Macro Title Label and Input */}
                   <View style={styles.inputGroup}>
-                    <ThemedText style={styles.label}>Macro Title:</ThemedText>
+                    <ThemedText style={{ color: "white" }}>
+                      Macro Title:
+                    </ThemedText>
                     <TextInput
                       style={styles.input}
                       placeholder="Add in your Macros Title"
@@ -1382,40 +1384,36 @@ const ProgressTracker = () => {
                     />
                   </View>
 
-                  {/* Date picker label and button */}
-                  <View style={styles.inputGroup}>
-                    <ThemedText style={styles.label}>Date:</ThemedText>
-                    <TouchableOpacity
-                      onPress={() => setShowMacroDatePicker(true)}
-                      style={styles.datePickerButton}
-                    >
-                      <Text style={{ color: "#eee" }}>
-                        Select Date: {macroDate.toLocaleDateString()}
-                      </Text>
-                    </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => setShowMacroDatePicker(true)}
+                    style={styles.datePickerButton}
+                  >
+                    <ThemedText style={{ color: "white" }}>
+                      Select Date: {macroDate.toLocaleDateString()}
+                    </ThemedText>
+                  </TouchableOpacity>
 
-                    {showMacroDatePicker && (
-                      <DateTimePicker
-                        value={macroDate}
-                        mode="date"
-                        display="default"
-                        maximumDate={new Date()}
-                        onChange={(event, selectedDate) => {
-                          setShowMacroDatePicker(false);
-                          if (selectedDate) setMacroDate(selectedDate);
-                        }}
-                      />
-                    )}
-                  </View>
+                  {showMacroDatePicker && (
+                    <DateTimePicker
+                      value={macroDate}
+                      mode="date"
+                      display="default"
+                      maximumDate={new Date()}
+                      onChange={(event, selectedDate) => {
+                        setShowMacroDatePicker(false);
+                        if (selectedDate) setMacroDate(selectedDate);
+                      }}
+                    />
+                  )}
 
                   {/* Calories Label and Input */}
                   <View style={styles.inputGroup}>
-                    <ThemedText style={styles.label}>
+                    <ThemedText style={{ color: "white" }}>
                       Total Calories (cal):
                     </ThemedText>
                     <TextInput
                       style={styles.input}
-                      placeholder="Enter Total Calories"
+                      placeholder="Enter Total Calories (cal)"
                       placeholderTextColor="grey"
                       value={calories}
                       onChangeText={setCalories}
@@ -1425,7 +1423,7 @@ const ProgressTracker = () => {
 
                   {/* Protein Label and Input */}
                   <View style={styles.inputGroup}>
-                    <ThemedText style={styles.label}>
+                    <ThemedText style={{ color: "white" }}>
                       Total Protein (g):
                     </ThemedText>
                     <TextInput
@@ -1440,7 +1438,7 @@ const ProgressTracker = () => {
 
                   {/* Carbs Label and Input */}
                   <View style={styles.inputGroup}>
-                    <ThemedText style={styles.label}>
+                    <ThemedText style={{ color: "white" }}>
                       Total Carbs (g):
                     </ThemedText>
                     <TextInput
@@ -1455,7 +1453,7 @@ const ProgressTracker = () => {
 
                   {/* Fats Label and Input */}
                   <View style={styles.inputGroup}>
-                    <ThemedText style={styles.label}>
+                    <ThemedText style={{ color: "white" }}>
                       Total Fats (g):
                     </ThemedText>
                     <TextInput
@@ -1470,13 +1468,13 @@ const ProgressTracker = () => {
 
                   <View style={styles.modalButtonRow}>
                     <ThemedButton onPress={handleSubmitMacros}>
-                      <ThemedText>
+                      <ThemedText style={{ color: "white" }}>
                         {editingMacro ? "Save" : "Submit"}
                       </ThemedText>
                     </ThemedButton>
 
                     <ThemedButton onPress={handleCancelMacroEntry}>
-                      <ThemedText>Cancel</ThemedText>
+                      <ThemedText style={{ color: "white" }}>Cancel</ThemedText>
                     </ThemedButton>
                   </View>
                 </View>
@@ -1500,7 +1498,7 @@ const ProgressTracker = () => {
               }}
               style={styles.addButton2}
             >
-              <ThemedText>+</ThemedText>
+              <ThemedText style={{ color: "white" }}>+</ThemedText>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -1660,9 +1658,9 @@ const ProgressTracker = () => {
                   onPress={() => setShowDatePicker(true)}
                   style={styles.datePickerButton}
                 >
-                  <Text style={{ color: "#eee" }}>
+                  <ThemedText style={{ color: "white" }}>
                     Select Date: {date.toLocaleDateString()}
-                  </Text>
+                  </ThemedText>
                 </TouchableOpacity>
 
                 {showDatePicker && (
@@ -1692,11 +1690,13 @@ const ProgressTracker = () => {
                     onPress={handleSubmitWeight}
                     testID="saveWeightButton"
                   >
-                    <ThemedText>{editingWeight ? "Save" : "Submit"}</ThemedText>
+                    <ThemedText style={{ color: "white" }}>
+                      {editingWeight ? "Save" : "Submit"}
+                    </ThemedText>
                   </ThemedButton>
 
                   <ThemedButton onPress={handleCancelWeightEntry}>
-                    <ThemedText>Cancel</ThemedText>
+                    <ThemedText style={{ color: "white" }}>Cancel</ThemedText>
                   </ThemedButton>
                 </View>
               </View>
@@ -1762,8 +1762,8 @@ const styles = StyleSheet.create({
     padding: 10,
     justifyContent: "center",
     alignItems: "center",
-    width: 37, // fixed width
-    height: 40, // fixed height (square button)
+    width: 37, 
+    height: 40, 
   },
   card: {
     backgroundColor: "#fff",
@@ -1816,8 +1816,8 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: "bold",
     marginBottom: 15,
+    color: "white"
   },
   datePickerButton: {
     paddingVertical: 10,

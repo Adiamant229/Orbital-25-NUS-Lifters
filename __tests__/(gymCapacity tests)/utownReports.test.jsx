@@ -114,6 +114,18 @@ jest.mock("react-native-dropdown-picker", () => {
     );
 });
 
+jest.mock("@react-native-async-storage/async-storage", () => ({
+  setItem: jest.fn(),
+  getItem: jest.fn(),
+  removeItem: jest.fn(),
+  clear: jest.fn(),
+}));
+
+jest.mock("../../components/themedContext", () => ({
+  useThemeContext: () => ({ theme: "light", setTheme: jest.fn() }),
+}));
+
+
 jest.spyOn(Alert, "alert").mockImplementation((title, message, buttons) => {
   if (buttons) {
     const positiveButton = buttons.find(
