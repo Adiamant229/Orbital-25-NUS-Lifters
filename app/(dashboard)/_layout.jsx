@@ -6,42 +6,45 @@ import {
   MaterialIcons,
 } from "@expo/vector-icons";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
-import { useColorScheme } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-
+import { useThemeContext } from "../../components/themedContext";
 import { Colors } from "../../constants/colors";
 
 const DashboardLayout = () => {
-  const colorScheme = useColorScheme(); //returns light or dark or null
-  const theme = Colors[colorScheme] ?? Colors.light; //defaults to light
+  const { theme } = useThemeContext();
+  const themeColors = Colors[theme] ?? Colors.light;
 
   return (
     <SafeAreaProvider>
       <SafeAreaView
-        style={{ flex: 1, backgroundColor: "black" }}
+        style={{ flex: 1, backgroundColor: themeColors.navBackground}}
         edges={["bottom", "left", "right"]}
       >
         <Tabs
           screenOptions={{
             headerShown: false,
             tabBarStyle: {
-              backgroundColor: theme.navBackground,
+              backgroundColor: themeColors.navBackground,
               paddingTop: 5,
-              height: 75,
+              height: 50
             },
-            tabBarActiveTintColor: theme.iconColorFocused,
-            tabBarInactiveTintColor: theme.iconColor,
+            tabBarActiveTintColor: themeColors.iconColorFocused,
+            tabBarInactiveTintColor: themeColors.iconColor,
           }}
         >
           <Tabs.Screen
             name="gymCapacity"
             options={{
-              title: "Capacity",
+              title: "",
               tabBarIcon: ({ focused }) => (
                 <Ionicons
-                  size={24}
+                  size={26}
                   name={focused ? "people" : "people-outline"}
-                  color={focused ? theme.iconColorFocused : theme.iconColor}
+                  color={
+                    focused
+                      ? themeColors.iconColorFocused
+                      : themeColors.iconColor
+                  }
                 />
               ),
             }}
@@ -50,12 +53,16 @@ const DashboardLayout = () => {
           <Tabs.Screen
             name="forum"
             options={{
-              title: "Forum",
+              title: "",
               tabBarIcon: ({ focused }) => (
                 <MaterialCommunityIcons
-                  size={24}
+                  size={26}
                   name={focused ? "forum" : "forum-outline"}
-                  color={focused ? theme.iconColorFocused : theme.iconColor}
+                  color={
+                    focused
+                      ? themeColors.iconColorFocused
+                      : themeColors.iconColor
+                  }
                 />
               ),
             }}
@@ -64,12 +71,16 @@ const DashboardLayout = () => {
           <Tabs.Screen
             name="macro"
             options={{
-              title: "Macro",
+              title: "",
               tabBarIcon: ({ focused }) => (
                 <MaterialIcons
-                  size={24}
+                  size={26}
                   name="local-dining"
-                  color={focused ? theme.iconColorFocused : theme.iconColor}
+                  color={
+                    focused
+                      ? themeColors.iconColorFocused
+                      : themeColors.iconColor
+                  }
                 />
               ),
             }}
@@ -78,12 +89,16 @@ const DashboardLayout = () => {
           <Tabs.Screen
             name="progressTracker"
             options={{
-              title: "Progress",
+              title: "",
               tabBarIcon: ({ focused }) => (
                 <FontAwesome6
                   name="chart-line"
-                  size={24}
-                  color={focused ? theme.iconColorFocused : theme.iconColor}
+                  size={26}
+                  color={
+                    focused
+                      ? themeColors.iconColorFocused
+                      : themeColors.iconColor
+                  }
                 />
               ),
             }}
@@ -91,12 +106,16 @@ const DashboardLayout = () => {
           <Tabs.Screen
             name="profile"
             options={{
-              title: "Profile",
+              title: "",
               tabBarIcon: ({ focused }) => (
                 <Ionicons
-                  size={24}
+                  size={26}
                   name={focused ? "person" : "person-outline"}
-                  color={focused ? theme.iconColorFocused : theme.iconColor}
+                  color={
+                    focused
+                      ? themeColors.iconColorFocused
+                      : themeColors.iconColor
+                  }
                 />
               ),
             }}

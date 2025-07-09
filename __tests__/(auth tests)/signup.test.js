@@ -44,6 +44,17 @@ jest.mock("firebase/firestore", () => ({
   setDoc: (...args) => mockSetDoc(...args),
 }));
 
+jest.mock("@react-native-async-storage/async-storage", () => ({
+  setItem: jest.fn(),
+  getItem: jest.fn(),
+  removeItem: jest.fn(),
+  clear: jest.fn(),
+}));
+
+jest.mock("../../components/themedContext", () => ({
+  useThemeContext: () => ({ theme: "light", setTheme: jest.fn() }),
+}));
+
 import Signup from "../../app/(auth)/signup";
 
 jest.spyOn(Alert, "alert");

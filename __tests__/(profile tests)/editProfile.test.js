@@ -58,6 +58,17 @@ jest.mock("expo-image-picker", () => ({
   Images: "Images",
 }));
 
+
+jest.mock("@react-native-async-storage/async-storage", () => ({
+  setItem: jest.fn(),
+  getItem: jest.fn(),
+  removeItem: jest.fn(),
+  clear: jest.fn(),
+}));
+
+jest.mock("../../components/themedContext", () => ({
+  useThemeContext: () => ({ theme: "light", setTheme: jest.fn() }),
+}));
 global.fetch = jest.fn(() =>
   Promise.resolve({
     blob: () => Promise.resolve(new Blob(["test"])),

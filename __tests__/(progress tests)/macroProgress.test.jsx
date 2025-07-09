@@ -54,11 +54,23 @@ jest.mock("react-native-dropdown-picker", () => {
     );
 });
 
+jest.mock("@react-native-async-storage/async-storage", () => ({
+  setItem: jest.fn(),
+  getItem: jest.fn(),
+  removeItem: jest.fn(),
+  clear: jest.fn(),
+}));
+
+jest.mock("../../components/themedContext", () => ({
+  useThemeContext: () => ({ theme: "light", setTheme: jest.fn() }),
+}));
+
 describe("MacroProgress Component", () => {
   const fakeUserId = "user123";
 
   beforeEach(() => {
     jest.clearAllMocks();
+    global.alert = jest.fn(); 
 
     getAuth.mockReturnValue({
       currentUser: { uid: fakeUserId },
@@ -91,7 +103,7 @@ describe("MacroProgress Component", () => {
 
     onSnapshot.mockImplementation((query, callback) => {
       callback({ docs: fakeDocs });
-      return jest.fn(); // unsubscribe function
+      return jest.fn(); 
     });
   });
 

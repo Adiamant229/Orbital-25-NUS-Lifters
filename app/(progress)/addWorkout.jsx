@@ -576,10 +576,12 @@ const AddWorkout = () => {
 
           <View style={styles.buttonRow}>
             <ThemedButton onPress={handleSaveWorkout}>
-              <ThemedText>{editWorkoutId ? "Save" : "Submit"}</ThemedText>
+              <ThemedText style={{ color: "white" }}>
+                {editWorkoutId ? "Save" : "Submit"}
+              </ThemedText>
             </ThemedButton>
             <ThemedButton onPress={handleCancelPress}>
-              <ThemedText>Cancel</ThemedText>
+              <ThemedText style={{ color: "white" }}>Cancel</ThemedText>
             </ThemedButton>
           </View>
         </ScrollView>
@@ -616,9 +618,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     padding: 15,
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "black",
     borderRadius: 10,
-    backgroundColor: "#1c1c1c",
+    backgroundColor: "#333232",
     overflow: "visible",
   },
   dropdown: {
