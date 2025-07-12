@@ -94,7 +94,7 @@ const ThreadDetailPage = () => {
           return b.createdAt?.toMillis() - a.createdAt?.toMillis();
         });
         setComments(list);
-      },
+      }
     );
 
     return () => {
@@ -128,31 +128,50 @@ const ThreadDetailPage = () => {
   const submitComment = async () => {
     const trimmed = modalCommentInput.trim();
     if (!trimmed) return Alert.alert("Error", "Comment cannot be empty.");
-    try {
-      const user = getAuth().currentUser;
-      if (!user) throw new Error("Not logged in");
 
-      if (editingCommentId) {
-        await updateDoc(
-          doc(db, "threads", threadId, "comments", editingCommentId),
-          { content: trimmed, editedAt: new Date() },
-        );
-      } else {
-        await addDoc(collection(db, "threads", threadId, "comments"), {
-          commenterID: user.uid,
-          content: trimmed,
-          createdAt: new Date(),
-          editedAt: null,
-          likes: 0,
-          likedBy: [],
-        });
-      }
-      closeModal();
-      Keyboard.dismiss();
-    } catch (err) {
-      Alert.alert("Error", "Failed to submit comment");
-    }
+    const action = editingCommentId
+      ? "save changes to this comment"
+      : "post this comment";
+
+    Alert.alert("Confirm", `Are you sure you want to ${action}?`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: editingCommentId ? "Save" : "Post",
+        onPress: async () => {
+          try {
+            const user = getAuth().currentUser;
+            if (!user) throw new Error("Not logged in");
+
+            if (editingCommentId) {
+              await updateDoc(
+                doc(db, "threads", threadId, "comments", editingCommentId),
+                { content: trimmed, editedAt: new Date() }
+              );
+            } else {
+              await addDoc(collection(db, "threads", threadId, "comments"), {
+                commenterID: user.uid,
+                content: trimmed,
+                createdAt: new Date(),
+                editedAt: null,
+                likes: 0,
+                likedBy: [],
+              });
+            }
+            closeModal();
+            Keyboard.dismiss();
+          } catch (err) {
+            Alert.alert(
+              "Error",
+              editingCommentId
+                ? "Failed to save edited comment"
+                : "Failed to submit comment"
+            );
+          }
+        },
+      },
+    ]);
   };
+  
 
   const confirmDelete = (commentId) => {
     Alert.alert("Delete", "Delete this comment?", [
@@ -163,7 +182,7 @@ const ThreadDetailPage = () => {
         onPress: async () => {
           try {
             await deleteDoc(
-              doc(db, "threads", threadId, "comments", commentId),
+              doc(db, "threads", threadId, "comments", commentId)
             );
           } catch (err) {
             Alert.alert("Error", "Failed to delete comment");
@@ -189,7 +208,7 @@ const ThreadDetailPage = () => {
     });
   };
 
-  if (!thread) return null;
+  if (!thread) return <ThemedText>Loading thread...</ThemedText>;
 
   return (
     <ThemedView style={{ flex: 1, padding: 20, paddingTop: 10 }}>
@@ -205,6 +224,7 @@ const ThreadDetailPage = () => {
           {thread.title}
         </ThemedText>
         <TouchableOpacity
+          testID="thread-like-button"
           onPress={async () => {
             const user = getAuth().currentUser;
             if (!user) return;
@@ -278,7 +298,12 @@ const ThreadDetailPage = () => {
           Comments:
         </ThemedText>
         <TouchableOpacity onPress={() => setModalVisible(true)}>
-          <Ionicons name="add-circle-outline" size={28} color="#007AFF" />
+          <Ionicons
+            testID="addCommentButton"
+            name="add-circle-outline"
+            size={28}
+            color="#007AFF"
+          />
         </TouchableOpacity>
       </View>
 
@@ -303,9 +328,45 @@ const ThreadDetailPage = () => {
         <FlatList
           data={comments}
           keyExtractor={(item) => item.id}
+          // inside FlatList renderItem:
           renderItem={({ item }) => (
             <View style={{ marginBottom: 12 }}>
-              <ThemedText>- {item.content}</ThemedText>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <ThemedText>- {item.content}</ThemedText>
+
+                {/* Show edit/delete icons only for comment owner */}
+                {item.commenterID === currentUserId && (
+                  <>
+                    <TouchableOpacity
+                      testID={`edit-comment-button-${item.id}`}
+                      onPress={() => {
+                        setModalCommentInput(item.content);
+                        setEditingCommentId(item.id);
+                        setOriginalContent(item.content);
+                        setModalVisible(true);
+                      }}
+                      style={{ marginHorizontal: 6 }}
+                    >
+                      <Ionicons
+                        name="pencil-outline"
+                        size={16}
+                        color="#007AFF"
+                      />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      testID={`delete-comment-button-${item.id}`}
+                      onPress={() => confirmDelete(item.id)}
+                    >
+                      <Ionicons
+                        name="trash-outline"
+                        size={16}
+                        color="#ff3b30"
+                      />
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
               <View
                 style={{
                   flexDirection: "row",
@@ -329,6 +390,7 @@ const ThreadDetailPage = () => {
                   · {formatDate(item.createdAt)} {item.editedAt && "(edited)"}
                 </ThemedText>
                 <TouchableOpacity
+                  testID={`comment-like-button-${item.id}`}
                   onPress={() => toggleCommentLike(item)}
                   style={{
                     flexDirection: "row",
@@ -360,6 +422,7 @@ const ThreadDetailPage = () => {
         transparent
         animationType="fade"
         onRequestClose={confirmCancel}
+         testID="add-comment-modal"
       >
         <Pressable style={styles.modalOverlay} onPress={confirmCancel}>
           <KeyboardAvoidingView
