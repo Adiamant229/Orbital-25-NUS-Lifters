@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Appearance } from "react-native";
 
-const ThemeContext = createContext();
+const ThemeContext = createContext('light');
 
 export const ThemeProvider = ({ children }) => {
   const systemScheme = Appearance.getColorScheme(); // "light" | "dark" | null

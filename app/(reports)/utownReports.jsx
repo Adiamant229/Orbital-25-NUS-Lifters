@@ -521,7 +521,9 @@ const UtownReports = () => {
               marginHorizontal: 4,
             }}
           >
-            <ThemedText style={{ fontSize: 18, color:"white" }}>Gym Details</ThemedText>
+            <ThemedText style={{ fontSize: 18, color: "white" }}>
+              Gym Details
+            </ThemedText>
 
             <Spacer height={10} />
 
