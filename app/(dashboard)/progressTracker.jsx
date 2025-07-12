@@ -1147,7 +1147,7 @@ const ProgressTracker = () => {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => router.push("/exercises")}
+              onPress={() => router.push("/calories")}
               style={styles.addButton2}
             >
               <FontAwesome5 name="book-open" size={15} color="white" />
