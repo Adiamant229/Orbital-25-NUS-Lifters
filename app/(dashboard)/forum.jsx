@@ -9,17 +9,12 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
   Platform,
   View,
-  Image
 } from "react-native";
-import uuid from "react-native-uuid";
-import { Video } from "expo-video";
 import { useRouter } from "expo-router";
-import * as ImagePicker from "expo-image-picker";
 
 //firebase imports
 import {
@@ -34,8 +29,7 @@ import {
   onSnapshot,
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
-import { db, storage } from "../../firebaseConfig";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db } from "../../firebaseConfig";
 
 //themed components
 import { Ionicons } from "@expo/vector-icons";
@@ -43,7 +37,6 @@ import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import ThemedButton from "../../components/themedButton";
 import Spacer from "../../components/spacer";
-
 
 const categories = ["Training", "Diet", "Cardio"];
 
@@ -94,7 +87,7 @@ const Forum = () => {
       },
       (error) => {
         console.error("Error fetching user names in real-time: ", error);
-      }
+      },
     );
 
     let q;
@@ -103,12 +96,13 @@ const Forum = () => {
     } else {
       q = query(
         collection(db, "threads"),
-        where("category", "==", selectedCategory)
+        where("category", "==", selectedCategory),
       );
     }
 
     setLoading(true);
     const unsubscribeThreads = onSnapshot(
+      // Renamed for clarity
       q,
       (snapshot) => {
         const threadsList = [];
@@ -116,7 +110,7 @@ const Forum = () => {
           threadsList.push({ id: doc.id, ...doc.data() });
         });
         threadsList.sort(
-          (a, b) => b.createdAt?.toMillis() - a.createdAt?.toMillis()
+          (a, b) => b.createdAt?.toMillis() - a.createdAt?.toMillis(),
         );
         setThreads(threadsList);
         setLoading(false);
@@ -124,7 +118,7 @@ const Forum = () => {
       (error) => {
         console.error("Error fetching threads in real-time: ", error);
         setLoading(false);
-      }
+      },
     );
 
     // Return a cleanup function that unsubscribes from both listeners
@@ -157,7 +151,7 @@ const Forum = () => {
       },
       (error) => {
         console.error("Error fetching selected thread in real-time: ", error);
-      }
+      },
     );
 
     const commentUnsubscribe = onSnapshot(
@@ -169,13 +163,13 @@ const Forum = () => {
         });
 
         updatedComments.sort(
-          (a, b) => a.createdAt.toMillis() - b.createdAt.toMillis()
+          (a, b) => a.createdAt.toMillis() - b.createdAt.toMillis(),
         );
         setComments(updatedComments);
       },
       (error) => {
         console.error("Error fetching comments in real-time: ", error);
-      }
+      },
     );
 
     return () => {
@@ -214,17 +208,14 @@ const Forum = () => {
                 return;
               }
 
-              const mediaUrl = await uploadMediaToStorage();
+              // No need to fetch freshUserName here, just store authorId
               await addDoc(collection(db, "threads"), {
                 title: newTitle,
                 category: newCategory,
-                authorId: user.uid,
+                authorId: user.uid, // Store only the ID
                 content: newContent,
-                mediaUrl: mediaUrl || null,
-                mediaType: mediaType || null,
                 createdAt: new Date(),
               });
-              
 
               Alert.alert("Success", "Thread created!");
               setModalVisible(false);
@@ -238,7 +229,7 @@ const Forum = () => {
           },
         },
       ],
-      { cancelable: true }
+      { cancelable: true },
     );
   };
 
@@ -265,7 +256,7 @@ const Forum = () => {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -301,16 +292,12 @@ const Forum = () => {
           onPress: async () => {
             try {
               const threadDocRef = doc(db, "threads", editThread.id);
-              const mediaUrl = await uploadMediaToStorage();
               await updateDoc(threadDocRef, {
                 title: editTitle,
                 category: editCategory,
                 content: editContent,
-                mediaUrl: mediaUrl || editThread.mediaUrl || null,
-                mediaType: mediaType || editThread.mediaType || null,
                 updatedAt: new Date(),
               });
-              
               Alert.alert("Success", "Thread updated!");
               setEditModalVisible(false);
               setEditThread(null);
@@ -321,7 +308,7 @@ const Forum = () => {
           },
         },
       ],
-      { cancelable: true }
+      { cancelable: true },
     );
   };
 
@@ -347,7 +334,7 @@ const Forum = () => {
               setNewContent("");
             },
           },
-        ]
+        ],
       );
     } else {
       setModalVisible(false);
@@ -383,7 +370,7 @@ const Forum = () => {
               setEditThread(null);
             },
           },
-        ]
+        ],
       );
     } else {
       setEditModalVisible(false);
@@ -399,7 +386,7 @@ const Forum = () => {
 
     Alert.alert(
       "Confirm Post",
-      "Are you sure you want to post this comment?",
+      "Do you really want to post this comment?",
       [
         {
           text: "Cancel",
@@ -440,7 +427,7 @@ const Forum = () => {
           },
         },
       ],
-      { cancelable: true }
+      { cancelable: true },
     );
   };
 
@@ -501,7 +488,7 @@ const Forum = () => {
             },
           },
         ],
-        { cancelable: true }
+        { cancelable: true },
       );
     } catch (err) {
       console.error("Error preparing comment for edit: ", err);
@@ -531,7 +518,7 @@ const Forum = () => {
                 "threads",
                 threadID,
                 "comments",
-                commentID
+                commentID,
               );
               const commentSnap = await getDoc(commentRef);
               const comment = commentSnap.data();
@@ -540,7 +527,7 @@ const Forum = () => {
               }
               if (currentUserId !== comment.commenterID) {
                 throw new Error(
-                  "Trying to delete comment without being the commenter"
+                  "Trying to delete comment without being the commenter",
                 );
               }
               await deleteDoc(commentRef);
@@ -550,7 +537,7 @@ const Forum = () => {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -579,7 +566,7 @@ const Forum = () => {
               setEditingCommentContent("");
             },
           },
-        ]
+        ],
       );
     } else {
       setEditingComment(null);
@@ -589,87 +576,6 @@ const Forum = () => {
 
   const router = useRouter();
 
-  // Media state
-  const [mediaUri, setMediaUri] = useState(null);
-  const [mediaType, setMediaType] = useState(null); // "image" or "video"
-
-  const pickMedia = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert("Permission required", "Media access is needed.");
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.All,
-      quality: 0.7,
-    });
-
-    if (!result.canceled) {
-      setMediaUri(result.assets[0].uri);
-      setMediaType(result.assets[0].type); // "image" or "video"
-    }
-  };
-
-  const takePhoto = async () => {
-    const permission = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert("Permission required", "Camera access is needed.");
-      return;
-    }
-
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.All,
-      quality: 0.7,
-    });
-
-    if (!result.canceled) {
-      setMediaUri(result.assets[0].uri);
-      setMediaType(result.assets[0].type);
-    }
-  };
-
-  const uploadMediaToStorage = async () => {
-    if (!mediaUri) return null;
-    const response = await fetch(mediaUri);
-    const blob = await response.blob();
-    const extension = mediaType === "video" ? ".mp4" : ".jpg";
-    const mediaRef = ref(storage, `threadMedia/${uuid.v4()}${extension}`);
-    await uploadBytes(mediaRef, blob);
-    return await getDownloadURL(mediaRef);
-  };
-
-
-  const formatDateForDisplay = (timestamp, timePeriod = "") => {
-    if (!timestamp) return "";
-    const createdDate = timestamp.toDate
-      ? timestamp.toDate()
-      : new Date(timestamp);
-    const now = new Date();
-
-    function calendarDaysDiff(d1, d2) {
-      const date1 = new Date(d1.getFullYear(), d1.getMonth(), d1.getDate());
-      const date2 = new Date(d2.getFullYear(), d2.getMonth(), d2.getDate());
-      const diffTime = date2.getTime() - date1.getTime();
-      return Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    }
-
-    const diffDays = calendarDaysDiff(createdDate, now);
-
-    const dateStr = createdDate.toLocaleDateString(undefined, {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    });
-
-    let relativeStr;
-    if (diffDays === 0) relativeStr = "Today";
-    else if (diffDays === 1) relativeStr = "1 day ago";
-    else relativeStr = `${diffDays} days ago`;
-
-    return `${dateStr} (${relativeStr})`;
-  };
-  
   return (
     <ThemedView style={styles.innerContainer}>
       <ThemedText style={styles.title} title={true}>
@@ -726,7 +632,7 @@ const Forum = () => {
                       {item.authorId === currentUserId
                         ? "You"
                         : userNames[item.authorId] || "Loading..."}{" "}
-                      · {item.category} 
+                      · {item.category}
                     </Text>
                     <Text
                       style={styles.threadSnippet}
@@ -825,39 +731,6 @@ const Forum = () => {
                   onChangeText={setNewContent}
                   multiline={true}
                 />
-                <View style={{ marginTop: 10 }}>
-                  <Text style={{ marginBottom: 5 }}>
-                    Attach Media (optional):
-                  </Text>
-                  <View style={{ flexDirection: "row", gap: 10 }}>
-                    <ThemedButton onPress={pickMedia}>
-                      <Text style={{ color: "white" }}>Pick from Gallery</Text>
-                    </ThemedButton>
-                    <ThemedButton onPress={takePhoto}>
-                      <Text style={{ color: "white" }}>Take Photo/Video</Text>
-                    </ThemedButton>
-                  </View>
-
-                  {mediaUri && (
-                    <>
-                      {mediaType === "image" ? (
-                        <Image
-                          source={{ uri: mediaUri }}
-                          style={{ height: 150, marginTop: 10 }}
-                        />
-                      ) : (
-                        <Text style={{ marginTop: 10 }}>Video selected</Text>
-                      )}
-                      <TouchableOpacity onPress={() => setMediaUri(null)}>
-                        <Ionicons
-                          name="trash-outline"
-                          size={20}
-                          color="#ff3b30"
-                        />
-                      </TouchableOpacity>
-                    </>
-                  )}
-                </View>
 
                 <View
                   style={{
@@ -939,40 +812,6 @@ const Forum = () => {
                   onChangeText={setEditContent}
                   multiline={true}
                 />
-                <View style={{ marginTop: 10 }}>
-                  <Text style={{ marginBottom: 5 }}>
-                    Attach Media (optional):
-                  </Text>
-                  <View style={{ flexDirection: "row", gap: 10 }}>
-                    <ThemedButton onPress={pickMedia}>
-                      <Text style={{ color: "white" }}>Pick from Gallery</Text>
-                    </ThemedButton>
-                    <ThemedButton onPress={takePhoto}>
-                      <Text style={{ color: "white" }}>Take Photo/Video</Text>
-                    </ThemedButton>
-                  </View>
-
-                  {mediaUri && (
-                    <>
-                      {mediaType === "image" ? (
-                        <Image
-                          source={{ uri: mediaUri }}
-                          style={{ height: 150, marginTop: 10 }}
-                        />
-                      ) : (
-                        <Text style={{ marginTop: 10 }}>Video selected</Text>
-                      )}
-                      <TouchableOpacity onPress={() => setMediaUri(null)}>
-                        <Ionicons
-                          name="trash-outline"
-                          size={20}
-                          color="#ff3b30"
-                        />
-                      </TouchableOpacity>
-                    </>
-                  )}
-                </View>
-
                 <View
                   style={{
                     flexDirection: "row",
@@ -1056,45 +895,15 @@ const Forum = () => {
                       <Text style={styles.threadMeta}>
                         {" · "}
                         {selectedThread.category}
-                        {" · "}
-                        {formatDateForDisplay(selectedThread.createdAt)}
                       </Text>
                     </View>
                     <Spacer height={20} />
                     <Text style={styles.threadContent}>
                       {selectedThread.content}
                     </Text>
-                    {selectedThread.mediaUrl &&
-                      (selectedThread.mediaType === "image" ? (
-                        <Image
-                          source={{ uri: selectedThread.mediaUrl }}
-                          style={{
-                            height: 200,
-                            borderRadius: 10,
-                            marginTop: 10,
-                          }}
-                          resizeMode="cover"
-                        />
-                      ) : (
-                        <Video
-                          source={{ uri: selectedThread.mediaUrl }}
-                          rate={1.0}
-                          volume={1.0}
-                          isMuted={false}
-                          resizeMode="contain"
-                          shouldPlay
-                          useNativeControls
-                          style={{
-                            height: 200,
-                            borderRadius: 10,
-                            marginTop: 10,
-                          }}
-                        />
-                      ))}
                     {comments !== null && (
                       <>
                         <Spacer height={20} />
-                         
                         <Text style={styles.commentHead}>Comments:</Text>
                         <FlatList
                           data={comments}
@@ -1125,7 +934,7 @@ const Forum = () => {
                                       editComment(
                                         selectedThread.id,
                                         item.id,
-                                        editingCommentContent
+                                        editingCommentContent,
                                       )
                                     }
                                     style={{ flex: 1, marginRight: 10 }}
@@ -1159,7 +968,7 @@ const Forum = () => {
                                   <Pressable
                                     onPress={() => {
                                       router.push(
-                                        `/(profiles)/${item.commenterID}`
+                                        `/(profiles)/${item.commenterID}`,
                                       );
                                       setSelectedThread(null);
                                       setComments([]);
@@ -1181,10 +990,6 @@ const Forum = () => {
                                           "Loading..."}
                                     </Text>
                                   </Pressable>
-                                  <Text style={[styles.commentAuthor]}>
-                                    {" · "}
-                                    {formatDateForDisplay(item.createdAt)}
-                                  </Text>
                                   {item.editedAt && (
                                     <Text
                                       style={{
@@ -1223,7 +1028,7 @@ const Forum = () => {
                                       onPress={() =>
                                         deleteComment(
                                           selectedThread.id,
-                                          item.id
+                                          item.id,
                                         )
                                       }
                                     >
@@ -1287,12 +1092,12 @@ const styles = StyleSheet.create({
   innerContainer: {
     flex: 1,
     padding: 20,
-    paddingTop: 80
+    paddingTop: 80,
   },
   title: {
     fontSize: 22,
     fontWeight: "bold",
-    textAlign: "center"
+    textAlign: "center",
   },
   filterContainer: {
     flexDirection: "row",

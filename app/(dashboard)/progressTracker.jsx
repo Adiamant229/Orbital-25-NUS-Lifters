@@ -17,7 +17,7 @@ import {
   Dimensions,
   ScrollView,
 } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter } from "expo-router";
 import DropDownPicker from "react-native-dropdown-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { LineChart, PieChart } from "react-native-chart-kit";
@@ -62,7 +62,7 @@ const ProgressTracker = () => {
   const [openYearDropdown, setOpenYearDropdown] = useState(false);
   const [selectedYear, setSelectedYear] = useState(null);
   const [yearOptions, setYearOptions] = useState([]);
-  const [allWeights, setAllWeights] = useState([]); 
+  const [allWeights, setAllWeights] = useState([]);
 
   const [openWorkoutYearDropdown, setOpenWorkoutYearDropdown] = useState(false);
   const [selectedWorkoutYear, setSelectedWorkoutYear] = useState("all");
@@ -70,13 +70,12 @@ const ProgressTracker = () => {
 
   const [weightListModalVisible, setWeightListModalVisible] = useState(false);
   const [editingWeight, setEditingWeight] = useState(null);
-  const user = auth.currentUser; 
+  const user = auth.currentUser;
 
-  const [allWorkouts, setAllWorkouts] = useState([]); 
+  const [allWorkouts, setAllWorkouts] = useState([]);
 
   const [originalWeightInput, setOriginalWeightInput] = useState("");
   const [originalDate, setOriginalDate] = useState(new Date());
-
 
   const [macroModalVisible, setMacroModalVisible] = useState(false);
   const [macroTitle, setMacroTitle] = useState("");
@@ -91,7 +90,6 @@ const ProgressTracker = () => {
   const [macroYearOptions, setMacroYearOptions] = useState([]);
   const [selectedMacroYear, setSelectedMacroYear] = useState("all");
   const [openMacroYearDropdown, setOpenMacroYearDropdown] = useState(false);
-
 
   const [editingMacro, setEditingMacro] = useState(null);
   const [originalMacroTitle, setOriginalMacroTitle] = useState("");
@@ -110,7 +108,7 @@ const ProgressTracker = () => {
 
     const q = query(
       collection(db, "users", user.uid, "macros"),
-      orderBy("createdAt", "desc")
+      orderBy("createdAt", "desc"),
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -123,8 +121,6 @@ const ProgressTracker = () => {
 
     return () => unsubscribe();
   }, [user]);
-  
-
 
   useEffect(() => {
     if (!user || allMacros.length === 0) {
@@ -138,7 +134,7 @@ const ProgressTracker = () => {
         allMacros.map((m) => {
           const d = m.createdAt?.toDate?.() || new Date();
           return d.getFullYear();
-        })
+        }),
       ),
     ].sort((a, b) => b - a);
 
@@ -163,7 +159,6 @@ const ProgressTracker = () => {
     }
   }, [allMacros, user]);
 
-
   useEffect(() => {
     if (!user) {
       setMacros([]);
@@ -183,7 +178,7 @@ const ProgressTracker = () => {
         macrosRef,
         where("createdAt", ">=", startOfYear),
         where("createdAt", "<", endOfYear),
-        orderBy("createdAt", "desc")
+        orderBy("createdAt", "desc"),
       );
     }
 
@@ -197,7 +192,6 @@ const ProgressTracker = () => {
 
     return () => unsubscribe();
   }, [user, selectedMacroYear]);
-  
 
   const toggleMacro = (id) => {
     setOpenedMacros((prev) => {
@@ -206,7 +200,7 @@ const ProgressTracker = () => {
       return newSet;
     });
   };
-  
+
   useEffect(() => {
     if (!user) {
       setAllWeights([]);
@@ -214,7 +208,7 @@ const ProgressTracker = () => {
     }
 
     const weightsCollection = collection(db, "users", user.uid, "weights");
-    const q = query(weightsCollection, orderBy("date", "desc")); 
+    const q = query(weightsCollection, orderBy("date", "desc"));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map((doc) => ({
@@ -230,7 +224,7 @@ const ProgressTracker = () => {
   useEffect(() => {
     if (allWeights.length === 0) {
       setYearOptions([]);
-      setSelectedYear(null); 
+      setSelectedYear(null);
       return;
     }
 
@@ -242,9 +236,9 @@ const ProgressTracker = () => {
               ? new Date(w.date)
               : w.date.toDate?.() || new Date();
           return d.getFullYear();
-        })
+        }),
       ),
-    ].sort((a, b) => b - a); 
+    ].sort((a, b) => b - a);
     const options = uniqueYears.map((year) => ({
       label: year.toString(),
       value: year,
@@ -254,7 +248,7 @@ const ProgressTracker = () => {
     if (selectedYear === null || !uniqueYears.includes(selectedYear)) {
       setSelectedYear(uniqueYears[0]);
     }
-  }, [allWeights, selectedYear]); 
+  }, [allWeights, selectedYear]);
 
   useEffect(() => {
     if (!user) {
@@ -265,7 +259,7 @@ const ProgressTracker = () => {
     const q = query(
       collection(db, "workouts"),
       where("userId", "==", user.uid),
-      orderBy("createdAt", "desc")
+      orderBy("createdAt", "desc"),
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -291,7 +285,7 @@ const ProgressTracker = () => {
         allWorkouts.map((w) => {
           const d = w.createdAt?.toDate ? w.createdAt.toDate() : new Date();
           return d.getFullYear();
-        })
+        }),
       ),
     ].sort((a, b) => b - a);
 
@@ -329,7 +323,7 @@ const ProgressTracker = () => {
       q = query(
         workoutsCollectionRef,
         where("userId", "==", user.uid),
-        orderBy("createdAt", "desc")
+        orderBy("createdAt", "desc"),
       );
     } else {
       const startOfYear = new Date(selectedWorkoutYear, 0, 1);
@@ -340,7 +334,7 @@ const ProgressTracker = () => {
         where("userId", "==", user.uid),
         where("createdAt", ">=", startOfYear),
         where("createdAt", "<", endOfYear),
-        orderBy("createdAt", "desc")
+        orderBy("createdAt", "desc"),
       );
     }
 
@@ -355,23 +349,22 @@ const ProgressTracker = () => {
     return () => unsubscribe();
   }, [user, selectedWorkoutYear]);
 
-
   useEffect(() => {
     if (!user || selectedYear === null) {
-      setWeights([]); 
+      setWeights([]);
       return;
     }
 
     const weightsCollection = collection(db, "users", user.uid, "weights");
 
-    const startOfYear = new Date(selectedYear, 0, 1); 
+    const startOfYear = new Date(selectedYear, 0, 1);
     const endOfYear = new Date(selectedYear + 1, 0, 1);
 
     const q = query(
       weightsCollection,
-      where("date", ">=", startOfYear), 
-      where("date", "<", endOfYear), 
-      orderBy("date", "desc")
+      where("date", ">=", startOfYear),
+      where("date", "<", endOfYear),
+      orderBy("date", "desc"),
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -412,7 +405,7 @@ const ProgressTracker = () => {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -470,8 +463,8 @@ const ProgressTracker = () => {
         setWeightInput("");
         setDate(new Date());
         setEditingWeight(null);
-        setOriginalWeightInput(""); 
-        setOriginalDate(new Date()); 
+        setOriginalWeightInput("");
+        setOriginalDate(new Date());
       } catch (error) {
         console.error("Error submitting weight:", error);
         Alert.alert("Failed to submit weight.");
@@ -490,7 +483,7 @@ const ProgressTracker = () => {
           style: "cancel",
           onPress: submit,
         },
-      ]
+      ],
     );
   };
 
@@ -520,7 +513,7 @@ const ProgressTracker = () => {
       new Date(entry.date).toLocaleDateString(undefined, {
         month: "short",
         day: "numeric",
-      })
+      }),
     ),
     datasets: [
       {
@@ -532,11 +525,11 @@ const ProgressTracker = () => {
   };
 
   const chartConfig = {
-    backgroundGradientFrom: "#2c2c2c", 
-    backgroundGradientTo: "#1c1c1c", 
+    backgroundGradientFrom: "#2c2c2c",
+    backgroundGradientTo: "#1c1c1c",
     decimalPlaces: 1,
     color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
-    labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`, 
+    labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
     style: {
       borderRadius: 16,
     },
@@ -581,7 +574,7 @@ const ProgressTracker = () => {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -592,7 +585,7 @@ const ProgressTracker = () => {
     setDate(initialDate);
     setOriginalDate(initialDate);
     setWeightInput(w.weight.toString());
-    setOriginalWeightInput(w.weight.toString()); 
+    setOriginalWeightInput(w.weight.toString());
     setModalVisible(true);
   };
 
@@ -600,7 +593,7 @@ const ProgressTracker = () => {
     let hasChanges = false;
     if (editingWeight) {
       const weightChanged = weightInput !== originalWeightInput;
-      const dateChanged = date.toDateString() !== originalDate.toDateString(); 
+      const dateChanged = date.toDateString() !== originalDate.toDateString();
       hasChanges = weightChanged || dateChanged;
     } else {
       hasChanges = weightInput.length > 0;
@@ -622,19 +615,19 @@ const ProgressTracker = () => {
               setEditingWeight(null);
               setWeightInput("");
               setDate(new Date());
-              setOriginalWeightInput(""); 
-              setOriginalDate(new Date()); 
+              setOriginalWeightInput("");
+              setOriginalDate(new Date());
             },
           },
-        ]
+        ],
       );
     } else {
       setModalVisible(false);
       setEditingWeight(null);
       setWeightInput("");
       setDate(new Date());
-      setOriginalWeightInput(""); 
-      setOriginalDate(new Date()); 
+      setOriginalWeightInput("");
+      setOriginalDate(new Date());
     }
   };
 
@@ -704,10 +697,9 @@ const ProgressTracker = () => {
           style: "default",
           onPress: submit,
         },
-      ]
+      ],
     );
   };
-  
 
   const openEditMacro = (macro) => {
     setEditingMacro(macro);
@@ -738,23 +730,16 @@ const ProgressTracker = () => {
           onPress: async () => {
             try {
               await deleteDoc(doc(db, "users", user.uid, "macros", id));
-
-              setImportedMacroHandled(true);
-
-              setMacroModalVisible(false);
-              setEditingMacro(null);
-              
-              router.replace("/(dashboard)/progressTracker");
             } catch (error) {
               console.error("Failed to delete macro entry:", error);
               Alert.alert("Failed to delete macro entry");
             }
           },
         },
-      ]
+      ],
     );
   };
-  
+
   const handleCancelMacroEntry = () => {
     const hasChanges =
       macroTitle !== originalMacroTitle ||
@@ -780,10 +765,9 @@ const ProgressTracker = () => {
               setProtein("");
               setCarbs("");
               setFats("");
-              setImportedMacroHandled(false);
             },
           },
-        ]
+        ],
       );
     } else {
       setMacroModalVisible(false);
@@ -793,44 +777,8 @@ const ProgressTracker = () => {
       setProtein("");
       setCarbs("");
       setFats("");
-      setImportedMacroHandled(false);
     }
   };
-    
-  const { importedMacro, importedSelectedTab, importedCalories, importedProtein, importedFat, importedCarbs } = useLocalSearchParams();
-  const [importedMacroHandled, setImportedMacroHandled] = useState(false);
- 
-  useEffect(() => {
-
-    if (importedMacro === "true" && importedMacroHandled) {
-      setImportedMacroHandled(false);
-    }
-
-    if (!importedMacroHandled && importedMacro === "true") {
-      if (importedSelectedTab === "Macros") {
-        setSelectedTab("Macros");
-      }
-
-      setCalories(importedCalories || "");
-      setProtein(importedProtein || "");
-      setFats(importedFat || "");
-      setCarbs(importedCarbs || "");
-      setMacroDate(new Date());
-      setMacroModalVisible(true);
-      setImportedMacroHandled(true);
-
-       router.replace("/(dashboard)/progressTracker");
-    }
-  }, [
-    importedMacro,
-    importedSelectedTab,
-    importedCalories,
-    importedProtein,
-    importedFat,
-    importedCarbs,
-    importedMacroHandled,
-  ]);
-  
 
   return (
     <ThemedView style={styles.container}>
@@ -981,12 +929,12 @@ const ProgressTracker = () => {
                             const date1 = new Date(
                               d1.getFullYear(),
                               d1.getMonth(),
-                              d1.getDate()
+                              d1.getDate(),
                             );
                             const date2 = new Date(
                               d2.getFullYear(),
                               d2.getMonth(),
-                              d2.getDate()
+                              d2.getDate(),
                             );
                             const diffTime = date2.getTime() - date1.getTime();
                             return Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -1000,7 +948,7 @@ const ProgressTracker = () => {
                               day: "2-digit",
                               month: "long",
                               year: "numeric",
-                            }
+                            },
                           );
 
                           const timePeriodStr = item.timePeriod
@@ -1011,8 +959,8 @@ const ProgressTracker = () => {
                             diffDays === 0
                               ? "Today"
                               : diffDays === 1
-                              ? "1 day ago"
-                              : `${diffDays} days ago`;
+                                ? "1 day ago"
+                                : `${diffDays} days ago`;
 
                           return `${dateStr}${timePeriodStr} (${relativeStr})`;
                         })()}
@@ -1102,7 +1050,7 @@ const ProgressTracker = () => {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => router.push("/exercises")}
+              onPress={() => router.push("/calories")}
               style={styles.addButton2}
             >
               <FontAwesome5 name="book-open" size={20} color="white" />
@@ -1172,12 +1120,12 @@ const ProgressTracker = () => {
                     const d1 = new Date(
                       createdDate.getFullYear(),
                       createdDate.getMonth(),
-                      createdDate.getDate()
+                      createdDate.getDate(),
                     );
                     const d2 = new Date(
                       now.getFullYear(),
                       now.getMonth(),
-                      now.getDate()
+                      now.getDate(),
                     );
                     return Math.floor((d2 - d1) / (1000 * 60 * 60 * 24));
                   })();
@@ -1192,8 +1140,8 @@ const ProgressTracker = () => {
                     diffDays === 0
                       ? "Today"
                       : diffDays === 1
-                      ? "1 day ago"
-                      : `${diffDays} days ago`;
+                        ? "1 day ago"
+                        : `${diffDays} days ago`;
                 }
 
                 return (
@@ -1636,7 +1584,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 15,
-    paddingTop: 70
+    paddingTop: 70,
   },
   title: {
     fontSize: 22,

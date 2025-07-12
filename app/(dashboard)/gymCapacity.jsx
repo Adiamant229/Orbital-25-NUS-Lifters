@@ -17,7 +17,6 @@ import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import ThemedButton from "../../components/themedButton";
 
-
 const GymCapacity = () => {
   const router = useRouter();
   const [gyms, setGyms] = React.useState([]);
@@ -26,7 +25,7 @@ const GymCapacity = () => {
   const [refreshing, setRefreshing] = React.useState(false);
 
   const getCapacityColor = (current, max) => {
-    if (!current || !max) return "green"; 
+    if (!current || !max) return "green";
     const ratio = current / max;
     if (ratio > 0.8) return "red";
     if (ratio >= 0.5) return "orange";
@@ -37,7 +36,7 @@ const GymCapacity = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        "https://asia-southeast1-nus-lifters-club.cloudfunctions.net/getCapacity"
+        "https://asia-southeast1-nus-lifters-club.cloudfunctions.net/getCapacity",
       );
       const data = await response.json();
       const timestamp = new Date(data.timestamp._seconds * 1000);
@@ -102,7 +101,7 @@ const GymCapacity = () => {
                 ...styles.button,
                 backgroundColor: getCapacityColor(
                   gyms[2]?.capacity,
-                  gyms[2]?.maxCapacity ?? 120
+                  gyms[2]?.maxCapacity ?? 120,
                 ),
               }}
               onPress={() => router.push("/utownReports")}
@@ -111,7 +110,7 @@ const GymCapacity = () => {
                 UTown Gym:{" "}
                 {loading || gyms.length === 0
                   ? "Loading"
-                  : gyms[2]?.capacity ?? "-"}
+                  : (gyms[2]?.capacity ?? "-")}
               </ThemedText>
               <MaterialIcons size={50} name="groups" />
             </ThemedButton>
@@ -121,7 +120,7 @@ const GymCapacity = () => {
                 ...styles.button,
                 backgroundColor: getCapacityColor(
                   gyms[1]?.capacity,
-                  gyms[1]?.maxCapacity ?? 50
+                  gyms[1]?.maxCapacity ?? 50,
                 ),
               }}
               onPress={() => router.push("/uscReports")}
@@ -130,7 +129,7 @@ const GymCapacity = () => {
                 USC Gym:{" "}
                 {loading || gyms.length === 0
                   ? "Loading"
-                  : gyms[1]?.capacity ?? "-"}
+                  : (gyms[1]?.capacity ?? "-")}
               </ThemedText>
               <MaterialIcons size={50} name="groups" />
             </ThemedButton>
@@ -147,7 +146,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "#000",
-    paddingTop: 70
+    paddingTop: 70,
   },
   scrollContent: {
     padding: 20,
