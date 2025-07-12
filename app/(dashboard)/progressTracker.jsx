@@ -43,7 +43,7 @@ import {
   doc,
   updateDoc,
   where,
-  getDocs,
+  getDocs
 } from "firebase/firestore";
 
 const ProgressTracker = () => {
@@ -450,7 +450,7 @@ const ProgressTracker = () => {
         const selectedDateNormalized = new Date(
           date.getFullYear(),
           date.getMonth(),
-          date.getDate(),
+          date.getDate()
         );
 
         const q = query(
@@ -459,9 +459,9 @@ const ProgressTracker = () => {
           where(
             "date",
             "<",
-            new Date(selectedDateNormalized.getTime() + 24 * 60 * 60 * 1000),
-          ),
-          orderBy("date", "desc"),
+            new Date(selectedDateNormalized.getTime() + 24 * 60 * 60 * 1000)
+          ), 
+          orderBy("date", "desc") 
         );
 
         const snapshot = await getDocs(q);
@@ -474,8 +474,9 @@ const ProgressTracker = () => {
           const weightDocRef = doc(userDocRef, "weights", editingWeight.id);
           await updateDoc(weightDocRef, {
             weight: weightValue,
-            date: date,
+            date: date, 
           });
+
         } else {
           await addDoc(weightsCollectionRef, {
             weight: weightValue,
@@ -483,7 +484,7 @@ const ProgressTracker = () => {
           });
         }
 
-        const updatedSnapshot = await getDocs(q);
+        const updatedSnapshot = await getDocs(q); 
         const allCurrentDayWeights = updatedSnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
@@ -492,13 +493,13 @@ const ProgressTracker = () => {
 
         if (allCurrentDayWeights.length > 1) {
           allCurrentDayWeights.sort(
-            (a, b) => b.date.getTime() - a.date.getTime(),
+            (a, b) => b.date.getTime() - a.date.getTime()
           );
           const latestEntry = allCurrentDayWeights[0];
 
           for (let i = 1; i < allCurrentDayWeights.length; i++) {
             await deleteDoc(
-              doc(userDocRef, "weights", allCurrentDayWeights[i].id),
+              doc(userDocRef, "weights", allCurrentDayWeights[i].id)
             );
           }
         }
@@ -1709,8 +1710,8 @@ const styles = StyleSheet.create({
     padding: 10,
     justifyContent: "center",
     alignItems: "center",
-    width: 37,
-    height: 40,
+    width: 37, 
+    height: 40, 
   },
   card: {
     backgroundColor: "#fff",
@@ -1764,7 +1765,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     marginBottom: 15,
-    color: "white",
+    color: "white"
   },
   datePickerButton: {
     paddingVertical: 10,
@@ -1825,5 +1826,6 @@ const styles = StyleSheet.create({
   },
   inputGroup: {
     width: "100%",
+  
   },
 });
