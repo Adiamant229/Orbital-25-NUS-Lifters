@@ -9,7 +9,12 @@ import ThemedView from "../../components/themedView";
 import ThemedText from "../../components/themedText";
 
 // firebase imports
-import { query, collection, orderBy, onSnapshot } from "firebase/firestore";
+import {
+  query,
+  collection,
+  orderBy,
+  onSnapshot,
+} from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { db } from "../../firebaseConfig";
 
@@ -44,9 +49,9 @@ const MacroProgress = () => {
 
   const [macroData, setMacroData] = useState({});
   const [open, setOpen] = useState(false);
-  const [selectedMacros, setSelectedMacros] = useState(macroTypes);
+  const [selectedMacros, setSelectedMacros] = useState(macroTypes); 
   const [items, setItems] = useState(
-    macroTypes.map((m) => ({ label: m, value: m })),
+    macroTypes.map((m) => ({ label: m, value: m }))
   );
 
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -67,7 +72,7 @@ const MacroProgress = () => {
 
     const q = query(
       collection(db, "users", currentUser.uid, "macros"),
-      orderBy("createdAt", "asc"),
+      orderBy("createdAt", "asc")
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -84,8 +89,8 @@ const MacroProgress = () => {
         const dateObj = macroEntry.createdAt?.toDate
           ? macroEntry.createdAt.toDate()
           : macroEntry.createdAt instanceof Date
-            ? macroEntry.createdAt
-            : new Date(macroEntry.createdAt);
+          ? macroEntry.createdAt
+          : new Date(macroEntry.createdAt);
 
         const year = dateObj?.getFullYear();
         if (year) yearSet.add(year);

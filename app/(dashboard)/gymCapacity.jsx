@@ -1,28 +1,21 @@
-//react and expo imports
-import {
-  RefreshControl,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  View,
-} from "react-native";
-import React from "react";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+//react and expo imports 
+import { useState, useEffect, useCallback } from "react";
+import { RefreshControl, ScrollView, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
-//themed components
+//themed components 
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import ThemedButton from "../../components/themedButton";
 
 const GymCapacity = () => {
   const router = useRouter();
-  const [gyms, setGyms] = React.useState([]);
-  const [time, setTime] = React.useState(new Date());
-  const [loading, setLoading] = React.useState(true);
-  const [refreshing, setRefreshing] = React.useState(false);
+  const [gyms, setGyms] = useState([]);
+  const [time, setTime] = useState(new Date());
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const getCapacityColor = (current, max) => {
     if (!current || !max) return "green";
@@ -36,107 +29,113 @@ const GymCapacity = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        "https://asia-southeast1-nus-lifters-club.cloudfunctions.net/getCapacity",
+        "https://asia-southeast1-nus-lifters-club.cloudfunctions.net/getCapacity"
       );
       const data = await response.json();
       const timestamp = new Date(data.timestamp._seconds * 1000);
       setGyms(data.gym_capacity);
       setTime(timestamp);
+    } catch (error) {
+      console.error("Error calling getCapacity", error);
+    } finally {
       setLoading(false);
-    } catch (err) {
-      console.error("Error calling getCapacity", err);
     }
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     fetchData();
   }, []);
 
-  const onRefresh = React.useCallback(() => {
+  const onRefresh = useCallback(() => {
     setRefreshing(true);
+    // Wait 5 seconds before refreshing data (to avoid hammering API)
     setTimeout(() => {
       fetchData().finally(() => setRefreshing(false));
     }, 5000);
   }, []);
 
+  // Extract capacities with fallbacks
+  const utownCapacityNum = parseInt(gyms[2]?.capacity) || 0;
+  const utownMaxNum = parseInt(gyms[2]?.maxCapacity) || 120;
+
+  const uscCapacityNum = parseInt(gyms[1]?.capacity) || 0;
+  const uscMaxNum = parseInt(gyms[1]?.maxCapacity) || 50;
+
   return (
-    <SafeAreaProvider>
-      <SafeAreaView style={styles.safeArea}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        >
-          <View style={styles.iconWithTitle}>
-            <MaterialCommunityIcons
-              name="access-point"
-              size={30}
-              color="#2196f3"
-            />
-            <ThemedText style={styles.title} title={true}>
-              Live Gym Capacity
-            </ThemedText>
-          </View>
-
-          <ThemedText style={{ textAlign: "left" }} testID="last-updated">
-            Last updated at{" "}
-            {loading
-              ? "Loading"
-              : time
-                  .toLocaleString("en-GB", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                    hour: "numeric",
-                    minute: "2-digit",
-                    hour12: true,
-                  })
-                  .replace(" at ", ", ")}
+    <ThemedView style={styles.safeArea}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        <ThemedView style={styles.iconWithTitle}>
+          <MaterialCommunityIcons
+            name="access-point"
+            size={30}
+            color="#2196f3"
+          />
+          <ThemedText style={styles.title} title>
+            Live Gym Capacity
           </ThemedText>
+        </ThemedView>
 
-          <ThemedView style={styles.buttonContainer}>
-            <ThemedButton
-              style={{
-                ...styles.button,
-                backgroundColor: getCapacityColor(
-                  gyms[2]?.capacity,
-                  gyms[2]?.maxCapacity ?? 120,
-                ),
-              }}
-              onPress={() => router.push("/utownReports")}
-            >
-              <ThemedText>
-                UTown Gym:{" "}
-                {loading || gyms.length === 0
-                  ? "Loading"
-                  : (gyms[2]?.capacity ?? "-")}
-              </ThemedText>
-              <MaterialIcons size={50} name="groups" />
-            </ThemedButton>
+        <ThemedText style={styles.timestampText} testID="last-updated">
+          Last updated at{" "}
+          {loading
+            ? "Loading"
+            : time
+                .toLocaleString("en-GB", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                  hour: "numeric",
+                  minute: "2-digit",
+                  hour12: true,
+                })
+                .replace(" at ", ", ")}
+        </ThemedText>
 
-            <ThemedButton
-              style={{
-                ...styles.button,
+        <ThemedView style={styles.buttonContainer}>
+          <ThemedButton
+            style={[
+              styles.button,
+              {
                 backgroundColor: getCapacityColor(
-                  gyms[1]?.capacity,
-                  gyms[1]?.maxCapacity ?? 50,
+                  utownCapacityNum,
+                  utownMaxNum
                 ),
-              }}
-              onPress={() => router.push("/uscReports")}
-            >
-              <ThemedText>
-                USC Gym:{" "}
-                {loading || gyms.length === 0
-                  ? "Loading"
-                  : (gyms[1]?.capacity ?? "-")}
-              </ThemedText>
-              <MaterialIcons size={50} name="groups" />
-            </ThemedButton>
-          </ThemedView>
-        </ScrollView>
-      </SafeAreaView>
-    </SafeAreaProvider>
+              },
+            ]}
+            onPress={() => router.push("/utownReports")}
+          >
+            <ThemedText style={{ color: "white" }}>
+              UTown Gym:{" "}
+              {loading || gyms.length === 0
+                ? "Loading"
+                : `${gyms[2]?.capacity ?? "-"}`}
+            </ThemedText>
+            <MaterialIcons size={50} name="groups" />
+          </ThemedButton>
+
+          <ThemedButton
+            style={[
+              styles.button,
+              { backgroundColor: getCapacityColor(uscCapacityNum, uscMaxNum) },
+            ]}
+            onPress={() => router.push("/uscReports")}
+          >
+            <ThemedText style={{ color: "white" }}>
+              USC Gym:{" "}
+              {loading || gyms.length === 0
+                ? "Loading"
+                : `${gyms[1]?.capacity ?? "-"}`}
+            </ThemedText>
+            <MaterialIcons size={50} name="groups" />
+          </ThemedButton>
+        </ThemedView>
+      </ScrollView>
+    </ThemedView>
   );
 };
 
@@ -145,7 +144,6 @@ export default GymCapacity;
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#000",
     paddingTop: 70,
   },
   scrollContent: {
@@ -160,6 +158,9 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 22,
+  },
+  timestampText: {
+    textAlign: "left",
   },
   buttonContainer: {
     flexDirection: "column",
