@@ -23,6 +23,18 @@ jest.mock("react-native-safe-area-context", () => {
   };
 });
 
+
+jest.mock("@react-native-async-storage/async-storage", () => ({
+  setItem: jest.fn(),
+  getItem: jest.fn(),
+  removeItem: jest.fn(),
+  clear: jest.fn(),
+}));
+
+jest.mock("../../components/themedContext", () => ({
+  useThemeContext: () => ({ theme: "light", setTheme: jest.fn() }),
+}));
+
 const mockPush = jest.fn();
 jest.mock("expo-router", () => ({
   useRouter: () => ({

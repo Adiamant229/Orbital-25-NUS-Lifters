@@ -438,7 +438,7 @@ const UscReports = () => {
             <View style={styles.header}>
               <ThemedText style={{ fontSize: 22 }}>USC Reports</ThemedText>
               <TouchableOpacity onPress={openAddModal} style={styles.addButton}>
-                <ThemedText>+</ThemedText>
+                <ThemedText style={{ color: "white" }}>+</ThemedText>
               </TouchableOpacity>
             </View>
           </>
@@ -521,21 +521,25 @@ const UscReports = () => {
               marginHorizontal: 4,
             }}
           >
-            <ThemedText style={{ fontSize: 18 }}>Gym Details</ThemedText>
+            <ThemedText style={{ fontSize: 18, color: "white" }}>
+              Gym Details
+            </ThemedText>
 
             <Spacer height={10} />
 
-            <ThemedText>Operating Hours:</ThemedText>
-            <ThemedText>Monday to Friday 0700hr to 2200hr</ThemedText>
+            <ThemedText style={{ color: "white" }}>Operating Hours:</ThemedText>
+            <ThemedText style={{ color: "white" }}>
+              Monday to Friday 0700hr to 2200hr
+            </ThemedText>
 
-            <ThemedText>
+            <ThemedText style={{ color: "white" }}>
               Weekends and Public Holidays 0700hr to 2200hr
             </ThemedText>
 
             <Spacer height={10} />
 
             <View style={styles.buttonicons}>
-              <ThemedText>Location: </ThemedText>
+              <ThemedText style={{ color: "white" }}>Location: </ThemedText>
 
               <FontAwesome name="map-marker" size={24} color="red" />
               <ThemedText
