@@ -346,7 +346,7 @@ const AddEditThread = () => {
               Pick from Gallery
             </ThemedText>
           </ThemedButton>
-          <ThemedButton onPress={handleTakePhoto}>
+          <ThemedButton testID="take-photo-button" onPress={handleTakePhoto}>
             <ThemedText style={{ color: "white" }}>Take Photo/Video</ThemedText>
           </ThemedButton>
         </View>
@@ -358,6 +358,7 @@ const AddEditThread = () => {
                 source={{ uri: mediaUri }}
                 style={{ height: 150, marginTop: 10 }}
                 resizeMode="contain"
+                testID="thread-image"
               />
             ) : (
               <Video
@@ -367,10 +368,14 @@ const AddEditThread = () => {
                 resizeMode="contain"
                 style={{ height: 200, marginTop: 10 }}
                 onPlaybackStatusUpdate={onPlaybackStatusUpdate}
+                testID="thread-video"
               />
             )}
 
-            <TouchableOpacity onPress={() => setMediaUri(null)}>
+            <TouchableOpacity
+              testID="remove-media-button"
+              onPress={() => setMediaUri(null)}
+            >
               <Ionicons name="trash-outline" size={20} color="#ff3b30" />
             </TouchableOpacity>
           </>
