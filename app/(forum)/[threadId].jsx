@@ -94,7 +94,7 @@ const ThreadDetailPage = () => {
           return b.createdAt?.toMillis() - a.createdAt?.toMillis();
         });
         setComments(list);
-      }
+      },
     );
 
     return () => {
@@ -135,7 +135,7 @@ const ThreadDetailPage = () => {
       if (editingCommentId) {
         await updateDoc(
           doc(db, "threads", threadId, "comments", editingCommentId),
-          { content: trimmed, editedAt: new Date() }
+          { content: trimmed, editedAt: new Date() },
         );
       } else {
         await addDoc(collection(db, "threads", threadId, "comments"), {
@@ -163,7 +163,7 @@ const ThreadDetailPage = () => {
         onPress: async () => {
           try {
             await deleteDoc(
-              doc(db, "threads", threadId, "comments", commentId)
+              doc(db, "threads", threadId, "comments", commentId),
             );
           } catch (err) {
             Alert.alert("Error", "Failed to delete comment");
