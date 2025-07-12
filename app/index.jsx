@@ -54,7 +54,7 @@ const Index = () => {
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
-        password
+        password,
       );
       const user = userCredential.user;
       console.log("User signed in:", user.uid);
@@ -94,56 +94,52 @@ const Index = () => {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
- 
-          <ThemedView style={styles.container}>
-            <Image
-              source={Logo}
-              style={[
-                styles.img,
-                { width: logoWidthAndHeight, height: logoWidthAndHeight },
-              ]}
-            />
-            <ThemedText style={{ fontSize: 16, fontStyle: "italic" }}>
-              For the Lifters, By the Lifters in NUS
+        <ThemedView style={styles.container}>
+          <Image
+            source={Logo}
+            style={[
+              styles.img,
+              { width: logoWidthAndHeight, height: logoWidthAndHeight },
+            ]}
+          />
+          <ThemedText style={{ fontSize: 16, fontStyle: "italic" }}>
+            For the Lifters, By the Lifters in NUS
+          </ThemedText>
+
+          <Spacer height={spacerHeight} />
+
+          <ThemedTextInput
+            style={{ width: "80%", marginBottom: 20 }}
+            placeholder="Email"
+            keyboardType="email-address"
+            placeholderTextColor={"grey"}
+            onChangeText={setEmail}
+            value={email}
+          />
+
+          <ThemedTextInput
+            style={{ width: "80%", marginBottom: 20 }}
+            placeholder="Password"
+            placeholderTextColor={"grey"}
+            onChangeText={setPassword}
+            value={password}
+            secureTextEntry
+          />
+
+          <ThemedButton onPress={handleSubmit}>
+            <ThemedText style={{ color: "#f2f2f2", fontWeight: "bold" }}>
+              Login
             </ThemedText>
+          </ThemedButton>
 
-            <Spacer height={spacerHeight} />
+          <Spacer height={spacerHeight} />
 
-     
-
-            <ThemedTextInput
-              style={{ width: "80%", marginBottom: 20 }}
-              placeholder="Email"
-              keyboardType="email-address"
-              placeholderTextColor={"grey"}
-              onChangeText={setEmail}
-              value={email}
-            />
-
-            <ThemedTextInput
-              style={{ width: "80%", marginBottom: 20 }}
-              placeholder="Password"
-              placeholderTextColor={"grey"}
-              onChangeText={setPassword}
-              value={password}
-              secureTextEntry
-            />
-
-            <ThemedButton onPress={handleSubmit}>
-              <ThemedText style={{ color: "#f2f2f2", fontWeight: "bold" }}>
-                Login
-              </ThemedText>
-            </ThemedButton>
-
-            <Spacer height={spacerHeight} />
-
-            <Link href="/signup">
-              <ThemedText style={{ textAlign: "center" }}>
-                Create new Account
-              </ThemedText>
-            </Link>
-          </ThemedView>
-    
+          <Link href="/signup">
+            <ThemedText style={{ textAlign: "center" }}>
+              Create new Account
+            </ThemedText>
+          </Link>
+        </ThemedView>
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );

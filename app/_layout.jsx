@@ -1,4 +1,4 @@
-//react and expo imports 
+//react and expo imports
 import { useColorScheme } from "react-native";
 import { Stack } from "expo-router";
 import { Colors } from "../constants/colors";
@@ -34,11 +34,6 @@ const RootLayout = () => {
         <Stack.Screen
           name="(guide)"
           options={{ title: "Gym Info and Guide" }}
-        />
-
-        <Stack.Screen
-          name="(profiles)"
-          options={{ title: "" }}
         />
       </Stack>
     </>

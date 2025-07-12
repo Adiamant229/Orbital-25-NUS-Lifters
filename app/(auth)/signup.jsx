@@ -72,7 +72,7 @@ const Signup = () => {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
-        password
+        password,
       );
       const user = userCredential.user;
 
@@ -117,70 +117,68 @@ const Signup = () => {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
-     
-          <ThemedView style={styles.container}>
-            <Image
-              source={Logo}
-              style={[
-                styles.img,
-                { width: logoWidthAndHeight, height: logoWidthAndHeight },
-              ]}
-            />
+        <ThemedView style={styles.container}>
+          <Image
+            source={Logo}
+            style={[
+              styles.img,
+              { width: logoWidthAndHeight, height: logoWidthAndHeight },
+            ]}
+          />
 
-            <ThemedText title={true} style={styles.title}>
-              Create New Account
+          <ThemedText title={true} style={styles.title}>
+            Create New Account
+          </ThemedText>
+
+          <ThemedTextInput
+            placeholder="Username"
+            placeholderTextColor={"grey"}
+            onChangeText={setName}
+            value={name}
+          />
+
+          <ThemedTextInput
+            placeholder="Email"
+            placeholderTextColor={"grey"}
+            keyboardType="email-address"
+            onChangeText={setEmail}
+            value={email}
+          />
+
+          <ThemedTextInput
+            placeholder="Password"
+            placeholderTextColor={"grey"}
+            secureTextEntry
+            onChangeText={setPassword}
+            value={password}
+            textContentType="password"
+            autoComplete="password"
+          />
+
+          <ThemedTextInput
+            placeholder="Confirm Password"
+            placeholderTextColor={"grey"}
+            secureTextEntry
+            onChangeText={setConfirmPassword}
+            value={confirmPassword}
+            textContentType="oneTimeCode"
+            autoComplete="off"
+          />
+
+          <ThemedButton onPress={handleRegister} disabled={loading}>
+            <Text style={{ color: "#f2f2f2", fontWeight: "bold" }}>
+              {loading ? "Creating..." : "Create"}
+            </Text>
+          </ThemedButton>
+
+          <Spacer height={spacerHeight} />
+
+          <Link href="/">
+            <ThemedText style={{ textAlign: "center" }}>
+              Login instead
             </ThemedText>
-
-            <ThemedTextInput
-              placeholder="Username"
-              placeholderTextColor={"grey"}
-              onChangeText={setName}
-              value={name}
-            />
-
-            <ThemedTextInput
-              placeholder="Email"
-              placeholderTextColor={"grey"}
-              keyboardType="email-address"
-              onChangeText={setEmail}
-              value={email}
-            />
-
-            <ThemedTextInput
-              placeholder="Password"
-              placeholderTextColor={"grey"}
-              secureTextEntry
-              onChangeText={setPassword}
-              value={password}
-              textContentType="password"
-              autoComplete="password"
-            />
-
-            <ThemedTextInput
-              placeholder="Confirm Password"
-              placeholderTextColor={"grey"}
-              secureTextEntry
-              onChangeText={setConfirmPassword}
-              value={confirmPassword}
-              textContentType="oneTimeCode"
-              autoComplete="off"
-            />
-
-            <ThemedButton onPress={handleRegister} disabled={loading}>
-              <Text style={{ color: "#f2f2f2", fontWeight: "bold" }}>
-                {loading ? "Creating..." : "Create"}
-              </Text>
-            </ThemedButton>
-
-            <Spacer height={spacerHeight} />
-
-            <Link href="/">
-              <ThemedText style={{ textAlign: "center" }}>
-                Login instead
-              </ThemedText>
-            </Link>
-          </ThemedView>
-      
+          </Link>
+        </ThemedView>
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );

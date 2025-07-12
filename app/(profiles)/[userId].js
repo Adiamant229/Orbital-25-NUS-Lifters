@@ -59,7 +59,6 @@ const PublicProfile = () => {
 
   return (
     <ThemedView style={styles.container}>
-        
       {/* Pressable for opening modal */}
       <TouchableOpacity
         style={styles.profileIconWrapper}

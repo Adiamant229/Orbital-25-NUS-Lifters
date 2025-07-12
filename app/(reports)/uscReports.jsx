@@ -60,16 +60,16 @@ const UscReports = () => {
 
   const [remarks, setRemarks] = useState("");
 
-  const [value, setValue] = useState(null); 
-  const [open, setOpen] = useState(false); 
+  const [value, setValue] = useState(null);
+  const [open, setOpen] = useState(false);
 
   const [expandedReportId, setExpandedReportId] = useState(null);
 
   const [imageDeletedLocally, setImageDeletedLocally] = useState(false);
   const [imageUri, setImageUri] = useState(null);
 
-  const [issueOpen, setIssueOpen] = useState(false); 
-  const [issueValue, setIssueValue] = useState(null); 
+  const [issueOpen, setIssueOpen] = useState(false);
+  const [issueValue, setIssueValue] = useState(null);
 
   const [editingReportId, setEditingReportId] = useState(null);
 
@@ -116,17 +116,17 @@ const UscReports = () => {
         data.sort((a, b) => {
           const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
           const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
-          return timeB - timeA; 
+          return timeB - timeA;
         });
         setReports(data);
       },
       (error) => {
         console.error("Error fetching real-time reports:", error);
-      }
+      },
     );
 
     return () => unsubscribe();
-  }, []); 
+  }, []);
 
   const openAddModal = () => {
     setEditingReportId(null);
@@ -135,7 +135,7 @@ const UscReports = () => {
     setIssueValue(null);
     setRemarks("");
     setImageUri(null);
-    setImageDeletedLocally(false); 
+    setImageDeletedLocally(false);
     setModalVisible(true);
   };
 
@@ -151,7 +151,7 @@ const UscReports = () => {
     setIssueValue(report.issueType);
     setRemarks(report.remarks || "");
     setImageUri(report.imageUrl || null);
-    setImageDeletedLocally(false); 
+    setImageDeletedLocally(false);
     setModalVisible(true);
   };
 
@@ -159,7 +159,7 @@ const UscReports = () => {
     if (!value || !issueValue) {
       Alert.alert(
         "Submission Error",
-        "Please select equipment and issue type."
+        "Please select equipment and issue type.",
       );
       return;
     }
@@ -173,15 +173,15 @@ const UscReports = () => {
         { text: "Cancel", style: "cancel" },
         {
           text: editingReportId ? "Update" : "Submit",
-          style: "default", 
+          style: "default",
           onPress: async () => {
             try {
-              let newImageUrl = null; 
-              let oldImageUrlFromDb = null; 
+              let newImageUrl = null;
+              let oldImageUrlFromDb = null;
 
               if (editingReportId) {
                 const docRef = doc(db, "uscReports", editingReportId);
-                const reportSnap = await getDoc(docRef); 
+                const reportSnap = await getDoc(docRef);
                 if (reportSnap.exists()) {
                   oldImageUrlFromDb = reportSnap.data().imageUrl || null;
                 }
@@ -211,22 +211,22 @@ const UscReports = () => {
                 } catch (e) {
                   console.warn("Failed to delete old image locally:", e);
                 }
-                newImageUrl = deleteField(); 
+                newImageUrl = deleteField();
               } else if (imageUri?.startsWith("https://")) {
                 newImageUrl = imageUri;
               } else {
-                newImageUrl = null; 
+                newImageUrl = null;
               }
 
               const reportData = {
                 equipment: value,
                 issueType: issueValue,
                 remarks: remarks.trim(),
-                userId: currentUserId, 
+                userId: currentUserId,
               };
 
               if (newImageUrl === deleteField()) {
-                reportData.imageUrl = deleteField(); 
+                reportData.imageUrl = deleteField();
               } else if (newImageUrl) {
                 reportData.imageUrl = newImageUrl;
               } else {
@@ -237,12 +237,13 @@ const UscReports = () => {
                   !newImageUrl &&
                   editingReportId &&
                   !oldImageUrlFromDb
-                ) {}
+                ) {
+                }
               }
 
               if (editingReportId) {
                 const docRef = doc(db, "uscReports", editingReportId);
-                await updateDoc(docRef, reportData); 
+                await updateDoc(docRef, reportData);
               } else {
                 reportData.createdAt = new Date();
                 await addDoc(reportsCollectionRef, reportData);
@@ -257,7 +258,7 @@ const UscReports = () => {
               setImageDeletedLocally(false);
               Alert.alert(
                 "Success",
-                editingReportId ? "Report updated!" : "Report submitted!"
+                editingReportId ? "Report updated!" : "Report submitted!",
               );
             } catch (error) {
               console.error("Error submitting report:", error);
@@ -265,7 +266,7 @@ const UscReports = () => {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -296,7 +297,7 @@ const UscReports = () => {
 
               if (reportToDelete?.imageUrl) {
                 const imagePath = getStoragePathFromUrl(
-                  reportToDelete.imageUrl
+                  reportToDelete.imageUrl,
                 );
                 const imageRef = ref(storage, imagePath);
                 await deleteObject(imageRef);
@@ -314,7 +315,7 @@ const UscReports = () => {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -328,7 +329,7 @@ const UscReports = () => {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.Images, 
+      mediaTypes: ImagePicker.Images,
       quality: 0.7,
     });
 
@@ -351,13 +352,13 @@ const UscReports = () => {
 
     if (!result.canceled) {
       setImageUri(result.assets[0].uri);
-      setImageDeletedLocally(false); 
+      setImageDeletedLocally(false);
     }
   };
 
   const handleRemoveImage = () => {
     setImageUri(null);
-    setImageDeletedLocally(true); 
+    setImageDeletedLocally(true);
   };
 
   const changesDone = () => {
@@ -374,7 +375,7 @@ const UscReports = () => {
         issueValue !== originalReport.issueType ||
         remarks.trim() !== originalReport.remarks.trim() ||
         imageUri !== originalReport.imageUri ||
-        (imageDeletedLocally && originalReport.imageUri !== null) 
+        (imageDeletedLocally && originalReport.imageUri !== null)
       );
     }
   };
@@ -402,7 +403,7 @@ const UscReports = () => {
               setImageDeletedLocally(false);
             },
           },
-        ]
+        ],
       );
     } else {
       setModalVisible(false);
@@ -421,12 +422,12 @@ const UscReports = () => {
 
   const handleLink = () => {
     Linking.openURL(gymLocationUrl).catch((err) =>
-      console.error("Failed to open URL:", err)
+      console.error("Failed to open URL:", err),
     );
   };
-  
+
   const dropdownListMode = Platform.OS === "android" ? "MODAL" : "SCROLLVIEW";
-  
+
   return (
     <ThemedView style={styles.container}>
       <FlatList
