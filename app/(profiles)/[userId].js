@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from "expo-router";
+//react and expo imports 
 import { useEffect, useState } from "react";
 import {
   View,
@@ -9,12 +9,17 @@ import {
   Pressable,
   TouchableOpacity,
 } from "react-native";
+import { useLocalSearchParams } from "expo-router";
+import { MaterialIcons } from "@expo/vector-icons";
+
+//firebase imports 
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../firebaseConfig";
+
+//themed components 
 import ThemedView from "../../components/themedView";
 import ThemedText from "../../components/themedText";
 import Spacer from "../../components/spacer";
-import { MaterialIcons } from "@expo/vector-icons";
 
 const PublicProfile = () => {
   const { userId } = useLocalSearchParams();
@@ -49,7 +54,7 @@ const PublicProfile = () => {
     fetchUser();
   }, [userId]);
 
-  if (loading) return <ActivityIndicator style={{ flex: 1 }} />;
+  if (loading) return <ActivityIndicator testID="loading-indicator" style={{ flex: 1 }} />;
   if (!profileData)
     return (
       <ThemedView style={styles.container}>
@@ -61,6 +66,7 @@ const PublicProfile = () => {
     <ThemedView style={styles.container}>
       {/* Pressable for opening modal */}
       <TouchableOpacity
+        testID="profile-pic-button"
         style={styles.profileIconWrapper}
         onPress={() => setModalVisible(true)}
         activeOpacity={0.8}
@@ -85,30 +91,34 @@ const PublicProfile = () => {
 
       <View style={styles.section}>
         <ThemedText style={styles.sectionTitle}>Bio</ThemedText>
-        <ThemedText>{profileData.bio || "No bio available."}</ThemedText>
+        <ThemedText style={{ color: "white" }}>
+          {profileData.bio || "Not set"}
+        </ThemedText>
       </View>
 
       <View style={styles.section}>
         <ThemedText style={styles.sectionTitle}>Stats</ThemedText>
-        <ThemedText>
+        <ThemedText style={{ color: "white" }}>
           Height: {profileData.height ? `${profileData.height} cm` : "Not set"}
         </ThemedText>
-        <ThemedText>
+        <ThemedText style={{ color: "white" }}>
           Weight: {profileData.weight ? `${profileData.weight} kg` : "Not set"}
         </ThemedText>
-        <ThemedText>
+        <ThemedText style={{ color: "white" }}>
           Age: {profileData.age ? `${profileData.age}` : "Not set"}
         </ThemedText>
       </View>
 
       {/* Modal for large profile pic */}
       <Modal
+        testID="profile-modal"
         animationType="fade"
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
         <Pressable
+          testID="modal-overlay"
           style={styles.modalOverlay}
           onPress={() => setModalVisible(false)}
         >
@@ -168,7 +178,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "bold",
+    color: "white",
     marginBottom: 8,
   },
   textMuted: {

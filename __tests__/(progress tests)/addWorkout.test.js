@@ -18,6 +18,17 @@ jest.mock("expo-router", () => {
 
 jest.mock("@react-native-community/datetimepicker", () => "DateTimePicker");
 
+jest.mock("@react-native-async-storage/async-storage", () => ({
+  setItem: jest.fn(),
+  getItem: jest.fn(),
+  removeItem: jest.fn(),
+  clear: jest.fn(),
+}));
+
+jest.mock("../../components/themedContext", () => ({
+  useThemeContext: () => ({ theme: "light", setTheme: jest.fn() }),
+}));
+
 jest.mock("../../firebaseConfig", () => ({
   auth: {
     currentUser: { uid: "testUser123" },
@@ -55,6 +66,7 @@ const mockWorkoutData = {
     createdAt: { toDate: () => new Date("2023-01-01T00:00:00Z") },
   }),
 };
+
 describe("AddWorkout Component", () => {
   beforeEach(() => {
     ExpoRouter.useLocalSearchParams.mockImplementation(() => ({}));

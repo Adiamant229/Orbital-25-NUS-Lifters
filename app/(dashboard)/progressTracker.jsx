@@ -43,6 +43,7 @@ import {
   doc,
   updateDoc,
   where,
+  getDocs
 } from "firebase/firestore";
 
 const ProgressTracker = () => {
@@ -444,19 +445,63 @@ const ProgressTracker = () => {
     const submit = async () => {
       try {
         const userDocRef = doc(db, "users", user.uid);
+        const weightsCollectionRef = collection(userDocRef, "weights");
+
+        const selectedDateNormalized = new Date(
+          date.getFullYear(),
+          date.getMonth(),
+          date.getDate()
+        );
+
+        const q = query(
+          weightsCollectionRef,
+          where("date", ">=", selectedDateNormalized),
+          where(
+            "date",
+            "<",
+            new Date(selectedDateNormalized.getTime() + 24 * 60 * 60 * 1000)
+          ), 
+          orderBy("date", "desc") 
+        );
+
+        const snapshot = await getDocs(q);
+        const existingWeightsOnDate = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
 
         if (editingWeight) {
           const weightDocRef = doc(userDocRef, "weights", editingWeight.id);
           await updateDoc(weightDocRef, {
             weight: weightValue,
-            date: date,
+            date: date, 
           });
+
         } else {
-          const weightsCollectionRef = collection(userDocRef, "weights");
           await addDoc(weightsCollectionRef, {
             weight: weightValue,
             date: date,
           });
+        }
+
+        const updatedSnapshot = await getDocs(q); 
+        const allCurrentDayWeights = updatedSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          date: doc.data().date.toDate(),
+        }));
+
+        if (allCurrentDayWeights.length > 1) {
+          allCurrentDayWeights.sort(
+            (a, b) => b.date.getTime() - a.date.getTime()
+          );
+          const latestEntry = allCurrentDayWeights[0];
+
+          for (let i = 1; i < allCurrentDayWeights.length; i++) {
+            await deleteDoc(
+              doc(userDocRef, "weights", allCurrentDayWeights[i].id)
+            );
+          }
         }
 
         setModalVisible(false);
@@ -793,7 +838,7 @@ const ProgressTracker = () => {
         >
           <View style={styles.buttonicons}>
             <FontAwesome6 name="dumbbell" size={20} color="white" />
-            <ThemedText>Workouts</ThemedText>
+            <ThemedText style={{ color: "white" }}>Workouts</ThemedText>
           </View>
         </TouchableOpacity>
 
@@ -810,7 +855,7 @@ const ProgressTracker = () => {
               size={24}
               color="white"
             />
-            <ThemedText>Macros</ThemedText>
+            <ThemedText style={{ color: "white" }}>Macros</ThemedText>
           </View>
         </TouchableOpacity>
 
@@ -823,20 +868,20 @@ const ProgressTracker = () => {
         >
           <View style={styles.buttonicons}>
             <Ionicons name="body" size={20} color="white" />
-            <ThemedText>Bodyweight</ThemedText>
+            <ThemedText style={{ color: "white" }}>Bodyweight</ThemedText>
           </View>
         </TouchableOpacity>
       </View>
       {selectedTab === "workouts" && (
         <>
           <View style={styles.header2}>
-            <ThemedText style={{ fontSize: 20 }}>Your Workouts</ThemedText>
+            <ThemedText style={{ fontSize: 17 }}>Your Workouts</ThemedText>
 
             <TouchableOpacity
               onPress={() => router.push("/addWorkout")}
               style={styles.addButton2}
             >
-              <ThemedText>+</ThemedText>
+              <ThemedText style={{ color: "white" }}>+</ThemedText>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -852,7 +897,7 @@ const ProgressTracker = () => {
               onPress={() => router.push("/exercises")}
               style={styles.addButton2}
             >
-              <FontAwesome5 name="book-open" size={20} color="white" />
+              <FontAwesome5 name="book-open" size={15} color="white" />
             </TouchableOpacity>
 
             {/* DropDownPicker for Workout Year Filter */}
@@ -1039,7 +1084,7 @@ const ProgressTracker = () => {
               onPress={() => setMacroModalVisible(true)}
               style={styles.addButton2}
             >
-              <ThemedText>+</ThemedText>
+              <ThemedText style={{ color: "white" }}>+</ThemedText>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -1053,7 +1098,7 @@ const ProgressTracker = () => {
               onPress={() => router.push("/calories")}
               style={styles.addButton2}
             >
-              <FontAwesome5 name="book-open" size={20} color="white" />
+              <FontAwesome5 name="book-open" size={15} color="white" />
             </TouchableOpacity>
 
             {/* DropDownPicker for Macro Year Filter */}
@@ -1162,7 +1207,7 @@ const ProgressTracker = () => {
                         {/* Left side: macro details and buttons */}
                         <View>
                           <Text style={{ fontWeight: "bold", color: "red" }}>
-                            Total Calories: {item.calories} kcal
+                            Total Calories: {item.calories} cal
                           </Text>
                           <Text
                             style={{ fontWeight: "bold", color: "#4CAF50" }}
@@ -1273,25 +1318,29 @@ const ProgressTracker = () => {
                     {editingMacro ? "Edit Macro Entry" : "Add New Macro"}
                   </ThemedText>
 
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Add in your Macros Title"
-                    placeholderTextColor="grey"
-                    value={macroTitle}
-                    onChangeText={setMacroTitle}
-                  />
+                  {/* Macro Title Label and Input */}
+                  <View style={styles.inputGroup}>
+                    <ThemedText style={{ color: "white" }}>
+                      Macro Title:
+                    </ThemedText>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Add in your Macros Title"
+                      placeholderTextColor="grey"
+                      value={macroTitle}
+                      onChangeText={setMacroTitle}
+                    />
+                  </View>
 
-                  {/* Date picker button */}
                   <TouchableOpacity
                     onPress={() => setShowMacroDatePicker(true)}
                     style={styles.datePickerButton}
                   >
-                    <Text style={{ color: "#eee" }}>
+                    <ThemedText style={{ color: "white" }}>
                       Select Date: {macroDate.toLocaleDateString()}
-                    </Text>
+                    </ThemedText>
                   </TouchableOpacity>
 
-                  {/* Show the date picker only if showMacroDatePicker is true */}
                   {showMacroDatePicker && (
                     <DateTimePicker
                       value={macroDate}
@@ -1305,48 +1354,75 @@ const ProgressTracker = () => {
                     />
                   )}
 
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter Total Calories"
-                    placeholderTextColor="grey"
-                    value={calories}
-                    onChangeText={setCalories}
-                    keyboardType="numeric"
-                  />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter Total Protein (g)"
-                    placeholderTextColor="grey"
-                    value={protein}
-                    onChangeText={setProtein}
-                    keyboardType="numeric"
-                  />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter Total Carbs (g)"
-                    placeholderTextColor="grey"
-                    value={carbs}
-                    onChangeText={setCarbs}
-                    keyboardType="numeric"
-                  />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter Total Fats (g)"
-                    placeholderTextColor="grey"
-                    value={fats}
-                    onChangeText={setFats}
-                    keyboardType="numeric"
-                  />
+                  {/* Calories Label and Input */}
+                  <View style={styles.inputGroup}>
+                    <ThemedText style={{ color: "white" }}>
+                      Total Calories (cal):
+                    </ThemedText>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter Total Calories (cal)"
+                      placeholderTextColor="grey"
+                      value={calories}
+                      onChangeText={setCalories}
+                      keyboardType="numeric"
+                    />
+                  </View>
+
+                  {/* Protein Label and Input */}
+                  <View style={styles.inputGroup}>
+                    <ThemedText style={{ color: "white" }}>
+                      Total Protein (g):
+                    </ThemedText>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter Total Protein (g)"
+                      placeholderTextColor="grey"
+                      value={protein}
+                      onChangeText={setProtein}
+                      keyboardType="numeric"
+                    />
+                  </View>
+
+                  {/* Carbs Label and Input */}
+                  <View style={styles.inputGroup}>
+                    <ThemedText style={{ color: "white" }}>
+                      Total Carbs (g):
+                    </ThemedText>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter Total Carbs (g)"
+                      placeholderTextColor="grey"
+                      value={carbs}
+                      onChangeText={setCarbs}
+                      keyboardType="numeric"
+                    />
+                  </View>
+
+                  {/* Fats Label and Input */}
+                  <View style={styles.inputGroup}>
+                    <ThemedText style={{ color: "white" }}>
+                      Total Fats (g):
+                    </ThemedText>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter Total Fats (g)"
+                      placeholderTextColor="grey"
+                      value={fats}
+                      onChangeText={setFats}
+                      keyboardType="numeric"
+                    />
+                  </View>
 
                   <View style={styles.modalButtonRow}>
                     <ThemedButton onPress={handleSubmitMacros}>
-                      <ThemedText>
+                      <ThemedText style={{ color: "white" }}>
                         {editingMacro ? "Save" : "Submit"}
                       </ThemedText>
                     </ThemedButton>
 
                     <ThemedButton onPress={handleCancelMacroEntry}>
-                      <ThemedText>Cancel</ThemedText>
+                      <ThemedText style={{ color: "white" }}>Cancel</ThemedText>
                     </ThemedButton>
                   </View>
                 </View>
@@ -1358,7 +1434,7 @@ const ProgressTracker = () => {
       {selectedTab === "weight" && (
         <>
           <View style={styles.header3}>
-            <ThemedText style={{ fontSize: 20 }}>Your Bodyweights</ThemedText>
+            <ThemedText style={{ fontSize: 17 }}>Your Bodyweights</ThemedText>
             <TouchableOpacity
               onPress={() => {
                 setModalVisible(true);
@@ -1370,14 +1446,14 @@ const ProgressTracker = () => {
               }}
               style={styles.addButton2}
             >
-              <ThemedText>+</ThemedText>
+              <ThemedText style={{ color: "white" }}>+</ThemedText>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={() => router.push("/exercises")}
               style={styles.addButton2}
             >
-              <FontAwesome5 name="book-open" size={20} color="white" />
+              <FontAwesome5 name="book-open" size={15} color="white" />
             </TouchableOpacity>
 
             <DropDownPicker
@@ -1530,9 +1606,9 @@ const ProgressTracker = () => {
                   onPress={() => setShowDatePicker(true)}
                   style={styles.datePickerButton}
                 >
-                  <Text style={{ color: "#eee" }}>
+                  <ThemedText style={{ color: "white" }}>
                     Select Date: {date.toLocaleDateString()}
-                  </Text>
+                  </ThemedText>
                 </TouchableOpacity>
 
                 {showDatePicker && (
@@ -1562,11 +1638,13 @@ const ProgressTracker = () => {
                     onPress={handleSubmitWeight}
                     testID="saveWeightButton"
                   >
-                    <ThemedText>{editingWeight ? "Save" : "Submit"}</ThemedText>
+                    <ThemedText style={{ color: "white" }}>
+                      {editingWeight ? "Save" : "Submit"}
+                    </ThemedText>
                   </ThemedButton>
 
                   <ThemedButton onPress={handleCancelWeightEntry}>
-                    <ThemedText>Cancel</ThemedText>
+                    <ThemedText style={{ color: "white" }}>Cancel</ThemedText>
                   </ThemedButton>
                 </View>
               </View>
@@ -1630,6 +1708,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#2196f3",
     borderRadius: 20,
     padding: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    width: 37, 
+    height: 40, 
   },
   card: {
     backgroundColor: "#fff",
@@ -1678,13 +1760,12 @@ const styles = StyleSheet.create({
   modalContent: {
     backgroundColor: "#1c1c1c",
     padding: 20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderRadius: 20,
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: "bold",
     marginBottom: 15,
+    color: "white"
   },
   datePickerButton: {
     paddingVertical: 10,
@@ -1742,5 +1823,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 8,
     marginTop: 10,
+  },
+  inputGroup: {
+    width: "100%",
+  
   },
 });
