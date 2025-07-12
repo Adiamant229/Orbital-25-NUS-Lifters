@@ -1,21 +1,21 @@
 //react and expo imports
-import { ThemeProvider, useThemeContext } from "../components/themedContext"; // make sure this file exports both
+import { useColorScheme } from "react-native";
 import { Stack } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import { Colors } from "../constants/colors";
+import { StatusBar } from "expo-status-bar";
 
-// Inner layout with access to theme context
-const InnerLayout = () => {
-  const { theme } = useThemeContext();
-  const themeColors = Colors[theme] ?? Colors.light;
+const RootLayout = () => {
+  //use light or dark theme based on system
+  const colorScheme = useColorScheme(); //returns light or dark or null
+  const theme = Colors[colorScheme] ?? Colors.light; //defaults to light
 
   return (
     <>
-      <StatusBar style={theme === "dark" ? "light" : "dark"} />
+      <StatusBar value="auto" />
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: themeColors.navBackground },
-          headerTintColor: themeColors.title,
+          headerStyle: { backgroundColor: theme.navBackground },
+          headerTintColor: theme.title,
         }}
       >
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
@@ -35,21 +35,8 @@ const InnerLayout = () => {
           name="(guide)"
           options={{ title: "Gym Info and Guide" }}
         />
-
-        <Stack.Screen name="(profiles)" options={{ title: "" }} />
-
-        <Stack.Screen name="(forum)" options={{ title: "" }} />
       </Stack>
     </>
-  );
-};
-
-// Wrap inner layout in ThemeProvider
-const RootLayout = () => {
-  return (
-    <ThemeProvider>
-      <InnerLayout />
-    </ThemeProvider>
   );
 };
 

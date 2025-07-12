@@ -1,135 +1,586 @@
-// forum.jsx
+//react imports
 import { useEffect, useState } from "react";
 import {
   Alert,
   FlatList,
+  Keyboard,
+  Modal,
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
+  TouchableWithoutFeedback,
+  KeyboardAvoidingView,
+  Platform,
   View,
 } from "react-native";
-import DropDownPicker from "react-native-dropdown-picker";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
-import { getAuth } from "firebase/auth";
+//firebase imports
 import {
+  addDoc,
   collection,
   deleteDoc,
   doc,
-  onSnapshot,
-  query,
-  where,
   getDoc,
+  query,
+  updateDoc,
+  where,
+  onSnapshot,
 } from "firebase/firestore";
-import { deleteObject, ref } from "firebase/storage";
+import { getAuth } from "firebase/auth";
+import { db } from "../../firebaseConfig";
 
+//themed components
+import { Ionicons } from "@expo/vector-icons";
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import ThemedButton from "../../components/themedButton";
-import { db, storage } from "../../firebaseConfig";
+import Spacer from "../../components/spacer";
 
 const categories = ["Training", "Diet", "Cardio"];
-
-const deleteThread = async (threadId) => {
-  Alert.alert("Delete Thread", "Are you sure you want to delete this thread?", [
-    { text: "Cancel", style: "cancel" },
-    {
-      text: "Delete",
-      style: "destructive",
-      onPress: async () => {
-        try {
-          const threadDocRef = doc(db, "threads", threadId);
-          const threadSnap = await getDoc(threadDocRef);
-          if (!threadSnap.exists()) {
-            Alert.alert("Error", "Thread not found.");
-            return;
-          }
-          const threadData = threadSnap.data();
-
-          if (threadData.mediaUrl) {
-            try {
-              const url = threadData.mediaUrl;
-              const baseUrl = url.split("?")[0];
-              const pathEncoded = baseUrl.split("/o/")[1];
-              const path = decodeURIComponent(pathEncoded);
-
-              const storageRef = ref(storage, path);
-              await deleteObject(storageRef);
-            } catch (storageErr) {
-              console.warn("Failed to delete media file:", storageErr);
-            }
-          }
-
-          await deleteDoc(threadDocRef);
-          Alert.alert("Deleted", "Thread removed successfully.");
-        } catch (error) {
-          console.error("Error deleting thread: ", error);
-          Alert.alert("Error", "Could not delete thread.");
-        }
-      },
-    },
-  ]);
-};
 
 const Forum = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [threads, setThreads] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newCategory, setNewCategory] = useState(categories[0]);
+  const [newContent, setNewContent] = useState("");
+
   const [currentUserId, setCurrentUserId] = useState(null);
+
+  const [selectedThread, setSelectedThread] = useState(null);
+  const [comments, setComments] = useState([]);
+
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editThread, setEditThread] = useState(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editCategory, setEditCategory] = useState(categories[0]);
+  const [editContent, setEditContent] = useState("");
+
+  const [commentInput, setCommentInput] = useState("");
+  const [editingComment, setEditingComment] = useState(null);
+  const [editingCommentContent, setEditingCommentContent] = useState("");
+
+  // New state to store user names dynamically
   const [userNames, setUserNames] = useState({});
-  const [sortOption, setSortOption] = useState("newest");
-  const [open, setOpen] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     const auth = getAuth();
     const user = auth.currentUser;
-    if (user) setCurrentUserId(user.uid);
+    if (user) {
+      setCurrentUserId(user.uid);
+    }
 
-    const unsubscribeUsers = onSnapshot(collection(db, "users"), (snapshot) => {
-      const names = {};
-      snapshot.forEach((doc) => {
-        names[doc.id] = doc.data().name || "Anonymous";
-      });
-      setUserNames(names);
-    });
+    // Listener for all user names
+    const unsubscribeUsers = onSnapshot(
+      collection(db, "users"),
+      (snapshot) => {
+        const names = {};
+        snapshot.forEach((doc) => {
+          names[doc.id] = doc.data().name || "Anonymous";
+        });
+        setUserNames(names);
+      },
+      (error) => {
+        console.error("Error fetching user names in real-time: ", error);
+      },
+    );
 
-    const q =
-      selectedCategory === "All"
-        ? query(collection(db, "threads"))
-        : query(
-            collection(db, "threads"),
-            where("category", "==", selectedCategory)
-          );
+    let q;
+    if (selectedCategory === "All") {
+      q = query(collection(db, "threads"));
+    } else {
+      q = query(
+        collection(db, "threads"),
+        where("category", "==", selectedCategory),
+      );
+    }
 
     setLoading(true);
-    const unsubscribeThreads = onSnapshot(q, (snapshot) => {
-      const threadsList = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      threadsList.sort((a, b) => {
-        if (sortOption === "likes") return (b.likes || 0) - (a.likes || 0);
-        return b.createdAt?.toMillis() - a.createdAt?.toMillis();
-      });
+    const unsubscribeThreads = onSnapshot(
+      // Renamed for clarity
+      q,
+      (snapshot) => {
+        const threadsList = [];
+        snapshot.forEach((doc) => {
+          threadsList.push({ id: doc.id, ...doc.data() });
+        });
+        threadsList.sort(
+          (a, b) => b.createdAt?.toMillis() - a.createdAt?.toMillis(),
+        );
+        setThreads(threadsList);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Error fetching threads in real-time: ", error);
+        setLoading(false);
+      },
+    );
 
-      setThreads(threadsList);
-      setLoading(false);
-    });
-
+    // Return a cleanup function that unsubscribes from both listeners
     return () => {
       unsubscribeUsers();
       unsubscribeThreads();
     };
-  }, [selectedCategory, sortOption]);
+  }, [selectedCategory]);
+
+  useEffect(() => {
+    if (!selectedThread) {
+      return;
+    }
+
+    const threadUnsubscribe = onSnapshot(
+      doc(db, "threads", selectedThread.id),
+      (snapshot) => {
+        if (snapshot.exists()) {
+          setSelectedThread({
+            id: snapshot.id,
+            ...snapshot.data(),
+          });
+        } else {
+          console.warn("Thread document no longer exists");
+          setSelectedThread(null);
+          setComments([]);
+          setEditingComment(null);
+          setCommentInput("");
+        }
+      },
+      (error) => {
+        console.error("Error fetching selected thread in real-time: ", error);
+      },
+    );
+
+    const commentUnsubscribe = onSnapshot(
+      collection(db, "threads", selectedThread.id, "comments"),
+      (snapshot) => {
+        const updatedComments = [];
+        snapshot.forEach((doc) => {
+          updatedComments.push({ id: doc.id, ...doc.data() });
+        });
+
+        updatedComments.sort(
+          (a, b) => a.createdAt.toMillis() - b.createdAt.toMillis(),
+        );
+        setComments(updatedComments);
+      },
+      (error) => {
+        console.error("Error fetching comments in real-time: ", error);
+      },
+    );
+
+    return () => {
+      commentUnsubscribe();
+      threadUnsubscribe();
+    };
+  }, [selectedThread?.id]);
+
+  const addThread = () => {
+    if (!newTitle.trim()) {
+      Alert.alert("Error", "Please enter a thread title.");
+      return;
+    }
+    if (!newContent.trim()) {
+      Alert.alert("Error", "Please enter some content for the thread.");
+      return;
+    }
+
+    Alert.alert(
+      "Confirm Create",
+      "Do you really want to create this thread?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+          onPress: () => {},
+        },
+        {
+          text: "Create",
+          onPress: async () => {
+            try {
+              const auth = getAuth();
+              const user = auth.currentUser;
+              if (!user) {
+                Alert.alert("Error", "User not logged in");
+                return;
+              }
+
+              // No need to fetch freshUserName here, just store authorId
+              await addDoc(collection(db, "threads"), {
+                title: newTitle,
+                category: newCategory,
+                authorId: user.uid, // Store only the ID
+                content: newContent,
+                createdAt: new Date(),
+              });
+
+              Alert.alert("Success", "Thread created!");
+              setModalVisible(false);
+              setNewTitle("");
+              setNewCategory(categories[0]);
+              setNewContent("");
+            } catch (error) {
+              console.error("Error adding thread: ", error);
+              Alert.alert("Error", "Could not create thread.");
+            }
+          },
+        },
+      ],
+      { cancelable: true },
+    );
+  };
+
+  const deleteThread = async (threadId) => {
+    Alert.alert(
+      "Delete Thread",
+      "Are you sure you want to delete this thread?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteDoc(doc(db, "threads", threadId));
+              Alert.alert("Deleted", "Thread removed successfully.");
+
+              if (selectedThread?.id === threadId) {
+                setSelectedThread(null);
+              }
+            } catch (error) {
+              console.error("Error deleting thread: ", error);
+              Alert.alert("Error", "Could not delete thread.");
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const openEditModal = (thread) => {
+    setEditThread(thread);
+    setEditTitle(thread.title);
+    setEditCategory(thread.category);
+    setEditContent(thread.content);
+    setEditModalVisible(true);
+  };
+
+  const updateThread = () => {
+    if (!editTitle.trim()) {
+      Alert.alert("Error", "Please enter a thread title.");
+      return;
+    }
+    if (!editContent.trim()) {
+      Alert.alert("Error", "Please enter some content for the thread.");
+      return;
+    }
+
+    Alert.alert(
+      "Confirm Save",
+      "Do you really want to save changes to this thread?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+          onPress: () => {},
+        },
+        {
+          text: "Save",
+          onPress: async () => {
+            try {
+              const threadDocRef = doc(db, "threads", editThread.id);
+              await updateDoc(threadDocRef, {
+                title: editTitle,
+                category: editCategory,
+                content: editContent,
+                updatedAt: new Date(),
+              });
+              Alert.alert("Success", "Thread updated!");
+              setEditModalVisible(false);
+              setEditThread(null);
+            } catch (error) {
+              console.error("Error updating thread: ", error);
+              Alert.alert("Error", "Could not update thread.");
+            }
+          },
+        },
+      ],
+      { cancelable: true },
+    );
+  };
+
+  const cancelCreateThread = () => {
+    const hasChanges =
+      newTitle.trim() !== "" ||
+      newContent.trim() !== "" ||
+      newCategory !== categories[0];
+
+    if (hasChanges) {
+      Alert.alert(
+        "Discard Thread?",
+        "You have started creating a new thread. Are you sure you want to discard this thread?",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Discard",
+            style: "destructive",
+            onPress: () => {
+              setModalVisible(false);
+              setNewTitle("");
+              setNewCategory(categories[0]);
+              setNewContent("");
+            },
+          },
+        ],
+      );
+    } else {
+      setModalVisible(false);
+    }
+  };
+
+  const cancelEditThread = () => {
+    if (!editThread) {
+      setEditModalVisible(false);
+      return;
+    }
+
+    const hasTitleChanged =
+      editTitle.trim() !== (editThread.title?.trim() || "");
+    const hasContentChanged =
+      editContent.trim() !== (editThread.content?.trim() || "");
+    const hasCategoryChanged = editCategory !== editThread.category;
+
+    const hasChanges =
+      hasTitleChanged || hasContentChanged || hasCategoryChanged;
+
+    if (hasChanges) {
+      Alert.alert(
+        "Discard Changes?",
+        "You have unsaved changes. Are you sure you want to discard them?",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Discard",
+            style: "destructive",
+            onPress: () => {
+              setEditModalVisible(false);
+              setEditThread(null);
+            },
+          },
+        ],
+      );
+    } else {
+      setEditModalVisible(false);
+      setEditThread(null);
+    }
+  };
+
+  const addComment = async (threadID, content) => {
+    if (!content.trim()) {
+      Alert.alert("Error", "Please enter a comment");
+      return;
+    }
+
+    Alert.alert(
+      "Confirm Post",
+      "Do you really want to post this comment?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+          onPress: () => {},
+        },
+        {
+          text: "Post",
+          onPress: async () => {
+            try {
+              const auth = getAuth();
+              const user = auth.currentUser;
+              if (!user) {
+                Alert.alert("Error", "User not logged in.");
+                return;
+              }
+
+              const threadRef = doc(db, "threads", threadID);
+              const threadSnap = await getDoc(threadRef);
+              if (!threadSnap.exists()) {
+                Alert.alert("Error", "Thread not found");
+                return;
+              }
+              const commentsRef = collection(threadRef, "comments");
+              const comment = {
+                commenterID: user.uid, // Store only the ID
+                content: content,
+                createdAt: new Date(),
+                editedAt: null,
+              };
+              await addDoc(commentsRef, comment);
+              setCommentInput("");
+              Keyboard.dismiss();
+            } catch (err) {
+              console.error("Error adding comment: ", err);
+              Alert.alert("Error", "Could not add comment.");
+            }
+          },
+        },
+      ],
+      { cancelable: true },
+    );
+  };
+
+  const editComment = async (threadID, commentID, content) => {
+    const trimmedContent = content.trim();
+
+    if (!trimmedContent) {
+      Alert.alert("Error", "Comment cannot be empty.");
+      return;
+    }
+
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (!user) {
+        Alert.alert("Error", "User not logged in");
+        return;
+      }
+
+      const commentRef = doc(db, "threads", threadID, "comments", commentID);
+      const commentSnap = await getDoc(commentRef);
+
+      if (!commentSnap.exists()) {
+        Alert.alert("Error", "Comment not found.");
+        return;
+      }
+
+      const comment = commentSnap.data();
+
+      if (currentUserId !== comment.commenterID) {
+        throw new Error("Trying to edit comment without being the commenter");
+      }
+
+      Alert.alert(
+        "Confirm Save",
+        "Do you want to save changes to this comment?",
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
+          },
+          {
+            text: "Save",
+            onPress: async () => {
+              try {
+                await updateDoc(commentRef, {
+                  content: trimmedContent,
+                  editedAt: new Date(),
+                });
+                setEditingComment(null);
+                setEditingCommentContent("");
+                Keyboard.dismiss();
+                Alert.alert("Success", "Comment updated!");
+              } catch (err) {
+                console.error("Error saving edited comment: ", err);
+                Alert.alert("Error", "Could not update comment.");
+              }
+            },
+          },
+        ],
+        { cancelable: true },
+      );
+    } catch (err) {
+      console.error("Error preparing comment for edit: ", err);
+      Alert.alert("Error", "Could not fetch comment.");
+    }
+  };
+
+  const deleteComment = async (threadID, commentID) => {
+    Alert.alert(
+      "Delete Comment",
+      "Are you sure you want to delete this comment?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const auth = getAuth();
+              const user = auth.currentUser;
+              if (!user) {
+                Alert.alert("Error", "User not logged in");
+                return;
+              }
+              const commentRef = doc(
+                db,
+                "threads",
+                threadID,
+                "comments",
+                commentID,
+              );
+              const commentSnap = await getDoc(commentRef);
+              const comment = commentSnap.data();
+              if (!commentSnap.exists()) {
+                throw new Error("Comment not found");
+              }
+              if (currentUserId !== comment.commenterID) {
+                throw new Error(
+                  "Trying to delete comment without being the commenter",
+                );
+              }
+              await deleteDoc(commentRef);
+            } catch (err) {
+              console.error("Error deleting comment: ", err);
+              Alert.alert("Error", "Could not delete comment.");
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const cancelEditComment = () => {
+    if (!editingComment) {
+      setEditingComment(null);
+      setEditingCommentContent("");
+      return;
+    }
+
+    const originalContent = editingComment.content?.trim() || "";
+    const currentContent = editingCommentContent.trim();
+    const hasChanges = currentContent !== originalContent;
+
+    if (hasChanges) {
+      Alert.alert(
+        "Discard Changes?",
+        "You have unsaved changes to this comment. Are you sure you want to discard them?",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Discard",
+            style: "destructive",
+            onPress: () => {
+              setEditingComment(null);
+              setEditingCommentContent("");
+            },
+          },
+        ],
+      );
+    } else {
+      setEditingComment(null);
+      setEditingCommentContent("");
+    }
+  };
+
+  const router = useRouter();
 
   return (
     <ThemedView style={styles.innerContainer}>
       <ThemedText style={styles.title} title={true}>
         Official NUS Lifters Club Forum
       </ThemedText>
-
       <View style={styles.filterContainerRow}>
         <View style={styles.filterButtonsRow}>
           {["All", ...categories].map((cat) => (
@@ -147,26 +598,12 @@ const Forum = () => {
         </View>
 
         <ThemedButton
-          onPress={() => router.push("/(forum)/addEditThread")}
+          onPress={() => setModalVisible(true)}
           style={styles.filterButton}
         >
           <Text style={styles.filterText}>+</Text>
         </ThemedButton>
       </View>
-
-      <DropDownPicker
-        open={open}
-        setOpen={setOpen}
-        value={sortOption}
-        setValue={setSortOption}
-        items={[
-          { label: "Newest", value: "newest" },
-          { label: "Most Liked", value: "likes" },
-        ]}
-        containerStyle={{ marginTop: 10, marginBottom: 10, width: 130 }}
-        zIndex={1000}
-      />
-
       {loading ? (
         <Text>Loading threads...</Text>
       ) : (
@@ -176,44 +613,27 @@ const Forum = () => {
           renderItem={({ item }) => (
             <Pressable
               testID={"thread-card-button"}
-              onPress={() => router.push(`/(forum)/${item.id}`)}
+              onPress={() => {
+                setSelectedThread(item);
+              }}
             >
               <ThemedView style={styles.threadCard}>
                 <View
                   style={{
                     flexDirection: "row",
                     justifyContent: "space-between",
+                    alignItems: "center",
                   }}
                 >
                   <View style={{ flex: 1 }}>
                     <Text style={styles.threadTitle}>{item.title}</Text>
-
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        flexWrap: "wrap",
-                        marginTop: 2,
-                      }}
-                    >
-                      <Text style={styles.threadMeta}>
-                        by{" "}
-                        {item.authorId === currentUserId
-                          ? "You"
-                          : userNames[item.authorId] || "Loading..."}{" "}
-                        · {item.category} ·{" "}
-                      </Text>
-                      <Ionicons
-                        name="heart"
-                        size={14}
-                        color="#ff4d4d"
-                        style={{ marginRight: 2 }}
-                      />
-                      <Text style={styles.threadMeta}>
-                        {item.likes || 0}
-                      </Text>
-                    </View>
-
+                    <Text style={styles.threadMeta}>
+                      by{" "}
+                      {item.authorId === currentUserId
+                        ? "You"
+                        : userNames[item.authorId] || "Loading..."}{" "}
+                      · {item.category}
+                    </Text>
                     <Text
                       style={styles.threadSnippet}
                       numberOfLines={2}
@@ -226,12 +646,8 @@ const Forum = () => {
                   {item.authorId === currentUserId && (
                     <View style={{ flexDirection: "row", gap: 10 }}>
                       <Pressable
-                        onPress={() =>
-                          router.push({
-                            pathname: "/(forum)/addEditThread",
-                            params: { threadId: item.id },
-                          })
-                        }
+                        onPress={() => openEditModal(item)}
+                        testID="edit-thread-button"
                       >
                         <Ionicons
                           name="pencil-outline"
@@ -258,11 +674,418 @@ const Forum = () => {
           contentContainerStyle={{ gap: 16 }}
         />
       )}
+
+      {/* New Thread Modal */}
+      <Modal
+        visible={modalVisible}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <TouchableWithoutFeedback
+          onPress={() => {
+            Keyboard.dismiss();
+          }}
+        >
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.modalBackdrop}
+          >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={styles.modalContainer}>
+                <Text style={styles.modalTitle}>Create New Thread</Text>
+
+                <TextInput
+                  style={styles.input}
+                  placeholder="Thread Title"
+                  placeholderTextColor={"grey"}
+                  value={newTitle}
+                  onChangeText={setNewTitle}
+                />
+
+                <Text style={{ marginTop: 10 }}>Category:</Text>
+                <View style={styles.filterContainer}>
+                  {categories.map((cat) => (
+                    <ThemedButton
+                      key={cat}
+                      style={[
+                        styles.filterButton,
+                        newCategory === cat && styles.filterButtonSelected,
+                      ]}
+                      onPress={() => setNewCategory(cat)}
+                    >
+                      <Text style={styles.filterText}>{cat}</Text>
+                    </ThemedButton>
+                  ))}
+                </View>
+
+                <Text style={{ marginTop: 10 }}>Content:</Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    { height: 100, textAlignVertical: "top" },
+                  ]}
+                  placeholder="Write your thread content here..."
+                  placeholderTextColor={"grey"}
+                  value={newContent}
+                  onChangeText={setNewContent}
+                  multiline={true}
+                />
+
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    marginTop: 20,
+                  }}
+                >
+                  <ThemedButton
+                    onPress={addThread}
+                    style={{ flex: 1, marginRight: 10 }}
+                  >
+                    <Text style={styles.filterText}>Create</Text>
+                  </ThemedButton>
+
+                  <ThemedButton
+                    onPress={cancelCreateThread}
+                    style={{ flex: 1 }}
+                  >
+                    <Text style={styles.filterText}>Cancel</Text>
+                  </ThemedButton>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </KeyboardAvoidingView>
+        </TouchableWithoutFeedback>
+      </Modal>
+
+      {/* Edit Thread Modal */}
+      <Modal
+        visible={editModalVisible}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <TouchableWithoutFeedback
+          onPress={() => {
+            Keyboard.dismiss();
+          }}
+        >
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.modalBackdrop}
+          >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={styles.modalContainer}>
+                <Text style={styles.modalTitle}>Edit Thread</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Thread Title"
+                  placeholderTextColor={"grey"}
+                  value={editTitle}
+                  onChangeText={setEditTitle}
+                />
+                <Text style={{ marginTop: 10 }}>Category:</Text>
+                <View style={styles.filterContainer}>
+                  {categories.map((cat) => (
+                    <ThemedButton
+                      key={cat}
+                      style={[
+                        styles.filterButton,
+                        editCategory === cat && styles.filterButtonSelected,
+                      ]}
+                      onPress={() => setEditCategory(cat)}
+                    >
+                      <Text style={styles.filterText}>{cat}</Text>
+                    </ThemedButton>
+                  ))}
+                </View>
+                <Text style={{ marginTop: 10 }}>Content:</Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    { height: 100, textAlignVertical: "top" },
+                  ]}
+                  placeholder="Edit your thread content here..."
+                  placeholderTextColor={"grey"}
+                  value={editContent}
+                  onChangeText={setEditContent}
+                  multiline={true}
+                />
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    marginTop: 20,
+                  }}
+                >
+                  <ThemedButton
+                    onPress={updateThread}
+                    style={{ flex: 1, marginRight: 10 }}
+                  >
+                    <Text style={styles.filterText}>Save</Text>
+                  </ThemedButton>
+
+                  <ThemedButton onPress={cancelEditThread} style={{ flex: 1 }}>
+                    <Text style={styles.filterText}>Cancel</Text>
+                  </ThemedButton>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </KeyboardAvoidingView>
+        </TouchableWithoutFeedback>
+      </Modal>
+
+      {/* Thread Detail Modal */}
+      <Modal
+        visible={selectedThread !== null}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => {
+          setSelectedThread(null);
+          setComments([]);
+          setEditingComment(null);
+          setEditingCommentContent("");
+          setCommentInput("");
+        }}
+      >
+        <TouchableWithoutFeedback
+          onPress={() => {
+            setSelectedThread(null);
+            setComments([]);
+            setEditingComment(null);
+            setEditingCommentContent("");
+            setCommentInput("");
+          }}
+        >
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.modalBackdrop}
+          >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={styles.modalContainer}>
+                {selectedThread !== null && (
+                  <>
+                    <Text style={styles.threadTitle}>
+                      {selectedThread.title}
+                    </Text>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                      }}
+                    >
+                      <Pressable
+                        onPress={() => {
+                          router.push(`/(profiles)/${selectedThread.authorId}`);
+                          setSelectedThread(null);
+                          setComments([]);
+                          setEditingComment(null);
+                          setEditingCommentContent("");
+                          setCommentInput("");
+                        }}
+                      >
+                        <Text style={[styles.threadMeta, { color: "#007AFF" }]}>
+                          by{" "}
+                          {selectedThread.authorId === currentUserId
+                            ? "You"
+                            : userNames[selectedThread.authorId] ||
+                              "Loading..."}
+                        </Text>
+                      </Pressable>
+                      <Text style={styles.threadMeta}>
+                        {" · "}
+                        {selectedThread.category}
+                      </Text>
+                    </View>
+                    <Spacer height={20} />
+                    <Text style={styles.threadContent}>
+                      {selectedThread.content}
+                    </Text>
+                    {comments !== null && (
+                      <>
+                        <Spacer height={20} />
+                        <Text style={styles.commentHead}>Comments:</Text>
+                        <FlatList
+                          data={comments}
+                          extraData={editingComment}
+                          keyExtractor={(item) => item.id}
+                          renderItem={({ item }) => {
+                            return editingComment !== null &&
+                              item.id === editingComment ? (
+                              <>
+                                <TextInput
+                                  style={[
+                                    styles.input,
+                                    { height: 100, textAlignVertical: "top" },
+                                  ]}
+                                  value={editingCommentContent}
+                                  onChangeText={setEditingCommentContent}
+                                  multiline={true}
+                                />
+                                <View
+                                  style={{
+                                    flexDirection: "row",
+                                    justifyContent: "space-between",
+                                    marginTop: 20,
+                                  }}
+                                >
+                                  <ThemedButton
+                                    onPress={() =>
+                                      editComment(
+                                        selectedThread.id,
+                                        item.id,
+                                        editingCommentContent,
+                                      )
+                                    }
+                                    style={{ flex: 1, marginRight: 10 }}
+                                  >
+                                    <Text style={styles.filterText}>Save</Text>
+                                  </ThemedButton>
+
+                                  <ThemedButton
+                                    onPress={cancelEditComment}
+                                    style={{ flex: 1 }}
+                                  >
+                                    <Text style={styles.filterText}>
+                                      Cancel
+                                    </Text>
+                                  </ThemedButton>
+                                </View>
+                              </>
+                            ) : (
+                              <View style={styles.commentItem}>
+                                <Text style={styles.commentContent}>
+                                  - {item.content}
+                                </Text>
+
+                                <View
+                                  style={{
+                                    flexDirection: "row",
+                                    flexWrap: "wrap",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <Pressable
+                                    onPress={() => {
+                                      router.push(
+                                        `/(profiles)/${item.commenterID}`,
+                                      );
+                                      setSelectedThread(null);
+                                      setComments([]);
+                                      setEditingComment(null);
+                                      setEditingCommentContent("");
+                                      setCommentInput("");
+                                    }}
+                                  >
+                                    <Text
+                                      style={[
+                                        styles.commentAuthor,
+                                        { color: "#007AFF" },
+                                      ]}
+                                    >
+                                      by{" "}
+                                      {item.commenterID === currentUserId
+                                        ? "You"
+                                        : userNames[item.commenterID] ||
+                                          "Loading..."}
+                                    </Text>
+                                  </Pressable>
+                                  {item.editedAt && (
+                                    <Text
+                                      style={{
+                                        fontSize: 10,
+                                        color: "#888",
+                                        marginLeft: 4,
+                                      }}
+                                    >
+                                      (edited)
+                                    </Text>
+                                  )}
+                                </View>
+
+                                <Spacer height={10} />
+                                {item.commenterID === currentUserId && (
+                                  <View
+                                    style={{
+                                      flexDirection: "row",
+                                      gap: 10,
+                                    }}
+                                  >
+                                    <Pressable
+                                      onPress={() => {
+                                        setEditingComment(item.id);
+                                        setEditingCommentContent(item.content);
+                                      }}
+                                      testID="edit-comment-button"
+                                    >
+                                      <Ionicons
+                                        name="pencil-outline"
+                                        size={20}
+                                        color="#007AFF"
+                                      />
+                                    </Pressable>
+                                    <Pressable
+                                      onPress={() =>
+                                        deleteComment(
+                                          selectedThread.id,
+                                          item.id,
+                                        )
+                                      }
+                                    >
+                                      <Ionicons
+                                        name="trash-outline"
+                                        size={20}
+                                        color="#ff3b30"
+                                      />
+                                    </Pressable>
+                                  </View>
+                                )}
+                              </View>
+                            );
+                          }}
+                          contentContainerStyle={{ paddingVertical: 10 }}
+                        />
+                      </>
+                    )}
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        marginTop: 10,
+                      }}
+                    >
+                      <TextInput
+                        style={[styles.input, { flex: 1, height: 40 }]}
+                        placeholder="Add a comment..."
+                        placeholderTextColor={"grey"}
+                        value={commentInput}
+                        onChangeText={setCommentInput}
+                        onSubmitEditing={() => {
+                          if (commentInput.trim()) {
+                            addComment(selectedThread.id, commentInput);
+                          }
+                        }}
+                      />
+                      <ThemedButton
+                        onPress={() => {
+                          addComment(selectedThread.id, commentInput);
+                        }}
+                        style={{ marginLeft: 10 }}
+                      >
+                        <Text style={styles.filterText}>Post</Text>
+                      </ThemedButton>
+                    </View>
+                  </>
+                )}
+              </View>
+            </TouchableWithoutFeedback>
+          </KeyboardAvoidingView>
+        </TouchableWithoutFeedback>
+      </Modal>
     </ThemedView>
   );
 };
 
-export { deleteThread };
 export default Forum;
 
 const styles = StyleSheet.create({
@@ -275,6 +1098,12 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "bold",
     textAlign: "center",
+  },
+  filterContainer: {
+    flexDirection: "row",
+    gap: 8,
+    flexWrap: "wrap",
+    marginBottom: 5,
   },
   filterContainerRow: {
     flexDirection: "row",
@@ -321,5 +1150,47 @@ const styles = StyleSheet.create({
     marginTop: 5,
     fontSize: 14,
     color: "#333",
+  },
+  threadContent: {
+    fontSize: 16,
+    paddingHorizontal: 20,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    padding: 20,
+  },
+  modalContainer: {
+    backgroundColor: "white",
+    borderRadius: 10,
+    padding: 20,
+    maxHeight: "80%",
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 5,
+    padding: 8,
+    fontSize: 16,
+  },
+  commentHead: {
+    fontSize: 16,
+  },
+  commentAuthor: {
+    fontSize: 12,
+  },
+  commentItem: {
+    paddingHorizontal: 20,
+    borderColor: "#D3D3D3",
+    borderRadius: 1,
+  },
+  commentContent: {
+    fontSize: 16,
   },
 });
