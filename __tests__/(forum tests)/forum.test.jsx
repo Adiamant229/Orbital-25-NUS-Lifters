@@ -1,6 +1,5 @@
 // __tests__/(forum tests)/forum.test.jsx
-import React from "react";
-import { View, Text, Alert } from "react-native";
+import { Alert } from "react-native";
 import { deleteDoc, doc, getDoc } from "firebase/firestore";
 import { deleteObject, ref } from "firebase/storage";
 import { render, fireEvent, waitFor, act } from "@testing-library/react-native";
@@ -118,8 +117,7 @@ jest.mock("../../components/themedContext", () => ({
 // Spy and mock Alert.alert
 jest.spyOn(Alert, "alert").mockImplementation(() => {});
 
-// Import Forum AFTER mocks
-import Forum from "../../app/(dashboard)/forum";
+import Forum, { deleteThread } from "../../app/(dashboard)/forum";
 
 const { __pushMock } = jest.requireMock("expo-router");
 
@@ -217,5 +215,163 @@ describe("Forum Page", () => {
 
     // Check error alert called for "Thread not found"
     expect(Alert.alert).toHaveBeenCalledWith("Error", "Thread not found.");
+  });
+
+  describe("deleteThread function", () => {
+    const threadId = "thread123";
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      // Reset Alert.alert mock to a no-op
+      Alert.alert.mockImplementation(() => {});
+      console.warn = jest.fn();
+      console.error = jest.fn();
+    });
+
+    test("deletes thread and media successfully", async () => {
+      getDoc.mockResolvedValueOnce({
+        exists: () => true,
+        data: () => ({
+          mediaUrl:
+            "https://firebasestorage.googleapis.com/v0/b/app.appspot.com/o/media%2Ffile.jpg?alt=media",
+        }),
+      });
+      deleteObject.mockResolvedValueOnce();
+      deleteDoc.mockResolvedValueOnce();
+
+      // Call deleteThread and simulate user pressing "Delete" in Alert
+      // First call triggers Alert.alert with buttons - find Delete button and call onPress
+      await deleteThread(threadId);
+
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Delete Thread",
+        "Are you sure you want to delete this thread?",
+        expect.any(Array)
+      );
+
+      // Extract the alert buttons from last Alert.alert call
+      const buttons =
+        Alert.alert.mock.calls[Alert.alert.mock.calls.length - 1][2];
+      const deleteButton = buttons.find((b) => b.text === "Delete");
+
+      // Call the Delete button's onPress (which is async)
+      await act(async () => {
+        await deleteButton.onPress();
+      });
+
+      // Verify doc and media deletion called correctly
+      expect(doc).toHaveBeenCalledWith(expect.anything(), "threads", threadId);
+      expect(getDoc).toHaveBeenCalled();
+      expect(ref).toHaveBeenCalledWith(expect.anything(), "media/file.jpg");
+      expect(deleteObject).toHaveBeenCalled();
+      expect(deleteDoc).toHaveBeenCalled();
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Deleted",
+        "Thread removed successfully."
+      );
+    });
+
+    test("deletes thread without mediaUrl", async () => {
+      getDoc.mockResolvedValueOnce({
+        exists: () => true,
+        data: () => ({}), // no mediaUrl
+      });
+      deleteDoc.mockResolvedValueOnce();
+
+      await deleteThread(threadId);
+
+      const buttons =
+        Alert.alert.mock.calls[Alert.alert.mock.calls.length - 1][2];
+      const deleteButton = buttons.find((b) => b.text === "Delete");
+
+      await act(async () => {
+        await deleteButton.onPress();
+      });
+
+      expect(deleteObject).not.toHaveBeenCalled();
+      expect(deleteDoc).toHaveBeenCalled();
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Deleted",
+        "Thread removed successfully."
+      );
+    });
+
+    test("alerts error if thread not found", async () => {
+      getDoc.mockResolvedValueOnce({
+        exists: () => false,
+      });
+
+      await deleteThread(threadId);
+
+      const buttons =
+        Alert.alert.mock.calls[Alert.alert.mock.calls.length - 1][2];
+      const deleteButton = buttons.find((b) => b.text === "Delete");
+
+      await act(async () => {
+        await deleteButton.onPress();
+      });
+
+      expect(Alert.alert).toHaveBeenCalledWith("Error", "Thread not found.");
+      expect(deleteDoc).not.toHaveBeenCalled();
+    });
+
+    test("warns but continues if media deletion fails", async () => {
+      getDoc.mockResolvedValueOnce({
+        exists: () => true,
+        data: () => ({
+          mediaUrl:
+            "https://firebasestorage.googleapis.com/v0/b/app.appspot.com/o/media%2Ffile.jpg?alt=media",
+        }),
+      });
+      deleteObject.mockRejectedValueOnce(new Error("Storage failure"));
+      deleteDoc.mockResolvedValueOnce();
+
+      await deleteThread(threadId);
+
+      const buttons =
+        Alert.alert.mock.calls[Alert.alert.mock.calls.length - 1][2];
+      const deleteButton = buttons.find((b) => b.text === "Delete");
+
+      await act(async () => {
+        await deleteButton.onPress();
+      });
+
+      expect(console.warn).toHaveBeenCalledWith(
+        "Failed to delete media file:",
+        expect.any(Error)
+      );
+      expect(deleteDoc).toHaveBeenCalled();
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Deleted",
+        "Thread removed successfully."
+      );
+    });
+
+    test("alerts error if deleteDoc fails", async () => {
+      getDoc.mockResolvedValueOnce({
+        exists: () => true,
+        data: () => ({}),
+      });
+      deleteDoc.mockRejectedValueOnce(new Error("Firestore failure"));
+
+      await deleteThread(threadId);
+
+      const buttons =
+        Alert.alert.mock.calls[Alert.alert.mock.calls.length - 1][2];
+      const deleteButton = buttons.find((b) => b.text === "Delete");
+
+      await act(async () => {
+        await deleteButton.onPress();
+      });
+
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Error",
+        "Could not delete thread."
+      );
+      expect(console.error).toHaveBeenCalledWith(
+        "Error deleting thread: ",
+        expect.any(Error)
+      );
+    });
   });
 });
