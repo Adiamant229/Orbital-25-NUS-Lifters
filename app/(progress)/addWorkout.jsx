@@ -22,7 +22,7 @@ import ThemedButton from "../../components/themedButton";
 import ThemedTextInput from "../../components/themedTextInput";
 
 //firebase imports
-import { db, auth } from "../../firebaseConfig";
+import { db, auth } from "../../firebaseConfig"; 
 import { collection, addDoc, doc, getDoc, updateDoc } from "firebase/firestore";
 
 const AddWorkout = () => {
@@ -121,12 +121,12 @@ const AddWorkout = () => {
 
               const maxExerciseId = Math.max(
                 ...exercisesWithIds.map((e) => e.id || 0),
-                0,
+                0
               );
               nextExerciseId.current = maxExerciseId + 1;
 
               const allSetIds = exercisesWithIds.flatMap((e) =>
-                e.sets.map((s) => s.id || 0),
+                e.sets.map((s) => s.id || 0)
               );
               const maxSetId = Math.max(...allSetIds, 0);
               nextSetId.current = maxSetId + 1;
@@ -138,7 +138,7 @@ const AddWorkout = () => {
 
             setWorkoutTimePeriod(data.timePeriod || null);
             setDate(
-              data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
+              data.createdAt?.toDate ? data.createdAt.toDate() : new Date()
             );
           } else {
             Alert.alert("Workout not found.");
@@ -211,7 +211,7 @@ const AddWorkout = () => {
       return;
     }
     const validExercises = exercises.filter(
-      (ex) => ex.name && ex.name.trim() !== "",
+      (ex) => ex.name && ex.name.trim() !== ""
     );
     if (validExercises.length === 0) {
       Alert.alert("Please add at least one exercise.");
@@ -264,7 +264,7 @@ const AddWorkout = () => {
         Alert.alert(
           "Success",
           editWorkoutId ? "Workout updated!" : "Workout added!",
-          [{ text: "OK", onPress: () => router.back() }],
+          [{ text: "OK", onPress: () => router.back() }]
         );
       } catch (error) {
         console.error("Error saving workout:", error);
@@ -280,7 +280,7 @@ const AddWorkout = () => {
       [
         { text: "Cancel", style: "cancel" },
         { text: editWorkoutId ? "Update" : "Save", onPress: save },
-      ],
+      ]
     );
   };
 
@@ -303,8 +303,8 @@ const AddWorkout = () => {
                 ex.sets.some(
                   (set) =>
                     (set.reps && set.reps !== "") ||
-                    (set.weight && set.weight !== ""),
-                )),
+                    (set.weight && set.weight !== "")
+                ))
           ))
       );
     }
@@ -314,7 +314,7 @@ const AddWorkout = () => {
     if (workoutTimePeriod !== originalWorkout.timePeriod) return true;
 
     if (!isDeepEqual(exercises, originalWorkout.exercises)) return true;
-
+    
     return false;
   };
 
@@ -328,12 +328,13 @@ const AddWorkout = () => {
         [
           { text: "No", style: "cancel" },
           { text: "Yes", style: "destructive", onPress: () => router.back() },
-        ],
+        ]
       );
     } else {
       router.back();
     }
   };
+  
 
   return (
     <ThemedView style={styles.container}>
@@ -370,6 +371,7 @@ const AddWorkout = () => {
                 value={date}
                 mode="date"
                 onChange={onChangeDate}
+                maximumDate={new Date()}
                 testID="date-picker"
               />
             )}
@@ -489,7 +491,7 @@ const AddWorkout = () => {
                               exerciseIndex,
                               setIndex,
                               "reps",
-                              value,
+                              value
                             );
                           }}
                           placeholder="Reps"
@@ -524,7 +526,7 @@ const AddWorkout = () => {
                               exerciseIndex,
                               setIndex,
                               "weight",
-                              value,
+                              value
                             );
                           }}
                           placeholder="Weight (kg)"

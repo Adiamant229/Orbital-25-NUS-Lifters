@@ -1,4 +1,4 @@
-//react imports
+//react imports 
 import { useEffect, useState } from "react";
 import { ScrollView, Dimensions, View, StyleSheet } from "react-native";
 import { LineChart } from "react-native-chart-kit";
@@ -8,7 +8,7 @@ import DropDownPicker from "react-native-dropdown-picker";
 import ThemedView from "../../components/themedView";
 import ThemedText from "../../components/themedText";
 
-//firebase imports
+//firebase imports 
 import { query, collection, orderBy, where, getDocs } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { db } from "../../firebaseConfig";
@@ -65,7 +65,7 @@ const ExerciseProgress = () => {
         const q = query(
           collection(db, "workouts"),
           where("userId", "==", currentUser.uid),
-          orderBy("createdAt", "asc"),
+          orderBy("createdAt", "asc")
         );
 
         const snapshot = await getDocs(q);
@@ -113,7 +113,7 @@ const ExerciseProgress = () => {
           exerciseArray.map((ex) => ({
             label: ex,
             value: ex,
-          })),
+          }))
         );
 
         setSelectedExercises(exerciseArray);
