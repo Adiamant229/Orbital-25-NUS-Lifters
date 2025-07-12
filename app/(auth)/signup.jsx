@@ -1,7 +1,8 @@
-// react and expo imports
+//react and expo imports
 import {
   StyleSheet,
   Alert,
+  Text,
   Keyboard,
   TouchableWithoutFeedback,
   Image,
@@ -23,7 +24,7 @@ import { auth, db } from "../../firebaseConfig";
 import { doc, setDoc } from "firebase/firestore";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 
-// logo
+//logo
 import Logo from "../../assets/img/NUS_Lifters.png";
 
 const Signup = () => {
@@ -34,6 +35,9 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const spacerHeight = Platform.OS === "ios" ? 10 : 3;
+  const logoWidthAndHeight = Platform.OS === "ios" ? 280 : 240;
 
   const validateEmail = (email) => {
     const re = /\S+@\S+\.\S+/;
@@ -68,7 +72,7 @@ const Signup = () => {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
-        password
+        password,
       );
       const user = userCredential.user;
 
@@ -111,17 +115,14 @@ const Signup = () => {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.flex}
+        style={{ flex: 1 }}
       >
         <ThemedView style={styles.container}>
           <Image
             source={Logo}
             style={[
               styles.img,
-              {
-                width: Platform.OS === "ios" ? 280 : 240,
-                height: Platform.OS === "ios" ? 280 : 240,
-              },
+              { width: logoWidthAndHeight, height: logoWidthAndHeight },
             ]}
           />
 
@@ -165,15 +166,17 @@ const Signup = () => {
           />
 
           <ThemedButton onPress={handleRegister} disabled={loading}>
-            <ThemedText style={styles.buttonText}>
+            <Text style={{ color: "#f2f2f2", fontWeight: "bold" }}>
               {loading ? "Creating..." : "Create"}
-            </ThemedText>
+            </Text>
           </ThemedButton>
 
-          <Spacer height={Platform.OS === "ios" ? 10 : 3} />
+          <Spacer height={spacerHeight} />
 
           <Link href="/">
-            <ThemedText style={styles.loginText}>Login instead</ThemedText>
+            <ThemedText style={{ textAlign: "center" }}>
+              Login instead
+            </ThemedText>
           </Link>
         </ThemedView>
       </KeyboardAvoidingView>
@@ -184,8 +187,8 @@ const Signup = () => {
 export default Signup;
 
 const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
+  scrollContainer: {
+    flexGrow: 1,
   },
   container: {
     flex: 1,
@@ -202,13 +205,5 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
     borderRadius: 20,
     marginVertical: 10,
-  },
-  buttonText: {
-    color: "#f2f2f2",
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  loginText: {
-    textAlign: "center",
   },
 });
