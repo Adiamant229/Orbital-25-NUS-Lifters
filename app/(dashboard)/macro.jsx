@@ -47,6 +47,7 @@ const searchOptions = (query) => {
 
 const searchDB = async (query) => {
     try {
+        console.log("searching");
         const response = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${APIKey}`, searchOptions(query));
         const data = await response.json();
         return data?.foods || [];
@@ -327,12 +328,14 @@ const Macro = () => {
                                     Energy: "calories",
                                     "Total lipid (fat)": "fat",
                                   };
+                                  console.log(item);
                                   const mealItem = item.foodNutrients
                                     .filter((nutrient) =>
                                       wanted.hasOwnProperty(
                                         nutrient.nutrientName
                                       )
                                     )
+                                      .filter((nutrient) => (nutrient.nutrientName !== "Energy" || nutrient.nutrientName === "Energy" && nutrient.unitName==="KCAL"))
                                     .reduce(
                                       (food, nutrient) => {
                                         food[wanted[nutrient.nutrientName]] =
