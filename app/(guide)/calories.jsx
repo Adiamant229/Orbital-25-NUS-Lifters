@@ -178,6 +178,13 @@ const calories = () => {
             <ScrollView
               contentContainerStyle={{ paddingBottom: 50, paddingTop: 10 }}
             >
+              <ThemedText
+                style={[styles.title, { marginBottom: 40 }]}
+                title={true}
+              >
+                How many calories should I eat?
+              </ThemedText>
+
               <ThemedText style={styles.title} title={true}>
                 Calorie Calculator
               </ThemedText>
@@ -195,7 +202,7 @@ const calories = () => {
                     <Ionicons
                       name="help-circle-outline"
                       size={15}
-                      color={"white"}
+                      color={"grey"}
                     />
                   </Pressable>
                 </View>
@@ -208,7 +215,9 @@ const calories = () => {
                     ]}
                   >
                     <View style={styles.buttonicons}>
-                      <ThemedText>Mifflin-St Jeor</ThemedText>
+                      <ThemedText style={{ color: "white" }}>
+                        Mifflin-St Jeor
+                      </ThemedText>
                     </View>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -219,7 +228,9 @@ const calories = () => {
                     ]}
                   >
                     <View style={styles.buttonicons}>
-                      <ThemedText>Katch-McArdle</ThemedText>
+                      <ThemedText style={{ color: "white" }}>
+                        Katch-McArdle
+                      </ThemedText>
                     </View>
                   </TouchableOpacity>
                 </View>
@@ -240,7 +251,7 @@ const calories = () => {
                   style={[styles.addButton, sex === 1 && styles.selectedButton]}
                 >
                   <View style={styles.buttonicons}>
-                    <ThemedText>Male</ThemedText>
+                    <ThemedText style={{ color: "white" }}>Male</ThemedText>
                   </View>
                 </TouchableOpacity>
 
@@ -249,7 +260,7 @@ const calories = () => {
                   style={[styles.addButton, sex === 0 && styles.selectedButton]}
                 >
                   <View style={styles.buttonicons}>
-                    <ThemedText>Female</ThemedText>
+                    <ThemedText style={{ color: "white" }}>Female</ThemedText>
                   </View>
                 </TouchableOpacity>
               </View>
@@ -301,7 +312,7 @@ const calories = () => {
                   ]}
                 >
                   <View style={styles.buttonicons}>
-                    <ThemedText>No</ThemedText>
+                    <ThemedText style={{ color: "white" }}>No</ThemedText>
                   </View>
                 </TouchableOpacity>
 
@@ -313,7 +324,7 @@ const calories = () => {
                   ]}
                 >
                   <View style={styles.buttonicons}>
-                    <ThemedText>Yes</ThemedText>
+                    <ThemedText style={{ color: "white" }}>Yes</ThemedText>
                   </View>
                 </TouchableOpacity>
               </View>
@@ -409,7 +420,7 @@ const calories = () => {
                           }
                           if (workVal !== 0 && leisureVal !== 0) {
                             setPALTemp(
-                              calculateActivityLevel(workVal, leisureVal),
+                              calculateActivityLevel(workVal, leisureVal)
                             );
                             setModalVisible(false);
                           }
@@ -466,7 +477,7 @@ const calories = () => {
                   }
                   if (mode === "mifflin") {
                     setBmr(
-                      mifflinBMRCalc(sex, tempWeight, tempHeight, tempAge),
+                      mifflinBMRCalc(sex, tempWeight, tempHeight, tempAge)
                     );
                   } else {
                     setBmr(katchBMRCalc(sex, tempWeight, tempHeight, tempFat));
@@ -480,20 +491,20 @@ const calories = () => {
                   setShowResults(true);
                 }}
               >
-                <ThemedText>Calculate</ThemedText>
+                <ThemedText style={{ color: "white" }}>Calculate</ThemedText>
               </ThemedButton>
               {showResults && (
                 <>
                   <View style={{ flexDirection: "row" }}>
                     <View style={styles.resultsBox}>
                       <ThemedText style={styles.resultsTxt}>
-                        BMR: {bmr}
+                        Your BMR: {bmr}
                       </ThemedText>
                     </View>
                     {toggletdeeres && (
                       <View style={styles.resultsBox}>
                         <ThemedText style={styles.resultsTxt}>
-                          TDEE: {tdee}
+                          Your TDEE: {tdee}
                         </ThemedText>
                       </View>
                     )}
@@ -515,7 +526,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
   },
   title: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "bold",
     alignSelf: "center",
   },
@@ -546,7 +557,7 @@ const styles = StyleSheet.create({
   },
   addButton: {
     backgroundColor: "#2196f3",
-    borderRadius: 1,
+    borderRadius: 20,
     padding: 10,
     width: 112,
     alignItems: "center",

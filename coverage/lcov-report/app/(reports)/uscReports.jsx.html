@@ -837,7 +837,8 @@
 <a name='L772'></a><a href='#L772'>772</a>
 <a name='L773'></a><a href='#L773'>773</a>
 <a name='L774'></a><a href='#L774'>774</a>
-<a name='L775'></a><a href='#L775'>775</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L775'></a><a href='#L775'>775</a>
+<a name='L776'></a><a href='#L776'>776</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1073,6 +1074,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1673,16 +1675,16 @@ const UscReports = () =&gt; {
 &nbsp;
   const [remarks, setRemarks] = useState("");
 &nbsp;
-  const [value, setValue] = useState(null); 
-  const [open, setOpen] = useState(false); 
+  const [value, setValue] = useState(null);
+  const [open, setOpen] = useState(false);
 &nbsp;
   const [expandedReportId, setExpandedReportId] = useState(null);
 &nbsp;
   const [imageDeletedLocally, setImageDeletedLocally] = useState(false);
   const [imageUri, setImageUri] = useState(null);
 &nbsp;
-  const [issueOpen, setIssueOpen] = useState(false); 
-  const [issueValue, setIssueValue] = useState(null); 
+  const [issueOpen, setIssueOpen] = useState(false);
+  const [issueValue, setIssueValue] = useState(null);
 &nbsp;
   const [editingReportId, setEditingReportId] = useState(null);
 &nbsp;
@@ -1729,17 +1731,17 @@ const UscReports = () =&gt; {
         data.sort(<span class="fstat-no" title="function not covered" >(a</span>, b) =&gt; {
           const timeA = <span class="cstat-no" title="statement not covered" >a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;</span>
           const timeB = <span class="cstat-no" title="statement not covered" >b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;</span>
-<span class="cstat-no" title="statement not covered" >          return timeB - timeA; </span>
+<span class="cstat-no" title="statement not covered" >          return timeB - timeA;</span>
         });
         setReports(data);
       },
       (error) =&gt; {
         console.error("Error fetching real-time reports:", error);
-      }
+      },
     );
 &nbsp;
     return () =&gt; unsubscribe();
-  }, []); 
+  }, []);
 &nbsp;
   const openAddModal = () =&gt; {
     setEditingReportId(null);
@@ -1748,7 +1750,7 @@ const UscReports = () =&gt; {
     setIssueValue(null);
     setRemarks("");
     setImageUri(null);
-    setImageDeletedLocally(false); 
+    setImageDeletedLocally(false);
     setModalVisible(true);
   };
 &nbsp;
@@ -1764,7 +1766,7 @@ const UscReports = () =&gt; {
     setIssueValue(report.issueType);
     setRemarks(report.remarks || <span class="branch-1 cbranch-no" title="branch not covered" >"")</span>;
     setImageUri(report.imageUrl || <span class="branch-1 cbranch-no" title="branch not covered" >null)</span>;
-    setImageDeletedLocally(false); 
+    setImageDeletedLocally(false);
     setModalVisible(true);
   };
 &nbsp;
@@ -1772,7 +1774,7 @@ const UscReports = () =&gt; {
     if (!value || !issueValue) {
       Alert.alert(
         "Submission Error",
-        "Please select equipment and issue type."
+        "Please select equipment and issue type.",
       );
       return;
     }
@@ -1786,15 +1788,15 @@ const UscReports = () =&gt; {
         { text: "Cancel", style: "cancel" },
         {
           text: editingReportId ? "Update" : "Submit",
-          style: "default", 
+          style: "default",
           onPress: async () =&gt; {
             try {
-              let newImageUrl = null; 
-              let oldImageUrlFromDb = null; 
+              let newImageUrl = null;
+              let oldImageUrlFromDb = null;
 &nbsp;
               if (editingReportId) {
                 const docRef = doc(db, "uscReports", editingReportId);
-                const reportSnap = await getDoc(docRef); 
+                const reportSnap = await getDoc(docRef);
                 <span class="missing-if-branch" title="else path not taken" >E</span>if (reportSnap.exists()) {
                   oldImageUrlFromDb = reportSnap.data().imageUrl || <span class="branch-1 cbranch-no" title="branch not covered" >null;</span>
                 }
@@ -1824,22 +1826,22 @@ const UscReports = () =&gt; {
                 } catch (e) {
                   console.warn("Failed to delete old image locally:", e);
                 }
-                newImageUrl = deleteField(); 
+                newImageUrl = deleteField();
               } else if (imageUri?.startsWith("https://")) {
                 newImageUrl = imageUri;
               } else {
-                newImageUrl = null; 
+                newImageUrl = null;
               }
 &nbsp;
               const reportData = {
                 equipment: value,
                 issueType: issueValue,
                 remarks: remarks.trim(),
-                userId: currentUserId, 
+                userId: currentUserId,
               };
 &nbsp;
               if (newImageUrl === deleteField()) {
-                reportData.imageUrl = deleteField(); 
+                reportData.imageUrl = deleteField();
               } else if (newImageUrl) {
                 reportData.imageUrl = newImageUrl;
               } else {
@@ -1850,12 +1852,13 @@ const UscReports = () =&gt; {
                   !newImageUrl &amp;&amp;
                   editingReportId &amp;&amp;
                   !oldImageUrlFromDb
-                ) {}
+                ) {
+                }
               }
 &nbsp;
               if (editingReportId) {
                 const docRef = doc(db, "uscReports", editingReportId);
-                await updateDoc(docRef, reportData); 
+                await updateDoc(docRef, reportData);
               } else {
                 reportData.createdAt = new Date();
                 await addDoc(reportsCollectionRef, reportData);
@@ -1870,7 +1873,7 @@ const UscReports = () =&gt; {
               setImageDeletedLocally(false);
               Alert.alert(
                 "Success",
-                editingReportId ? "Report updated!" : "Report submitted!"
+                editingReportId ? "Report updated!" : "Report submitted!",
               );
             } catch (error) {
               console.error("Error submitting report:", error);
@@ -1878,7 +1881,7 @@ const UscReports = () =&gt; {
             }
           },
         },
-      ]
+      ],
     );
   };
 &nbsp;
@@ -1909,7 +1912,7 @@ const UscReports = () =&gt; {
 &nbsp;
               <span class="missing-if-branch" title="else path not taken" >E</span>if (reportToDelete?.imageUrl) {
                 const imagePath = getStoragePathFromUrl(
-                  reportToDelete.imageUrl
+                  reportToDelete.imageUrl,
                 );
                 const imageRef = ref(storage, imagePath);
                 await deleteObject(imageRef);
@@ -1927,7 +1930,7 @@ const UscReports = () =&gt; {
             }
           },
         },
-      ]
+      ],
     );
   };
 &nbsp;
@@ -1941,7 +1944,7 @@ const UscReports = () =&gt; {
     }
 &nbsp;
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.Images, 
+      mediaTypes: ImagePicker.Images,
       quality: 0.7,
     });
 &nbsp;
@@ -1964,13 +1967,13 @@ const UscReports = () =&gt; {
 &nbsp;
     if (!result.canceled) {
       setImageUri(result.assets[0].uri);
-      setImageDeletedLocally(false); 
+      setImageDeletedLocally(false);
     }
   };
 &nbsp;
   const handleRemoveImage = () =&gt; {
     setImageUri(null);
-    setImageDeletedLocally(true); 
+    setImageDeletedLocally(true);
   };
 &nbsp;
   const changesDone = () =&gt; {
@@ -1987,7 +1990,7 @@ const UscReports = () =&gt; {
         issueValue !== originalReport.issueType ||
         remarks.trim() !== originalReport.remarks.trim() ||
         imageUri !== originalReport.imageUri ||
-        (imageDeletedLocally &amp;&amp; <span class="branch-5 cbranch-no" title="branch not covered" >originalReport.imageUri !== null) </span>
+        (imageDeletedLocally &amp;&amp; <span class="branch-5 cbranch-no" title="branch not covered" >originalReport.imageUri !== null)</span>
       );
     }
   };
@@ -2015,7 +2018,7 @@ const UscReports = () =&gt; {
               setImageDeletedLocally(false);
             },
           },
-        ]
+        ],
       );
     } else {
       setModalVisible(false);
@@ -2034,12 +2037,12 @@ const UscReports = () =&gt; {
 &nbsp;
   const handleLink = <span class="fstat-no" title="function not covered" >()</span> =&gt; {
 <span class="cstat-no" title="statement not covered" >    Linking.openURL(gymLocationUrl).catch(<span class="fstat-no" title="function not covered" >(e</span>rr) =&gt;</span>
-<span class="cstat-no" title="statement not covered" >      console.error("Failed to open URL:", err)</span>
+<span class="cstat-no" title="statement not covered" >      console.error("Failed to open URL:", err),</span>
     );
   };
-  
+&nbsp;
   const dropdownListMode = Platform.OS === "android" ? <span class="branch-0 cbranch-no" title="branch not covered" >"MODAL" </span>: "SCROLLVIEW";
-  
+&nbsp;
   return (
     &lt;ThemedView style={styles.container}&gt;
       &lt;FlatList
@@ -2392,7 +2395,7 @@ const styles = StyleSheet.create({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-07-13T03:26:27.949Z
+                at 2025-07-13T14:48:42.326Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
