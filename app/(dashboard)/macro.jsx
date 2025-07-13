@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   TouchableWithoutFeedback,
   View,
 } from "react-native";
@@ -16,7 +17,7 @@ import { Searchbar } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 //firebase imports
 import { APIKey } from "../../firebaseConfig";
 
@@ -170,9 +171,33 @@ const Macro = () => {
         >
           <View style={styles.searchContent}>
             <MaterialIcons size={24} name="search" color="#f2f2f2" />
-            <ThemedText>Search Food</ThemedText>
+            <ThemedText style={{ color: "white" }}>Search Food</ThemedText>
           </View>
         </ThemedButton>
+
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 75,
+            marginTop: 20,
+          }}
+        >
+          <ThemedText
+            style={{
+              fontSize: 18,
+            }}
+          >
+            Your Macros of the Day
+          </ThemedText>
+
+          <TouchableOpacity
+            onPress={() => router.push("/calories")}
+            style={styles.guideButton}
+          >
+            <FontAwesome5 name="book-open" size={15} color="white" />
+          </TouchableOpacity>
+        </View>
 
         <View style={styles.infoBox}>
           <View style={styles.row}>
@@ -195,12 +220,16 @@ const Macro = () => {
             onPress={handleSendToProgress}
             style={styles.sendButton}
           >
-            <ThemedText>Save to Progress Tracker</ThemedText>
+            <ThemedText style={{ color: "white" }}>
+              Save to Progress Tracker
+            </ThemedText>
           </ThemedButton>
         </View>
 
         <Spacer />
-
+        <ThemedText style={{ marginRight: 230, marginBottom: 5, fontSize: 18 }}>
+          Your Meals
+        </ThemedText>
         <View style={styles.mealbox}>
           {mealList.length < 1 ? (
             <View
@@ -384,7 +413,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 22,
-    marginBottom: 20,
+    marginBottom: 10,
   },
   searchButton: {
     paddingVertical: 12,
@@ -479,5 +508,14 @@ const styles = StyleSheet.create({
   resultsBox: {
     flex: 1,
     padding: 20,
+  },
+  guideButton: {
+    backgroundColor: "#2196f3",
+    borderRadius: 20,
+    padding: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    width: 37,
+    height: 35,
   },
 });
