@@ -1,18 +1,14 @@
 import { useLocalSearchParams } from "expo-router";
 import ThemedText from "../../components/themedText";
 import { exerciseAPIKey } from "../../firebaseConfig";
-import { Image, StyleSheet, Dimensions } from "react-native";
+import { Image, StyleSheet, Dimensions, ScrollView } from "react-native";
 import ThemedView from "../../components/themedView";
+import Spacer from "../../components/spacer";
+import { capWords } from "../index";
 
 const imgURL = `https://exercisedb.p.rapidapi.com/image?resolution=180&rapidapi-key=${exerciseAPIKey}`;
 const screenWidth = Dimensions.get("window").width;
 export default function exerciseInfo() {
-  const capWords = (x) => {
-    for (let i = 0; i < x.length; i++) {
-      x[i] = x[i].charAt(0).toUpperCase() + x[i].substring(1);
-    }
-    return x;
-  };
   const params = useLocalSearchParams();
   const name = capWords(params?.name.split(" ")).join(" ");
   const description = params?.description;
@@ -27,39 +23,52 @@ export default function exerciseInfo() {
   return (
     <>
       <ThemedView style={styles.container}>
-        <ThemedText style={styles.title}>{name}</ThemedText>
-        <Image
-          source={{ uri: imgURL + "&exerciseId=" + id }}
-          style={{ width: screenWidth, height: screenWidth }}
-        />
-        <ThemedText>{description}</ThemedText>
-        <ThemedText>
-          Equipment: {equipment}; targets: {bodyPart}; Secondary Muscles:{" "}
-          {secondaryMuscles.join(", ")}
-        </ThemedText>
-        <ThemedText>Instructions</ThemedText>
-        {instructions.map((item, index) => {
-          return (
-            <ThemedText key={item}>
-              {index + 1}: {item}
-            </ThemedText>
-          );
-        })}
+        <ScrollView contentContainerStyle={styles.container}>
+          <ThemedText style={styles.title}>{name}</ThemedText>
+          <Spacer />
+          <Image
+            source={{ uri: imgURL + "&exerciseId=" + id }}
+            style={{ width: "80%", aspectRatio: 1, alignSelf: "center" }}
+          />
+          <Spacer />
+          <ThemedText style={styles.text}>{description}</ThemedText>
+          <ThemedText style={styles.text}> Equipment: {equipment}</ThemedText>
+          <ThemedText style={styles.text}>Targets: {bodyPart};</ThemedText>
+          <ThemedText style={styles.text}>
+            Secondary Muscles: {secondaryMuscles.join(", ")}
+          </ThemedText>
+          <ThemedText style={styles.text}>Instructions</ThemedText>
+          {instructions.map((item, index) => {
+            return (
+              <ThemedText style={styles.text} key={item}>
+                {index + 1}: {item}
+              </ThemedText>
+            );
+          })}
+        </ScrollView>
       </ThemedView>
     </>
   );
 }
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    flexGrow: 1,
     padding: 20,
   },
-
+  scrollContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    flexGrow: 1,
+  },
   title: {
     fontWeight: "bold",
-    fontSize: 18,
+    fontSize: 20,
     marginBottom: 20,
+    textAlign: "center",
+  },
+  text: {
+    marginBottom: 20,
+    textAlign: "justify",
+    fontSize: 16,
   },
 });

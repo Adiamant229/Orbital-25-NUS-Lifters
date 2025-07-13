@@ -60,46 +60,47 @@ const AddWorkout = () => {
   const [exerciseApiOptions, setExerciseApiOptions] = useState([]);
   const [exerciseSearchQuery, setExerciseSearchQuery] = useState("");
 
-const fetchExerciseOptions = async (query = "", currentExercises = []) => {
-  try {
-    const baseURL = "https://exercisedb.p.rapidapi.com/";
-    const options = {
-      method: "GET",
-      headers: {
-        "x-rapidapi-key": exerciseAPIKey,
-        "x-rapidapi-host": "exercisedb.p.rapidapi.com",
-      },
-    };
-    const url = query
-      ? `${baseURL}exercises/name/${query.toLowerCase()}`
-      : `${baseURL}exercises`;
-
-    const response = await fetch(url, options);
-    const data = await response.json();
-
-    const selectedNames = currentExercises.map((ex) => ex.name).filter(Boolean);
-    const existingSet = new Set();
-
-    const dropdownItems = data.map((item) => {
-      existingSet.add(item.name);
-      return {
-        label: item.name,
-        value: item.name,
+  const fetchExerciseOptions = async (query = "", currentExercises = []) => {
+    try {
+      const baseURL = "https://exercisedb.p.rapidapi.com/";
+      const options = {
+        method: "GET",
+        headers: {
+          "x-rapidapi-key": exerciseAPIKey,
+          "x-rapidapi-host": "exercisedb.p.rapidapi.com",
+        },
       };
-    });
+      const url = query
+        ? `${baseURL}exercises/name/${query.toLowerCase()}`
+        : `${baseURL}exercises`;
 
-    selectedNames.forEach((name) => {
-      if (!existingSet.has(name)) {
-        dropdownItems.push({ label: name, value: name });
-      }
-    });
+      const response = await fetch(url, options);
+      const data = await response.json();
 
-    setExerciseApiOptions(dropdownItems);
-  } catch (error) {
-    console.error("Failed to fetch exercise list", error);
-  }
-};
+      const selectedNames = currentExercises
+        .map((ex) => ex.name)
+        .filter(Boolean);
+      const existingSet = new Set();
 
+      const dropdownItems = data.map((item) => {
+        existingSet.add(item.name);
+        return {
+          label: item.name,
+          value: item.name,
+        };
+      });
+
+      selectedNames.forEach((name) => {
+        if (!existingSet.has(name)) {
+          dropdownItems.push({ label: name, value: name });
+        }
+      });
+
+      setExerciseApiOptions(dropdownItems);
+    } catch (error) {
+      console.error("Failed to fetch exercise list", error);
+    }
+  };
 
   useEffect(() => {
     fetchExerciseOptions();
@@ -132,7 +133,7 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
             setWorkoutNotes(data.workoutNotes || "");
             setWorkoutTimePeriod(data.timePeriod || null);
             setDate(
-              data.createdAt?.toDate ? data.createdAt.toDate() : new Date()
+              data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
             );
 
             // **Refresh dropdown options to include saved exercises**
@@ -149,7 +150,6 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
       fetchWorkout();
     }
   }, [editWorkoutId]);
-
 
   const handleAddExercise = () => {
     setExercises((prev) => [
@@ -209,7 +209,7 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
       return;
     }
     const validExercises = exercises.filter(
-      (ex) => ex.name && ex.name.trim() !== ""
+      (ex) => ex.name && ex.name.trim() !== "",
     );
     if (validExercises.length === 0) {
       Alert.alert("Please add at least one exercise.");
@@ -262,7 +262,7 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
         Alert.alert(
           "Success",
           editWorkoutId ? "Workout updated!" : "Workout added!",
-          [{ text: "OK", onPress: () => router.back() }]
+          [{ text: "OK", onPress: () => router.back() }],
         );
       } catch (error) {
         console.error("Error saving workout:", error);
@@ -278,7 +278,7 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
       [
         { text: "Cancel", style: "cancel" },
         { text: editWorkoutId ? "Update" : "Save", onPress: save },
-      ]
+      ],
     );
   };
 
@@ -301,8 +301,8 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
                 ex.sets.some(
                   (set) =>
                     (set.reps && set.reps !== "") ||
-                    (set.weight && set.weight !== "")
-                ))
+                    (set.weight && set.weight !== ""),
+                )),
           ))
       );
     }
@@ -326,7 +326,7 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
         [
           { text: "No", style: "cancel" },
           { text: "Yes", style: "destructive", onPress: () => router.back() },
-        ]
+        ],
       );
     } else {
       router.back();
@@ -353,7 +353,6 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
             value={workoutName}
             onChangeText={setWorkoutName}
             placeholderTextColor="grey"
-            style={{ backgroundColor: "#333232" }}
           />
 
           <View style={[styles.dateTimeRow, { zIndex: 3000 }]}>
@@ -407,7 +406,6 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
             value={workoutNotes}
             onChangeText={setWorkoutNotes}
             placeholderTextColor="grey"
-            style={{ backgroundColor: "#333232" }}
           />
 
           {exercises.map((exercise, exerciseIndex) => (
@@ -427,19 +425,13 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
                     <DropDownPicker
                       open={openDropdownIndex === exerciseIndex}
                       value={exercise.name}
-                      items={exerciseApiOptions}
+                      items={exerciseOptions}
                       setOpen={(isOpen) =>
                         setOpenDropdownIndex(isOpen ? exerciseIndex : null)
                       }
                       setValue={(callback) => {
                         const value = callback(exercise.name);
                         handleChangeExerciseName(exerciseIndex, value);
-                      }}
-                      searchable={true}
-                      searchPlaceholder="Search exercise..."
-                      onChangeSearchText={(text) => {
-                        setExerciseSearchQuery(text);
-                        fetchExerciseOptions(text, exercises);
                       }}
                       placeholder="Select exercise"
                       style={styles.dropdown}
@@ -496,7 +488,7 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
                               exerciseIndex,
                               setIndex,
                               "reps",
-                              value
+                              value,
                             );
                           }}
                           placeholder="Reps"
@@ -531,7 +523,7 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
                               exerciseIndex,
                               setIndex,
                               "weight",
-                              value
+                              value,
                             );
                           }}
                           placeholder="Weight (kg)"
