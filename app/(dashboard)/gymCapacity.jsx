@@ -1,11 +1,11 @@
-//react and expo imports 
+//react and expo imports
 import { useState, useEffect, useCallback } from "react";
 import { RefreshControl, ScrollView, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
-//themed components 
+//themed components
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import ThemedButton from "../../components/themedButton";
@@ -29,7 +29,7 @@ const GymCapacity = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        "https://asia-southeast1-nus-lifters-club.cloudfunctions.net/getCapacity"
+        "https://asia-southeast1-nus-lifters-club.cloudfunctions.net/getCapacity",
       );
       const data = await response.json();
       const timestamp = new Date(data.timestamp._seconds * 1000);
@@ -103,7 +103,7 @@ const GymCapacity = () => {
               {
                 backgroundColor: getCapacityColor(
                   utownCapacityNum,
-                  utownMaxNum
+                  utownMaxNum,
                 ),
               },
             ]}

@@ -63,7 +63,7 @@ const Profile = () => {
       (error) => {
         console.error("Error listening to user data:", error);
         setUserData((prev) => ({ ...prev, name: "Error loading data" }));
-      }
+      },
     );
 
     return () => unsubscribe();
@@ -96,7 +96,7 @@ const Profile = () => {
         testID="theme-toggle-button"
       >
         <MaterialCommunityIcons
-          name="theme-light-dark" 
+          name="theme-light-dark"
           size={28}
           color={theme === "light" ? "#f5e900" : "#fff"}
         />

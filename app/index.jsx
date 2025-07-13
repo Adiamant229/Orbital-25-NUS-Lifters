@@ -54,7 +54,7 @@ const Index = () => {
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
-        password
+        password,
       );
       const user = userCredential.user;
       console.log("User signed in:", user.uid);
