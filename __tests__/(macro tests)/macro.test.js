@@ -1,6 +1,7 @@
-import { render, fireEvent, waitFor, act } from "@testing-library/react-native";
+import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Macro from "../../app/(dashboard)/macro";
+import { Alert } from "react-native";
 
 jest.mock("../../firebaseConfig", () => ({
   app: {},
@@ -19,7 +20,10 @@ jest.mock("../../components/themedContext", () => ({
   useThemeContext: () => ({ theme: "light", setTheme: jest.fn() }),
 }));
 
-
+jest.spyOn(Alert, "alert").mockImplementation((title, message, buttons) => {
+  const deleteButton = buttons.find((b) => b.text === "Delete");
+  deleteButton?.onPress(); // simulate user clicking "Delete"
+});
 
 global.fetch = jest.fn(() =>
   Promise.resolve({
@@ -114,33 +118,40 @@ describe("Macro Component", () => {
     });
   });
 
-  test("deletes item from meal list", async () => {
-    AsyncStorage.getItem.mockResolvedValueOnce(
-      JSON.stringify([
-        {
-          id: 0,
-          description: "Chicken Breast",
-          servings: 100,
-          protein: 31,
-          calories: 165,
-          fat: 3.6,
-          carbs: 0,
-        },
-      ])
-    );
+ test("deletes item from meal list", async () => {
+   AsyncStorage.getItem.mockResolvedValueOnce(
+     JSON.stringify([
+       {
+         id: 0,
+         description: "Chicken Breast",
+         servings: 100,
+         protein: 31,
+         calories: 165,
+         fat: 3.6,
+         carbs: 0,
+       },
+     ])
+   );
 
-    const { getByText, queryByText, getByTestId } = render(<Macro />);
+   const { getByText, queryByText, getByTestId } = render(<Macro />);
 
-    await waitFor(() => {
-      expect(getByText("Chicken Breast")).toBeTruthy();
-    });
+   await waitFor(() => {
+     expect(getByText("Chicken Breast")).toBeTruthy();
+   });
 
-    fireEvent.press(getByTestId("delete-button"));
+   fireEvent.press(getByTestId("delete-button-0"));
 
-    await waitFor(() => {
-      expect(queryByText("Chicken Breast")).toBeNull();
-    });
-  });
+   await waitFor(() => {
+     expect(queryByText("Chicken Breast")).toBeNull();
+   });
+   
+   await waitFor(() => {
+     expect(AsyncStorage.setItem).toHaveBeenCalledWith(
+       "mealList",
+       JSON.stringify([])
+     );
+   });
+ });
 
   test("handles empty meal list state", () => {
     const { getByText } = render(<Macro />);
