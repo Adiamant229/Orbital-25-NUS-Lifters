@@ -192,7 +192,11 @@ const calories = () => {
                   <Pressable
                     onPress={() => setShowModeDescription(!showModeDescription)}
                   >
-                    <Ionicons name="help-circle-outline" size={15} color={"white"}/>
+                    <Ionicons
+                      name="help-circle-outline"
+                      size={15}
+                      color={"white"}
+                    />
                   </Pressable>
                 </View>
                 <View style={styles.options}>
@@ -482,11 +486,15 @@ const calories = () => {
                 <>
                   <View style={{ flexDirection: "row" }}>
                     <View style={styles.resultsBox}>
-                      <ThemedText style={styles.resultsTxt}>BMR: {bmr}</ThemedText>
+                      <ThemedText style={styles.resultsTxt}>
+                        BMR: {bmr}
+                      </ThemedText>
                     </View>
                     {toggletdeeres && (
                       <View style={styles.resultsBox}>
-                        <ThemedText style={styles.resultsTxt}>TDEE: {tdee}</ThemedText>
+                        <ThemedText style={styles.resultsTxt}>
+                          TDEE: {tdee}
+                        </ThemedText>
                       </View>
                     )}
                   </View>
@@ -580,12 +588,12 @@ const styles = StyleSheet.create({
     margin: 20,
   },
   resultsBox: {
-    flex:1,
+    flex: 1,
     alignItems: "center",
-    justifyContent:"center",
+    justifyContent: "center",
     height: 50,
   },
-    resultsTxt: {
-      textAlign:"center",
-    }
+  resultsTxt: {
+    textAlign: "center",
+  },
 });

@@ -1,19 +1,13 @@
-//react and expo imports 
+//react and expo imports
 import { useEffect, useState, useRef } from "react";
-import {
-  Alert,
-  View,
-  Image,
-  TouchableOpacity,
-  ScrollView,
-} from "react-native";
+import { Alert, View, Image, TouchableOpacity, ScrollView } from "react-native";
 import uuid from "react-native-uuid";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Video } from "expo-av";
 import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 
-//firebase imports 
+//firebase imports
 import { getAuth } from "firebase/auth";
 import {
   addDoc,
@@ -31,12 +25,11 @@ import {
 } from "firebase/storage";
 import { db, storage } from "../../firebaseConfig";
 
-//themed components 
+//themed components
 import ThemedView from "../../components/themedView";
 import ThemedText from "../../components/themedText";
 import ThemedTextInput from "../../components/themedTextInput";
 import ThemedButton from "../../components/themedButton";
-
 
 const categories = ["Training", "Diet", "Cardio"];
 
@@ -153,7 +146,7 @@ const AddEditThread = () => {
             },
           },
           { text: "Cancel", style: "cancel" },
-        ]
+        ],
       );
     } catch (error) {
       console.error("Error in handleTakePhoto:", error);
@@ -244,7 +237,7 @@ const AddEditThread = () => {
                   mediaType: mediaType || null,
                   createdAt: serverTimestamp(),
                   likes: 0,
-                  likedBy: []
+                  likedBy: [],
                 });
                 Alert.alert("Success", "Thread created.");
               }
@@ -258,7 +251,7 @@ const AddEditThread = () => {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -274,7 +267,7 @@ const AddEditThread = () => {
             style: "destructive",
             onPress: () => router.back(),
           },
-        ]
+        ],
       );
     } else {
       router.back();
@@ -403,5 +396,5 @@ const AddEditThread = () => {
       </ScrollView>
     </ThemedView>
   );
-}
+};
 export default AddEditThread;

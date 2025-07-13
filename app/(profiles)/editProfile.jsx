@@ -1,4 +1,4 @@
-//react and expo imports 
+//react and expo imports
 import { useEffect, useState } from "react";
 import {
   Alert,
@@ -17,12 +17,12 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 
-//firebase imports 
+//firebase imports
 import { auth, db, storage } from "../../firebaseConfig";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
-//themed components 
+//themed components
 import ThemedText from "../../components/themedText";
 import ThemedTextInput from "../../components/themedTextInput";
 import ThemedView from "../../components/themedView";
@@ -62,17 +62,17 @@ const EditProfile = () => {
           setHeight(
             data.height !== undefined && data.height !== null
               ? data.height.toString()
-              : ""
+              : "",
           );
           setWeight(
             data.weight !== undefined && data.weight !== null
               ? data.weight.toString()
-              : ""
+              : "",
           );
           setAge(
             data.age !== undefined && data.age !== null
               ? data.age.toString()
-              : ""
+              : "",
           );
           setProfilePicUrl(data.profilePicUrl || null);
         }
@@ -176,7 +176,7 @@ const EditProfile = () => {
             setModalVisible(false);
           },
         },
-      ]
+      ],
     );
   };
 
@@ -232,11 +232,10 @@ const EditProfile = () => {
           },
         },
       ],
-      { cancelable: true }
+      { cancelable: true },
     );
   };
 
-  
   if (loading) {
     return (
       <ThemedView style={styles.container}>
@@ -245,7 +244,6 @@ const EditProfile = () => {
     );
   }
 
-
   const handleCancel = () => {
     Alert.alert(
       "Discard Changes?",
@@ -253,10 +251,10 @@ const EditProfile = () => {
       [
         { text: "No", style: "cancel" },
         { text: "Yes", style: "destructive", onPress: () => router.back() },
-      ]
+      ],
     );
   };
-  
+
   return (
     <ThemedView style={styles.container}>
       <KeyboardAvoidingView
