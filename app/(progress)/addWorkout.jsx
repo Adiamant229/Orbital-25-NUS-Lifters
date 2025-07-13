@@ -278,7 +278,7 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
       [
         { text: "Cancel", style: "cancel" },
         { text: editWorkoutId ? "Update" : "Save", onPress: save },
-      ]
+      ],
     );
   };
 
@@ -353,7 +353,6 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
             value={workoutName}
             onChangeText={setWorkoutName}
             placeholderTextColor="grey"
-            style={{ backgroundColor: "#333232" }}
           />
 
           <View style={[styles.dateTimeRow, { zIndex: 3000 }]}>
@@ -407,7 +406,6 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
             value={workoutNotes}
             onChangeText={setWorkoutNotes}
             placeholderTextColor="grey"
-            style={{ backgroundColor: "#333232" }}
           />
 
           {exercises.map((exercise, exerciseIndex) => (
@@ -434,12 +432,6 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
                       setValue={(callback) => {
                         const value = callback(exercise.name);
                         handleChangeExerciseName(exerciseIndex, value);
-                      }}
-                      searchable={true}
-                      searchPlaceholder="Search exercise..."
-                      onChangeSearchText={(text) => {
-                        setExerciseSearchQuery(text);
-                        fetchExerciseOptions(text, exercises);
                       }}
                       placeholder="Select exercise"
                       style={styles.dropdown}

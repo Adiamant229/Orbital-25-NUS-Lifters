@@ -4,16 +4,11 @@ import { exerciseAPIKey } from "../../firebaseConfig";
 import {Image, StyleSheet, Dimensions, ScrollView} from "react-native";
 import ThemedView from "../../components/themedView";
 import Spacer from "../../components/spacer";
+import {capWords} from "../index";
 
 const imgURL = `https://exercisedb.p.rapidapi.com/image?resolution=180&rapidapi-key=${exerciseAPIKey}`;
 const screenWidth = Dimensions.get("window").width;
 export default function exerciseInfo() {
-  const capWords = (x) => {
-    for (let i = 0; i < x.length; i++) {
-      x[i] = x[i].charAt(0).toUpperCase() + x[i].substring(1);
-    }
-    return x;
-  };
   const params = useLocalSearchParams();
   const name = capWords(params?.name.split(" ")).join(" ");
   const description = params?.description;
