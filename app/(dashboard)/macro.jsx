@@ -1,3 +1,4 @@
+//react and expo imports
 import {
   FlatList,
   Keyboard,
@@ -8,7 +9,6 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   TouchableWithoutFeedback,
   View,
 } from "react-native";
@@ -17,7 +17,7 @@ import { Searchbar } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+
 //firebase imports
 import { APIKey } from "../../firebaseConfig";
 
@@ -27,20 +27,23 @@ import ThemedView from "../../components/themedView";
 import Spacer from "../../components/spacer";
 import ThemedButton from "../../components/themedButton";
 
-const searchOptions = (query) => ({
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    query,
-    dataType: ["Foundation", "SR Legacy", "Survey (FNDDS)"],
-    pageSize: 25,
-  }),
-});
+const searchOptions = (query) => {
+  return {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      query,
+      dataType: ["Foundation", "SR Legacy", "Survey (FNDDS)"],
+      pageSize: 25,
+    }),
+  };
+};
 
 const searchDB = async (query) => {
   try {
+    console.log("searching");
     const response = await fetch(
       `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${APIKey}`,
       searchOptions(query),
@@ -54,22 +57,21 @@ const searchDB = async (query) => {
 };
 
 const Macro = () => {
-  const [searching, setSearching] = useState(false);
-  const [foodList, setFoodList] = useState([]);
+  const [searching, setSearching] = useState(false); //modal controller
+  const [foodList, setFoodList] = useState([]); //search results to be rendered
   const [query, setQuery] = useState("");
   const [debounced, setDebounced] = useState("");
   const [mealList, setMealList] = useState([]);
-  const [servingInputs, setServingInputs] = useState({});
-  const router = useRouter();
 
   useEffect(() => {
     const loadMealList = async () => {
-      try {
-        const data = await AsyncStorage.getItem("mealList");
-        if (data) setMealList(JSON.parse(data));
-      } catch (err) {
-        console.error("Failed to load meal list:", err);
-      }
+      AsyncStorage.getItem("mealList")
+        .then((data) => {
+          if (data) {
+            setMealList(JSON.parse(data));
+          }
+        })
+        .catch((err) => console.error("Failed to load meal list:", err));
     };
     loadMealList();
   }, []);
@@ -80,55 +82,63 @@ const Macro = () => {
     }, 500);
     return () => clearTimeout(typingTimeout);
   }, [query]);
-
   useEffect(() => {
     if (debounced && debounced.length >= 3) {
       searchDB(debounced)
-        .then(setFoodList)
+        .then((data) => {
+          setFoodList(data);
+        })
         .catch((err) => console.error("Retrieval error: ", err));
     }
   }, [debounced]);
 
   useEffect(() => {
-    try {
-      AsyncStorage.setItem("mealList", JSON.stringify(mealList));
-    } catch (err) {
-      console.error("Persistence Error: ", err);
-    }
+    const saveMealList = () => {
+      try {
+        AsyncStorage.setItem("mealList", JSON.stringify(mealList));
+      } catch (err) {
+        console.error("Persistence Error: ", err);
+      }
+    };
+    saveMealList();
   }, [mealList]);
 
-  useEffect(() => {
-    const inputs = {};
-    mealList.forEach((item) => {
-      inputs[item.id] = String(item.servings);
+  const router = useRouter();
+
+  const handleSendToProgress = () => {
+    const importedCalories = summation("calories");
+    const importedProtein = summation("protein");
+    const importedFat = summation("fat");
+    const importedCarbs = summation("carbs");
+
+    router.push({
+      pathname: "/progressTracker",
+      params: {
+        importedMacro: "true",
+        importedSelectedTab: "Macros",
+        importedCalories,
+        importedProtein,
+        importedFat,
+        importedCarbs,
+      },
     });
-    setServingInputs(inputs);
-  }, [mealList.length]);
-
-  const updateServings = (id) => (text) => {
-    if (text.startsWith(".")) {
-      text = "0" + text;
-    }
-
-    const validFormat = /^\d*(\.\d{0,2})?$/;
-
-    if (text === "" || validFormat.test(text)) {
-      setServingInputs((prev) => ({
-        ...prev,
-        [id]: text,
-      }));
-
-      const numeric = parseFloat(text);
-      if (!isNaN(numeric)) {
-        const updated = mealList.map((item) =>
-          item.id === id ? { ...item, servings: Math.abs(numeric) } : item,
-        );
-        setMealList(updated);
-      }
-    }
   };
 
-  // Sum macros from mealList
+  const updateServings = (id) => {
+    return (serving) => {
+      const updated = mealList.map((item) => {
+        if (item.id === id) {
+          return {
+            ...item,
+            servings: Math.abs(parseInt(serving) || 0),
+          };
+        }
+        return item;
+      });
+      setMealList(updated);
+    };
+  };
+
   const summation = (parameter) => {
     return mealList
       .reduce((total, food) => {
@@ -140,22 +150,8 @@ const Macro = () => {
   };
 
   const deleteItem = (id) => {
-    const updated = mealList.filter((item) => item.id !== id);
+    const updated = [...mealList].filter((item) => item.id !== id);
     setMealList(updated);
-  };
-
-  const handleSendToProgress = () => {
-    router.push({
-      pathname: "/progressTracker",
-      params: {
-        importedMacro: "true",
-        importedSelectedTab: "Macros",
-        importedCalories: summation("calories"),
-        importedProtein: summation("protein"),
-        importedFat: summation("fat"),
-        importedCarbs: summation("carbs"),
-      },
-    });
   };
 
   return (
@@ -171,38 +167,17 @@ const Macro = () => {
         >
           <View style={styles.searchContent}>
             <MaterialIcons size={24} name="search" color="#f2f2f2" />
-            <ThemedText style={{ color: "white" }}>Search Food</ThemedText>
+            <ThemedText>Search Food</ThemedText>
           </View>
         </ThemedButton>
-
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 75,
-            marginTop: 20,
-          }}
-        >
-          <ThemedText
-            style={{
-              fontSize: 18,
-            }}
-          >
-            Your Macros of the Day
-          </ThemedText>
-
-          <TouchableOpacity
-            onPress={() => router.push("/calories")}
-            style={styles.guideButton}
-          >
-            <FontAwesome5 name="book-open" size={15} color="white" />
-          </TouchableOpacity>
-        </View>
 
         <View style={styles.infoBox}>
           <View style={styles.row}>
             <Text style={styles.label}>Total Calories:</Text>
-            <Text style={styles.value}>{summation("calories")} cal</Text>
+            <Text style={styles.value}>
+              {summation("calories")}
+              cal
+            </Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Total Protein:</Text>
@@ -220,16 +195,10 @@ const Macro = () => {
             onPress={handleSendToProgress}
             style={styles.sendButton}
           >
-            <ThemedText style={{ color: "white" }}>
-              Save to Progress Tracker
-            </ThemedText>
+            <ThemedText>Save to Progress Tracker</ThemedText>
           </ThemedButton>
         </View>
-
         <Spacer />
-        <ThemedText style={{ marginRight: 230, marginBottom: 5, fontSize: 18 }}>
-          Your Meals
-        </ThemedText>
         <View style={styles.mealbox}>
           {mealList.length < 1 ? (
             <View
@@ -271,6 +240,7 @@ const Macro = () => {
                       Carbs: {((item.carbs * item.servings) / 100).toFixed(2)}
                     </ThemedText>
 
+                    {/* Input row */}
                     <View
                       style={{
                         flexDirection: "row",
@@ -284,10 +254,8 @@ const Macro = () => {
                       >
                         <TextInput
                           style={styles.textbox}
-                          keyboardType="decimal-pad"
-                          value={
-                            servingInputs[item.id] ?? String(item.servings)
-                          }
+                          keyboardType="numeric"
+                          value={String(item.servings)}
                           onChangeText={updateServings(item.id)}
                         />
                         <ThemedText style={styles.contentText}>g</ThemedText>
@@ -297,7 +265,11 @@ const Macro = () => {
                         testID="delete-button"
                         onPress={() => deleteItem(item.id)}
                       >
-                        <Ionicons name="trash-outline" color="red" size={24} />
+                        <Ionicons
+                          name={"trash-outline"}
+                          color={"red"}
+                          size={24}
+                        />
                       </Pressable>
                     </View>
                   </View>
@@ -306,8 +278,6 @@ const Macro = () => {
             />
           )}
         </View>
-
-        {/* Modal */}
         <Modal
           visible={searching}
           animationType="fade"
@@ -329,7 +299,7 @@ const Macro = () => {
                 <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                   <View style={styles.modalContainer}>
                     <Searchbar
-                      placeholder="Search Food"
+                      placeholder={"Search Food"}
                       onChangeText={setQuery}
                       value={query}
                     />
@@ -357,11 +327,18 @@ const Macro = () => {
                                   Energy: "calories",
                                   "Total lipid (fat)": "fat",
                                 };
+                                console.log(item);
                                 const mealItem = item.foodNutrients
                                   .filter((nutrient) =>
                                     wanted.hasOwnProperty(
                                       nutrient.nutrientName,
                                     ),
+                                  )
+                                  .filter(
+                                    (nutrient) =>
+                                      nutrient.nutrientName !== "Energy" ||
+                                      (nutrient.nutrientName === "Energy" &&
+                                        nutrient.unitName === "KCAL"),
                                   )
                                   .reduce(
                                     (food, nutrient) => {
@@ -415,7 +392,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 22,
-    marginBottom: 10,
+    marginBottom: 20,
   },
   searchButton: {
     paddingVertical: 12,
@@ -430,6 +407,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 2,
+  },
+  buttonText: {
+    color: "#f2f2f2",
+    fontSize: 16,
+    fontWeight: "600",
   },
   infoBox: {
     width: "100%",
@@ -452,6 +434,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignSelf: "center",
   },
+
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -472,6 +455,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#eee",
     borderRadius: 12,
   },
+  rowBox: {
+    padding: 10,
+    justifyContent: "space-between",
+  },
+  contentText: {
+    fontSize: 16,
+  },
   contentCards: {
     backgroundColor: "#2196f3",
     borderRadius: 12,
@@ -483,17 +473,10 @@ const styles = StyleSheet.create({
   textbox: {
     backgroundColor: "blue",
     color: "white",
-    paddingHorizontal: 6,
-    paddingVertical: 4,
-    minWidth: 60,
+    paddingHorizontal: 4,
+    width: "auto",
     fontSize: 16,
     borderRadius: 18,
-    textAlign: "center",
-  },
-  contentText: {
-    fontSize: 16,
-    marginLeft: 6,
-    color: "#fff",
   },
   modalContainer: {
     backgroundColor: "white",
@@ -511,13 +494,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
-  guideButton: {
-    backgroundColor: "#2196f3",
-    borderRadius: 20,
-    padding: 10,
-    justifyContent: "center",
-    alignItems: "center",
-    width: 37,
-    height: 35,
+  resultsText: {
+    flex: 1,
   },
 });
