@@ -26,10 +26,10 @@ import ThemedButton from "../components/themedButton";
 import Logo from "../assets/img/NUS_Lifters.png";
 
 export function capWords(x) {
-    for (let i = 0; i < x.length; i++) {
-        x[i] = x[i].charAt(0).toUpperCase() + x[i].substring(1);
-    }
-    return x;
+  for (let i = 0; i < x.length; i++) {
+    x[i] = x[i].charAt(0).toUpperCase() + x[i].substring(1);
+  }
+  return x;
 }
 
 const Index = () => {
