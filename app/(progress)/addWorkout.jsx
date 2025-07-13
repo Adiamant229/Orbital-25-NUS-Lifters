@@ -22,7 +22,7 @@ import ThemedButton from "../../components/themedButton";
 import ThemedTextInput from "../../components/themedTextInput";
 
 //firebase imports
-import { db, auth, exerciseAPIKey } from "../../firebaseConfig";
+import { db, auth } from "../../firebaseConfig";
 import { collection, addDoc, doc, getDoc, updateDoc } from "firebase/firestore";
 
 const AddWorkout = () => {
@@ -57,53 +57,33 @@ const AddWorkout = () => {
 
   const [originalWorkout, setOriginalWorkout] = useState(null);
 
-  const [exerciseApiOptions, setExerciseApiOptions] = useState([]);
-  const [exerciseSearchQuery, setExerciseSearchQuery] = useState("");
-
-const fetchExerciseOptions = async (query = "", currentExercises = []) => {
-  try {
-    const baseURL = "https://exercisedb.p.rapidapi.com/";
-    const options = {
-      method: "GET",
-      headers: {
-        "x-rapidapi-key": exerciseAPIKey,
-        "x-rapidapi-host": "exercisedb.p.rapidapi.com",
-      },
-    };
-    const url = query
-      ? `${baseURL}exercises/name/${query.toLowerCase()}`
-      : `${baseURL}exercises`;
-
-    const response = await fetch(url, options);
-    const data = await response.json();
-
-    const selectedNames = currentExercises.map((ex) => ex.name).filter(Boolean);
-    const existingSet = new Set();
-
-    const dropdownItems = data.map((item) => {
-      existingSet.add(item.name);
-      return {
-        label: item.name,
-        value: item.name,
-      };
-    });
-
-    selectedNames.forEach((name) => {
-      if (!existingSet.has(name)) {
-        dropdownItems.push({ label: name, value: name });
-      }
-    });
-
-    setExerciseApiOptions(dropdownItems);
-  } catch (error) {
-    console.error("Failed to fetch exercise list", error);
-  }
-};
-
-
-  useEffect(() => {
-    fetchExerciseOptions();
-  }, []);
+  //exercise dropdown box
+  const exerciseOptions = [
+    { label: "Bench Press", value: "Bench Press" },
+    { label: "Deadlift", value: "Deadlift" },
+    { label: "Squat", value: "Squat" },
+    { label: "Pull-up", value: "Pull-up" },
+    { label: "Incline Dumbbell Press ", value: "Incline Dumbbell Press" },
+    { label: "Incline Bench", value: "Incline Bench" },
+    { label: "Dumbbell Lateral Raises", value: "Dumbbell Lateral Raises" },
+    {
+      label: "Overhead Triceps Cable Extensions",
+      value: "Overhead Triceps Cable Extensions",
+    },
+    { label: "Cable Pullovers", value: "Cable PullOvers" },
+    { label: "Lat Pulldown", value: "Lat Pulldown" },
+    { label: "Barbell Bent-over Rows", value: "Barbell Bent-over Rows" },
+    { label: "Barbell Shrugs", value: "Barbell Shrugs" },
+    { label: "Dumbbell Curls", value: "Dumbbell Curls" },
+    { label: "Preacher Curls", value: "Preacher Curls" },
+    { label: "Hammer Curls", value: "Hammer Curls" },
+    { label: "Barbell Back Squat", value: "Barbell Back Squat" },
+    { label: "Seated Hamstring Curls", value: "Seated Hamstring Curls" },
+    { label: "Leg Press", value: "Leg Press" },
+    { label: "Dumbbell RDLs", value: "Dumbbell RDLs" },
+    { label: "Standing Calf Raises", value: "Standing Calf Raises" },
+    { label: "Leg Extensions", value: "Leg Extensions" },
+  ];
 
   useEffect(() => {
     if (editWorkoutId) {
@@ -114,9 +94,21 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
           if (docSnap.exists()) {
             const data = docSnap.data();
 
-            // map exercises with IDs as you do
-            const exercisesWithIds =
-              data.exercises?.map((ex) => {
+            setOriginalWorkout({
+              name: data.name || "",
+              workoutNotes: data.workoutNotes || "",
+              exercises: data.exercises || [],
+              timePeriod: data.timePeriod || null,
+              createdAt: data.createdAt?.toDate
+                ? data.createdAt.toDate()
+                : new Date(),
+            });
+
+            setWorkoutName(data.name || "");
+            setWorkoutNotes(data.workoutNotes || "");
+
+            if (data.exercises && data.exercises.length > 0) {
+              const exercisesWithIds = data.exercises.map((ex) => {
                 const exId = ex.id ?? nextExerciseId.current++;
                 const setsWithIds = ex.sets
                   ? ex.sets.map((set) => ({
@@ -125,18 +117,29 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
                     }))
                   : [];
                 return { ...ex, id: exId, sets: setsWithIds };
-              }) || [];
+              });
 
-            setExercises(exercisesWithIds);
-            setWorkoutName(data.name || "");
-            setWorkoutNotes(data.workoutNotes || "");
+              const maxExerciseId = Math.max(
+                ...exercisesWithIds.map((e) => e.id || 0),
+                0,
+              );
+              nextExerciseId.current = maxExerciseId + 1;
+
+              const allSetIds = exercisesWithIds.flatMap((e) =>
+                e.sets.map((s) => s.id || 0),
+              );
+              const maxSetId = Math.max(...allSetIds, 0);
+              nextSetId.current = maxSetId + 1;
+
+              setExercises(exercisesWithIds);
+            } else {
+              setExercises([]);
+            }
+
             setWorkoutTimePeriod(data.timePeriod || null);
             setDate(
-              data.createdAt?.toDate ? data.createdAt.toDate() : new Date()
+              data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
             );
-
-            // **Refresh dropdown options to include saved exercises**
-            fetchExerciseOptions("", exercisesWithIds);
           } else {
             Alert.alert("Workout not found.");
             router.back();
@@ -149,7 +152,6 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
       fetchWorkout();
     }
   }, [editWorkoutId]);
-
 
   const handleAddExercise = () => {
     setExercises((prev) => [
@@ -209,7 +211,7 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
       return;
     }
     const validExercises = exercises.filter(
-      (ex) => ex.name && ex.name.trim() !== ""
+      (ex) => ex.name && ex.name.trim() !== "",
     );
     if (validExercises.length === 0) {
       Alert.alert("Please add at least one exercise.");
@@ -262,7 +264,7 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
         Alert.alert(
           "Success",
           editWorkoutId ? "Workout updated!" : "Workout added!",
-          [{ text: "OK", onPress: () => router.back() }]
+          [{ text: "OK", onPress: () => router.back() }],
         );
       } catch (error) {
         console.error("Error saving workout:", error);
@@ -278,7 +280,7 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
       [
         { text: "Cancel", style: "cancel" },
         { text: editWorkoutId ? "Update" : "Save", onPress: save },
-      ]
+      ],
     );
   };
 
@@ -301,8 +303,8 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
                 ex.sets.some(
                   (set) =>
                     (set.reps && set.reps !== "") ||
-                    (set.weight && set.weight !== "")
-                ))
+                    (set.weight && set.weight !== ""),
+                )),
           ))
       );
     }
@@ -326,7 +328,7 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
         [
           { text: "No", style: "cancel" },
           { text: "Yes", style: "destructive", onPress: () => router.back() },
-        ]
+        ],
       );
     } else {
       router.back();
@@ -353,7 +355,6 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
             value={workoutName}
             onChangeText={setWorkoutName}
             placeholderTextColor="grey"
-            style={{ backgroundColor: "#333232" }}
           />
 
           <View style={[styles.dateTimeRow, { zIndex: 3000 }]}>
@@ -407,7 +408,6 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
             value={workoutNotes}
             onChangeText={setWorkoutNotes}
             placeholderTextColor="grey"
-            style={{ backgroundColor: "#333232" }}
           />
 
           {exercises.map((exercise, exerciseIndex) => (
@@ -427,19 +427,13 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
                     <DropDownPicker
                       open={openDropdownIndex === exerciseIndex}
                       value={exercise.name}
-                      items={exerciseApiOptions}
+                      items={exerciseOptions}
                       setOpen={(isOpen) =>
                         setOpenDropdownIndex(isOpen ? exerciseIndex : null)
                       }
                       setValue={(callback) => {
                         const value = callback(exercise.name);
                         handleChangeExerciseName(exerciseIndex, value);
-                      }}
-                      searchable={true}
-                      searchPlaceholder="Search exercise..."
-                      onChangeSearchText={(text) => {
-                        setExerciseSearchQuery(text);
-                        fetchExerciseOptions(text, exercises);
                       }}
                       placeholder="Select exercise"
                       style={styles.dropdown}
@@ -496,7 +490,7 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
                               exerciseIndex,
                               setIndex,
                               "reps",
-                              value
+                              value,
                             );
                           }}
                           placeholder="Reps"
@@ -531,7 +525,7 @@ const fetchExerciseOptions = async (query = "", currentExercises = []) => {
                               exerciseIndex,
                               setIndex,
                               "weight",
-                              value
+                              value,
                             );
                           }}
                           placeholder="Weight (kg)"
