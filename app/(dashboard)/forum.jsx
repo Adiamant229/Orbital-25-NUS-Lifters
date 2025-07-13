@@ -100,7 +100,7 @@ const Forum = () => {
         ? query(collection(db, "threads"))
         : query(
             collection(db, "threads"),
-            where("category", "==", selectedCategory)
+            where("category", "==", selectedCategory),
           );
 
     setLoading(true);
@@ -209,9 +209,7 @@ const Forum = () => {
                         color="#ff4d4d"
                         style={{ marginRight: 2 }}
                       />
-                      <Text style={styles.threadMeta}>
-                        {item.likes || 0}
-                      </Text>
+                      <Text style={styles.threadMeta}>{item.likes || 0}</Text>
                     </View>
 
                     <Text

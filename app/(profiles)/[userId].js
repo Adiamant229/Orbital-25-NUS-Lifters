@@ -1,4 +1,4 @@
-//react and expo imports 
+//react and expo imports
 import { useEffect, useState } from "react";
 import {
   View,
@@ -12,11 +12,11 @@ import {
 import { useLocalSearchParams } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 
-//firebase imports 
+//firebase imports
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../firebaseConfig";
 
-//themed components 
+//themed components
 import ThemedView from "../../components/themedView";
 import ThemedText from "../../components/themedText";
 import Spacer from "../../components/spacer";
@@ -54,7 +54,8 @@ const PublicProfile = () => {
     fetchUser();
   }, [userId]);
 
-  if (loading) return <ActivityIndicator testID="loading-indicator" style={{ flex: 1 }} />;
+  if (loading)
+    return <ActivityIndicator testID="loading-indicator" style={{ flex: 1 }} />;
   if (!profileData)
     return (
       <ThemedView style={styles.container}>

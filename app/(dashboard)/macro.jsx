@@ -42,7 +42,7 @@ const searchDB = async (query) => {
   try {
     const response = await fetch(
       `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${APIKey}`,
-      searchOptions(query)
+      searchOptions(query),
     );
     const data = await response.json();
     return data?.foods || [];
@@ -120,13 +120,13 @@ const Macro = () => {
       const numeric = parseFloat(text);
       if (!isNaN(numeric)) {
         const updated = mealList.map((item) =>
-          item.id === id ? { ...item, servings: Math.abs(numeric) } : item
+          item.id === id ? { ...item, servings: Math.abs(numeric) } : item,
         );
         setMealList(updated);
       }
     }
   };
-  
+
   // Sum macros from mealList
   const summation = (parameter) => {
     return mealList
@@ -330,7 +330,9 @@ const Macro = () => {
                                 };
                                 const mealItem = item.foodNutrients
                                   .filter((nutrient) =>
-                                    wanted.hasOwnProperty(nutrient.nutrientName)
+                                    wanted.hasOwnProperty(
+                                      nutrient.nutrientName,
+                                    ),
                                   )
                                   .reduce(
                                     (food, nutrient) => {
@@ -341,13 +343,13 @@ const Macro = () => {
                                     {
                                       description: item.description,
                                       servings: 100,
-                                    }
+                                    },
                                   );
                                 const newMealList = [...mealList, mealItem].map(
                                   (item, index) => ({
                                     ...item,
                                     id: index,
-                                  })
+                                  }),
                                 );
                                 setMealList(newMealList);
                               }}
