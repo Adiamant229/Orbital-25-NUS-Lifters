@@ -19,6 +19,7 @@ import { Searchbar } from "react-native-paper";
 import ThemedButton from "../../components/themedButton";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import {capWords} from "../index"
 
 const screenWidth = Dimensions.get("window").width;
 const baseURL = "https://exercisedb.p.rapidapi.com/";
@@ -59,12 +60,6 @@ const Exercises = () => {
       .then((res) => res.json())
       .then((res) => setSearchRes(res))
   };
-    const capWords = (x) => {
-      for (let i = 0; i < x.length; i++) {
-          x[i] = x[i].charAt(0).toUpperCase() + x[i].substring(1);
-      }
-        return x;
-    };
 
   return (
     <ThemedView style={styles.container}>
