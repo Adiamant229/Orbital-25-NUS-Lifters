@@ -272,7 +272,10 @@ const deleteItem = (id) => {
                         />
                         <ThemedText style={styles.contentText}>g</ThemedText>
                       </View>
-                      <Pressable onPress={() => deleteItem(item.id)}>
+                      <Pressable
+                        onPress={() => deleteItem(item.id)}
+                        testID={`delete-button-${item.id}`}
+                      >
                         <Ionicons name="trash-outline" color="red" size={24} />
                       </Pressable>
                     </View>
