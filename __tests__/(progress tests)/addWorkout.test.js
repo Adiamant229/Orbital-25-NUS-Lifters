@@ -58,7 +58,7 @@ const mockWorkoutData = {
     exercises: [
       {
         id: 1,
-        name: "Bench Press",
+        name: "Barbell Bench Press", // Changed here as well for consistency
         sets: [{ id: 1, reps: "10", weight: "50" }],
       },
     ],
@@ -68,6 +68,24 @@ const mockWorkoutData = {
 };
 
 describe("AddWorkout Component", () => {
+  beforeAll(() => {
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        json: () =>
+          Promise.resolve([
+            { name: "Barbell Bench Press" },
+            { name: "Squat" },
+            { name: "Deadlift" },
+          ]),
+      })
+    );
+  });
+
+  afterAll(() => {
+    global.fetch.mockClear();
+    delete global.fetch;
+  });
+
   beforeEach(() => {
     ExpoRouter.useLocalSearchParams.mockImplementation(() => ({}));
     jest.clearAllMocks();
@@ -137,9 +155,12 @@ describe("AddWorkout Component", () => {
 
     fireEvent.press(getByText("+ Add Exercise"));
 
+    // Wait for fetch to be called and options to load
+    await waitFor(() => expect(fetch).toHaveBeenCalled());
+
     const exerciseDropdowns = getAllByText("Select exercise");
     fireEvent.press(exerciseDropdowns[0]);
-    await waitFor(() => fireEvent.press(getByText("Bench Press")));
+    await waitFor(() => fireEvent.press(getByText("Barbell Bench Press")));
 
     fireEvent.press(getByText("Submit"));
 
@@ -165,9 +186,12 @@ describe("AddWorkout Component", () => {
     await waitFor(() => fireEvent.press(getByText("Morning")));
     fireEvent.press(getByText("+ Add Exercise"));
 
+    // Wait for fetch to be called and options to load
+    await waitFor(() => expect(fetch).toHaveBeenCalled());
+
     const exerciseDropdowns = getAllByText("Select exercise");
     fireEvent.press(exerciseDropdowns[0]);
-    await waitFor(() => fireEvent.press(getByText("Bench Press")));
+    await waitFor(() => fireEvent.press(getByText("Barbell Bench Press")));
 
     fireEvent.press(getByText("+ Add Set"));
     fireEvent.press(getByText("Submit"));
@@ -196,10 +220,20 @@ describe("AddWorkout Component", () => {
     });
   });
 
-  test("adds exercise and updates its name", () => {
-    const { getByText, queryAllByText } = render(<AddWorkout />);
+  test("adds exercise and updates its name", async () => {
+    const { getByText, queryAllByText, getAllByText } = render(<AddWorkout />);
+
     fireEvent.press(getByText("+ Add Exercise"));
+
+    // Wait for fetch call to complete
+    await waitFor(() => expect(fetch).toHaveBeenCalled());
+
     expect(queryAllByText(/Exercise \d+/)).toHaveLength(1);
+
+    const exerciseDropdowns = getAllByText("Select exercise");
+    fireEvent.press(exerciseDropdowns[0]);
+    await waitFor(() => fireEvent.press(getByText("Barbell Bench Press")));
+    expect(getByText("Barbell Bench Press")).toBeTruthy();
   });
 
   test("adds a set to the exercise", async () => {
@@ -254,9 +288,11 @@ describe("AddWorkout Component", () => {
 
     fireEvent.press(getByText("+ Add Exercise"));
 
+    await waitFor(() => expect(fetch).toHaveBeenCalled());
+
     const exerciseDropdowns = getAllByText("Select exercise");
     fireEvent.press(exerciseDropdowns[0]);
-    await waitFor(() => fireEvent.press(getByText("Bench Press")));
+    await waitFor(() => fireEvent.press(getByText("Barbell Bench Press")));
 
     fireEvent.press(getByText("+ Add Set"));
 
@@ -328,8 +364,10 @@ describe("AddWorkout Component", () => {
 
     fireEvent.press(getByText("+ Add Exercise"));
 
+    await waitFor(() => expect(fetch).toHaveBeenCalled());
+
     fireEvent.press(getByText("Select exercise"));
-    await waitFor(() => fireEvent.press(getByText("Bench Press")));
+    await waitFor(() => fireEvent.press(getByText("Barbell Bench Press")));
 
     fireEvent.press(getByText("+ Add Set"));
 
@@ -373,8 +411,10 @@ describe("AddWorkout Component", () => {
 
     fireEvent.press(getByText("+ Add Exercise"));
 
+    await waitFor(() => expect(fetch).toHaveBeenCalled());
+
     fireEvent.press(getAllByText("Select exercise")[0]);
-    await waitFor(() => fireEvent.press(getByText("Bench Press")));
+    await waitFor(() => fireEvent.press(getByText("Barbell Bench Press")));
 
     fireEvent.press(getByText("+ Add Set"));
 
@@ -484,6 +524,7 @@ describe("AddWorkout Component", () => {
 
     expect(getByText(/25\/12\/2024|12\/25\/2024/)).toBeTruthy();
   });
+
   // NEW TEST: Error handling for workout fetch failure
   describe("error handling when fetching workout", () => {
     beforeEach(() => {
@@ -543,6 +584,24 @@ describe("AddWorkout Component", () => {
 
       alertSpy.mockRestore();
       routerBackSpy.mockRestore();
+    });
+  });
+
+  // Test that exercise options load from API
+  test("loads exercise options from API and populates dropdown", async () => {
+    const { getByText, getAllByText } = render(<AddWorkout />);
+
+    await waitFor(() => expect(fetch).toHaveBeenCalled());
+
+    fireEvent.press(getByText("+ Add Exercise"));
+
+    const dropdown = getAllByText("Select exercise")[0];
+    fireEvent.press(dropdown);
+
+    await waitFor(() => {
+      expect(getByText("Barbell Bench Press")).toBeTruthy();
+      expect(getByText("Squat")).toBeTruthy();
+      expect(getByText("Deadlift")).toBeTruthy();
     });
   });
 });
