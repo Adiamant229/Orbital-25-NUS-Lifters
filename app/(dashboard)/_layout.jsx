@@ -26,10 +26,7 @@ const DashboardLayout = () => {
             tabBarStyle: {
               backgroundColor: themeColors.navBackground,
               paddingTop: 5,
-              height: 30,
-              elevation: 0,
-              shadowColor: "transparent",
-              borderTopWidth: 0,
+              height: 50,
             },
             tabBarActiveTintColor: themeColors.iconColorFocused,
             tabBarInactiveTintColor: themeColors.iconColor,
