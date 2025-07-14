@@ -1,4 +1,4 @@
-// forum.jsx
+//react and expo imports
 import { useEffect, useState } from "react";
 import {
   Alert,
@@ -12,6 +12,8 @@ import DropDownPicker from "react-native-dropdown-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
+//firebase imports
+import { db, storage } from "../../firebaseConfig";
 import { getAuth } from "firebase/auth";
 import {
   collection,
@@ -24,10 +26,10 @@ import {
 } from "firebase/firestore";
 import { deleteObject, ref } from "firebase/storage";
 
+//themed components
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import ThemedButton from "../../components/themedButton";
-import { db, storage } from "../../firebaseConfig";
 
 const categories = ["Training", "Diet", "Cardio"];
 
@@ -100,7 +102,7 @@ const Forum = () => {
         ? query(collection(db, "threads"))
         : query(
             collection(db, "threads"),
-            where("category", "==", selectedCategory),
+            where("category", "==", selectedCategory)
           );
 
     setLoading(true);

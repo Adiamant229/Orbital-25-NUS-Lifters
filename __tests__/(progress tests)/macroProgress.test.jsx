@@ -70,7 +70,7 @@ describe("MacroProgress Component", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    global.alert = jest.fn(); 
+    global.alert = jest.fn();
 
     getAuth.mockReturnValue({
       currentUser: { uid: fakeUserId },
@@ -103,7 +103,7 @@ describe("MacroProgress Component", () => {
 
     onSnapshot.mockImplementation((query, callback) => {
       callback({ docs: fakeDocs });
-      return jest.fn(); 
+      return jest.fn();
     });
   });
 

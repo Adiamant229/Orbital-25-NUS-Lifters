@@ -60,7 +60,7 @@ describe("Profile Component", () => {
 
     mockOnSnapshot.mockImplementation((docRef, onSuccess, onError) => {
       onSuccess(snapshotMock);
-      return jest.fn(); 
+      return jest.fn();
     });
 
     const { getByText } = render(<Profile />);
@@ -172,11 +172,10 @@ describe("Profile Component", () => {
 
     fireEvent.press(getByTestId("avatar-icon"));
     expect(getByTestId("profile-modal")).toBeTruthy();
-    
+
     fireEvent.press(getByTestId("modal-overlay"));
     await waitFor(() => {
       expect(queryByTestId("profile-modal")).toBeNull();
     });
   });
-  
 });
