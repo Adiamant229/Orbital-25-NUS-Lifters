@@ -22,7 +22,7 @@ jest.mock("../../components/themedContext", () => ({
 
 jest.spyOn(Alert, "alert").mockImplementation((title, message, buttons) => {
   const deleteButton = buttons.find((b) => b.text === "Delete");
-  deleteButton?.onPress(); // simulate user clicking "Delete"
+  deleteButton?.onPress();
 });
 
 global.fetch = jest.fn(() =>
@@ -67,7 +67,7 @@ describe("Macro Component", () => {
     expect(getByPlaceholderText("Search Food")).toBeTruthy();
 
     fireEvent(getByPlaceholderText("Search Food"), "onBlur");
-    expect(queryByPlaceholderText("Search Food")).toBeTruthy(); 
+    expect(queryByPlaceholderText("Search Food")).toBeTruthy();
   });
 
   test("searches and adds a food item", async () => {
@@ -118,44 +118,43 @@ describe("Macro Component", () => {
     });
   });
 
- test("deletes item from meal list", async () => {
-   AsyncStorage.getItem.mockResolvedValueOnce(
-     JSON.stringify([
-       {
-         id: 0,
-         description: "Chicken Breast",
-         servings: 100,
-         protein: 31,
-         calories: 165,
-         fat: 3.6,
-         carbs: 0,
-       },
-     ])
-   );
+  test("deletes item from meal list", async () => {
+    AsyncStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify([
+        {
+          id: 0,
+          description: "Chicken Breast",
+          servings: 100,
+          protein: 31,
+          calories: 165,
+          fat: 3.6,
+          carbs: 0,
+        },
+      ])
+    );
 
-   const { getByText, queryByText, getByTestId } = render(<Macro />);
+    const { getByText, queryByText, getByTestId } = render(<Macro />);
 
-   await waitFor(() => {
-     expect(getByText("Chicken Breast")).toBeTruthy();
-   });
+    await waitFor(() => {
+      expect(getByText("Chicken Breast")).toBeTruthy();
+    });
 
-   fireEvent.press(getByTestId("delete-button-0"));
+    fireEvent.press(getByTestId("delete-button-0"));
 
-   await waitFor(() => {
-     expect(queryByText("Chicken Breast")).toBeNull();
-   });
-   
-   await waitFor(() => {
-     expect(AsyncStorage.setItem).toHaveBeenCalledWith(
-       "mealList",
-       JSON.stringify([])
-     );
-   });
- });
+    await waitFor(() => {
+      expect(queryByText("Chicken Breast")).toBeNull();
+    });
+
+    await waitFor(() => {
+      expect(AsyncStorage.setItem).toHaveBeenCalledWith(
+        "mealList",
+        JSON.stringify([])
+      );
+    });
+  });
 
   test("handles empty meal list state", () => {
     const { getByText } = render(<Macro />);
     expect(getByText('Add foods with the "Search Food" Button!')).toBeTruthy();
   });
-
 });

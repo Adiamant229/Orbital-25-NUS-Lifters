@@ -88,7 +88,7 @@ describe("Login Component", () => {
       );
     });
   });
-  
+
   test("shows alert on invalid login due to invalid email format", async () => {
     const { getByText, getByPlaceholderText } = render(<Index />);
 
@@ -106,7 +106,6 @@ describe("Login Component", () => {
       );
     });
   });
-  
 
   test("successful login calls Firebase and redirects", async () => {
     const { getByText, getByPlaceholderText } = render(<Index />);
@@ -126,7 +125,7 @@ describe("Login Component", () => {
   test("redirects immediately if user is already authenticated", async () => {
     const { onAuthStateChanged } = require("firebase/auth");
     onAuthStateChanged.mockImplementationOnce((auth, callback) => {
-      callback({ uid: "test-uid" }); 
+      callback({ uid: "test-uid" });
       return () => {};
     });
 

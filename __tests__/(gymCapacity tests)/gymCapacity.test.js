@@ -6,7 +6,7 @@ const fetchMock = jest.fn(() =>
       Promise.resolve({
         timestamp: { _seconds: 1719300000 },
         gym_capacity: [
-          {}, 
+          {},
           { name: "USC", capacity: 35, maxCapacity: 50 },
           { name: "UTown", capacity: 100, maxCapacity: 120 },
         ],
@@ -22,7 +22,6 @@ jest.mock("react-native-safe-area-context", () => {
     useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
   };
 });
-
 
 jest.mock("@react-native-async-storage/async-storage", () => ({
   setItem: jest.fn(),
@@ -94,5 +93,4 @@ describe("GymCapacity Component", () => {
     fireEvent.press(getByText(/USC Gym/i));
     expect(mockPush).toHaveBeenCalledWith("/uscReports");
   });
-
 });

@@ -1,10 +1,9 @@
 //react and expo imports
-import { ThemeProvider, useThemeContext } from "../components/themedContext"; // make sure this file exports both
+import { ThemeProvider, useThemeContext } from "../components/themedContext";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Colors } from "../constants/colors";
 
-// Inner layout with access to theme context
 const InnerLayout = () => {
   const { theme } = useThemeContext();
   const themeColors = Colors[theme] ?? Colors.light;
@@ -44,7 +43,6 @@ const InnerLayout = () => {
   );
 };
 
-// Wrap inner layout in ThemeProvider
 const RootLayout = () => {
   return (
     <ThemeProvider>
