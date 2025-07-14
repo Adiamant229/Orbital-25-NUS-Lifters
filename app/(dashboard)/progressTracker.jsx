@@ -109,7 +109,7 @@ const ProgressTracker = () => {
 
     const q = query(
       collection(db, "users", user.uid, "macros"),
-      orderBy("createdAt", "desc"),
+      orderBy("createdAt", "desc")
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -135,7 +135,7 @@ const ProgressTracker = () => {
         allMacros.map((m) => {
           const d = m.createdAt?.toDate?.() || new Date();
           return d.getFullYear();
-        }),
+        })
       ),
     ].sort((a, b) => b - a);
 
@@ -179,7 +179,7 @@ const ProgressTracker = () => {
         macrosRef,
         where("createdAt", ">=", startOfYear),
         where("createdAt", "<", endOfYear),
-        orderBy("createdAt", "desc"),
+        orderBy("createdAt", "desc")
       );
     }
 
@@ -237,7 +237,7 @@ const ProgressTracker = () => {
               ? new Date(w.date)
               : w.date.toDate?.() || new Date();
           return d.getFullYear();
-        }),
+        })
       ),
     ].sort((a, b) => b - a);
     const options = uniqueYears.map((year) => ({
@@ -260,7 +260,7 @@ const ProgressTracker = () => {
     const q = query(
       collection(db, "workouts"),
       where("userId", "==", user.uid),
-      orderBy("createdAt", "desc"),
+      orderBy("createdAt", "desc")
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -286,7 +286,7 @@ const ProgressTracker = () => {
         allWorkouts.map((w) => {
           const d = w.createdAt?.toDate ? w.createdAt.toDate() : new Date();
           return d.getFullYear();
-        }),
+        })
       ),
     ].sort((a, b) => b - a);
 
@@ -324,7 +324,7 @@ const ProgressTracker = () => {
       q = query(
         workoutsCollectionRef,
         where("userId", "==", user.uid),
-        orderBy("createdAt", "desc"),
+        orderBy("createdAt", "desc")
       );
     } else {
       const startOfYear = new Date(selectedWorkoutYear, 0, 1);
@@ -335,7 +335,7 @@ const ProgressTracker = () => {
         where("userId", "==", user.uid),
         where("createdAt", ">=", startOfYear),
         where("createdAt", "<", endOfYear),
-        orderBy("createdAt", "desc"),
+        orderBy("createdAt", "desc")
       );
     }
 
@@ -365,7 +365,7 @@ const ProgressTracker = () => {
       weightsCollection,
       where("date", ">=", startOfYear),
       where("date", "<", endOfYear),
-      orderBy("date", "desc"),
+      orderBy("date", "desc")
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -406,7 +406,7 @@ const ProgressTracker = () => {
             }
           },
         },
-      ],
+      ]
     );
   };
 
@@ -450,7 +450,7 @@ const ProgressTracker = () => {
         const selectedDateNormalized = new Date(
           date.getFullYear(),
           date.getMonth(),
-          date.getDate(),
+          date.getDate()
         );
 
         const q = query(
@@ -459,9 +459,9 @@ const ProgressTracker = () => {
           where(
             "date",
             "<",
-            new Date(selectedDateNormalized.getTime() + 24 * 60 * 60 * 1000),
+            new Date(selectedDateNormalized.getTime() + 24 * 60 * 60 * 1000)
           ),
-          orderBy("date", "desc"),
+          orderBy("date", "desc")
         );
 
         const snapshot = await getDocs(q);
@@ -492,13 +492,13 @@ const ProgressTracker = () => {
 
         if (allCurrentDayWeights.length > 1) {
           allCurrentDayWeights.sort(
-            (a, b) => b.date.getTime() - a.date.getTime(),
+            (a, b) => b.date.getTime() - a.date.getTime()
           );
           const latestEntry = allCurrentDayWeights[0];
 
           for (let i = 1; i < allCurrentDayWeights.length; i++) {
             await deleteDoc(
-              doc(userDocRef, "weights", allCurrentDayWeights[i].id),
+              doc(userDocRef, "weights", allCurrentDayWeights[i].id)
             );
           }
         }
@@ -527,7 +527,7 @@ const ProgressTracker = () => {
           style: "cancel",
           onPress: submit,
         },
-      ],
+      ]
     );
   };
 
@@ -557,7 +557,7 @@ const ProgressTracker = () => {
       new Date(entry.date).toLocaleDateString(undefined, {
         month: "short",
         day: "numeric",
-      }),
+      })
     ),
     datasets: [
       {
@@ -618,7 +618,7 @@ const ProgressTracker = () => {
             }
           },
         },
-      ],
+      ]
     );
   };
 
@@ -663,7 +663,7 @@ const ProgressTracker = () => {
               setOriginalDate(new Date());
             },
           },
-        ],
+        ]
       );
     } else {
       setModalVisible(false);
@@ -741,7 +741,7 @@ const ProgressTracker = () => {
           style: "default",
           onPress: submit,
         },
-      ],
+      ]
     );
   };
 
@@ -787,7 +787,7 @@ const ProgressTracker = () => {
             }
           },
         },
-      ],
+      ]
     );
   };
 
@@ -819,7 +819,7 @@ const ProgressTracker = () => {
               setImportedMacroHandled(false);
             },
           },
-        ],
+        ]
       );
     } else {
       setMacroModalVisible(false);
@@ -1022,12 +1022,12 @@ const ProgressTracker = () => {
                             const date1 = new Date(
                               d1.getFullYear(),
                               d1.getMonth(),
-                              d1.getDate(),
+                              d1.getDate()
                             );
                             const date2 = new Date(
                               d2.getFullYear(),
                               d2.getMonth(),
-                              d2.getDate(),
+                              d2.getDate()
                             );
                             const diffTime = date2.getTime() - date1.getTime();
                             return Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -1041,7 +1041,7 @@ const ProgressTracker = () => {
                               day: "2-digit",
                               month: "long",
                               year: "numeric",
-                            },
+                            }
                           );
 
                           const timePeriodStr = item.timePeriod
@@ -1213,12 +1213,12 @@ const ProgressTracker = () => {
                     const d1 = new Date(
                       createdDate.getFullYear(),
                       createdDate.getMonth(),
-                      createdDate.getDate(),
+                      createdDate.getDate()
                     );
                     const d2 = new Date(
                       now.getFullYear(),
                       now.getMonth(),
-                      now.getDate(),
+                      now.getDate()
                     );
                     return Math.floor((d2 - d1) / (1000 * 60 * 60 * 24));
                   })();
@@ -1495,13 +1495,6 @@ const ProgressTracker = () => {
               style={styles.addButton2}
             >
               <ThemedText style={{ color: "white" }}>+</ThemedText>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => router.push("/exercises")}
-              style={styles.addButton2}
-            >
-              <FontAwesome5 name="book-open" size={15} color="white" />
             </TouchableOpacity>
 
             <DropDownPicker

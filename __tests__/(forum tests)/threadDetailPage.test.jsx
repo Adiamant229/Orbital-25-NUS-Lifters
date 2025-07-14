@@ -2,7 +2,6 @@ import { Alert } from "react-native";
 import { render, waitFor, fireEvent, act } from "@testing-library/react-native";
 import ThreadDetailPage from "../../app/(forum)/[threadId]";
 
-// Mocks: AsyncStorage
 jest.mock("@react-native-async-storage/async-storage", () => ({
   setItem: jest.fn(),
   getItem: jest.fn(),
@@ -10,12 +9,10 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
   clear: jest.fn(),
 }));
 
-// Mocks: Themed Context
 jest.mock("../../components/themedContext", () => ({
   useThemeContext: () => ({ theme: "light", setTheme: jest.fn() }),
 }));
 
-// Mocks: Expo Router
 const mockPush = jest.fn();
 const mockBack = jest.fn();
 jest.mock("expo-router", () => ({
@@ -26,12 +23,10 @@ jest.mock("expo-router", () => ({
   }),
 }));
 
-// Mocks: Firebase Config
 jest.mock("../../firebaseConfig", () => ({
   db: {},
 }));
 
-// Mocks: Firebase Auth
 const mockCurrentUser = { uid: "user123" };
 jest.mock("firebase/auth", () => ({
   getAuth: () => ({
@@ -39,7 +34,6 @@ jest.mock("firebase/auth", () => ({
   }),
 }));
 
-// Mocks: Firebase Firestore
 const mockDoc = jest.fn((dbArg, ...pathSegments) => pathSegments.join("/"));
 const mockCollection = jest.fn((dbArg, ...pathSegments) =>
   pathSegments.join("/")
@@ -58,7 +52,6 @@ jest.mock("firebase/firestore", () => ({
   deleteDoc: (...args) => mockDeleteDoc(...args),
 }));
 
-// Mock: Video from expo-av
 jest.mock("expo-av", () => ({
   Video: ({ ...props }) => {
     return <></>;
@@ -87,7 +80,7 @@ describe("ThreadDetailPage", () => {
           data: () => ({
             title: "Test Thread",
             content: "Test content goes here",
-            authorId: "user123", // current user as author
+            authorId: "user123",
             category: "General",
             createdAt: { toDate: () => new Date("2024-01-01") },
             likes: 3,
@@ -100,7 +93,7 @@ describe("ThreadDetailPage", () => {
             {
               id: "comment1",
               data: () => ({
-                commenterID: "otherUserId", // different user as commenter
+                commenterID: "otherUserId",
                 content: "Test comment",
                 createdAt: { toMillis: () => 1000, toDate: () => new Date() },
                 editedAt: null,
@@ -124,7 +117,7 @@ describe("ThreadDetailPage", () => {
           },
         });
       }
-      return jest.fn(); // unsubscribe function
+      return jest.fn();
     });
 
     const { getByText } = render(<ThreadDetailPage />);
@@ -170,7 +163,7 @@ describe("ThreadDetailPage", () => {
 
     await waitFor(() => {
       expect(getByText("Like Test")).toBeTruthy();
-      expect(getByText("1")).toBeTruthy(); // like count
+      expect(getByText("1")).toBeTruthy();
     });
   });
 
@@ -254,12 +247,12 @@ describe("ThreadDetailPage", () => {
     });
 
     const { getByText, queryByText } = render(<ThreadDetailPage />);
-   await waitFor(() => {
-     expect(getByText("- Edited comment")).toBeTruthy();
+    await waitFor(() => {
+      expect(getByText("- Edited comment")).toBeTruthy();
 
-     const editedLabel = queryByText(/\(edited\)/);
-     expect(editedLabel).toBeTruthy();
-   });
+      const editedLabel = queryByText(/\(edited\)/);
+      expect(editedLabel).toBeTruthy();
+    });
   });
 
   test("shows alert when submitting empty comment", async () => {
@@ -282,8 +275,6 @@ describe("ThreadDetailPage", () => {
 
     mockAlert.mockRestore();
   });
-  
-
 
   test("shows discard changes alert if editing with unsaved changes", async () => {
     const mockAlert = jest.spyOn(Alert, "alert");
@@ -291,26 +282,23 @@ describe("ThreadDetailPage", () => {
       <ThreadDetailPage />
     );
 
-    // Open modal
     await waitFor(() => getByTestId("addCommentButton"));
     fireEvent.press(getByTestId("addCommentButton"));
 
-    // Simulate typing
     fireEvent.changeText(
       getByPlaceholderText("Write your comment here..."),
       "unsaved"
     );
 
-    // Tap cancel
     fireEvent.press(getByText("Cancel"));
 
     expect(mockAlert).toHaveBeenCalledWith(
       "Discard changes?",
       "You have unsaved changes.",
-      expect.any(Array) // button config
+      expect.any(Array)
     );
   });
-  
+
   test("toggleCommentLike updates comment like count", async () => {
     mockUpdateDoc.mockResolvedValueOnce();
 
@@ -360,15 +348,12 @@ describe("ThreadDetailPage", () => {
 
     const { getByTestId } = render(<ThreadDetailPage />);
 
-    // Wait for comment
     await waitFor(() => {
       expect(getByTestId("comment-like-button-c123")).toBeTruthy();
     });
-    
-    // Simulate liking the comment
+
     fireEvent.press(getByTestId("comment-like-button-c123"));
-    
-    // Expect Firestore update
+
     await waitFor(() => {
       expect(mockUpdateDoc).toHaveBeenCalledWith(
         "threads/testThreadId/comments/c123",
@@ -474,11 +459,9 @@ describe("ThreadDetailPage", () => {
     });
   });
 
-
   test("successfully adds a comment and closes modal", async () => {
     mockAddDoc.mockResolvedValueOnce();
 
-    // Mock Alert.alert to immediately call the "Post" button's onPress callback
     jest.spyOn(Alert, "alert").mockImplementation((title, message, buttons) => {
       const confirmButton = buttons.find(
         (button) => button.text === "Post" || button.text === "Save"
@@ -529,17 +512,15 @@ describe("ThreadDetailPage", () => {
 
     fireEvent.press(getByText("Post"));
 
-    // wait for addDoc to be called
     await waitFor(() => {
       expect(mockAddDoc).toHaveBeenCalled();
     });
 
-    // wait for modal to disappear
     await waitFor(() => {
       expect(queryByTestId("add-comment-modal")).toBeNull();
     });
   });
-  
+
   test("cancel adding comment with no changes closes modal without alert", async () => {
     const alertSpy = jest.spyOn(Alert, "alert");
 
@@ -578,7 +559,6 @@ describe("ThreadDetailPage", () => {
 
     fireEvent.press(getByTestId("addCommentButton"));
 
-    // Directly press cancel without typing
     fireEvent.press(getByText("Cancel"));
 
     expect(alertSpy).not.toHaveBeenCalled();
@@ -686,7 +666,4 @@ describe("ThreadDetailPage", () => {
 
     alertSpy.mockRestore();
   });
-  
-
-
 });

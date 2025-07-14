@@ -55,7 +55,7 @@ jest.mock("firebase/firestore", () => ({
         },
       ],
     });
-    return jest.fn(); // Unsubscribe mock
+    return jest.fn();
   }),
 }));
 
@@ -124,7 +124,6 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
 jest.mock("../../components/themedContext", () => ({
   useThemeContext: () => ({ theme: "light", setTheme: jest.fn() }),
 }));
-
 
 jest.spyOn(Alert, "alert").mockImplementation((title, message, buttons) => {
   if (buttons) {
@@ -226,7 +225,7 @@ describe("UtownReports component", () => {
 
   test("image picker adds imageUri to state", async () => {
     const { getByText, getByTestId } = render(<UtownReports />);
-    fireEvent.press(getByText("+")); // open modal
+    fireEvent.press(getByText("+"));
 
     await act(async () => {
       fireEvent.press(getByText("Pick from Gallery"));
@@ -391,8 +390,8 @@ describe("UtownReports component", () => {
     const consoleSpy = jest.spyOn(console, "error").mockImplementation();
 
     firestore.onSnapshot.mockImplementationOnce((query, onNext, onError) => {
-      onError(new Error("Firestore failure")); // Trigger error callback
-      return () => {}; // Return unsubscribe function
+      onError(new Error("Firestore failure"));
+      return () => {};
     });
 
     render(<UtownReports />);
@@ -475,47 +474,38 @@ describe("UtownReports component", () => {
         data: () => ({ imageUrl: "https://fakeimage.url/oldimage.jpg" }),
       });
 
-      // Mock uuid.v4 to return fixed string for upload path
       jest.spyOn(uuid, "v4").mockReturnValue("fixed-uuid");
 
-      const { getByText, getByTestId, queryByTestId } = render(<UtownReports />);
+      const { getByText, getByTestId, queryByTestId } = render(
+        <UtownReports />
+      );
 
-      // Open modal and enter edit mode by pressing existing report
       await waitFor(() => getByText("Bench Press - Damaged"));
       fireEvent.press(getByText("Bench Press - Damaged"));
 
       const editIcon = await waitFor(() => getByTestId("edit-icon-1"));
       fireEvent.press(editIcon);
 
-      // Pick a new image - this triggers async update of imageUri in state
       await act(async () => {
         fireEvent.press(getByText("Pick from Gallery"));
       });
 
-      // Wait for the image preview to appear (indicating imageUri is set)
       await waitFor(() => getByTestId("image-preview"));
 
-      // Now submit
       await act(async () => {
         fireEvent.press(getByText("Save"));
       });
 
-      // Check fetch called to get blob from local file URI
       expect(global.fetch).toHaveBeenCalled();
 
-      // Check uploadBytes called (upload new image)
       expect(storage.uploadBytes).toHaveBeenCalled();
 
-      // Check getDownloadURL called (get new uploaded image URL)
       expect(storage.getDownloadURL).toHaveBeenCalled();
 
-      // Check deleteObject called (delete old image)
       expect(storage.deleteObject).toHaveBeenCalled();
 
-      // Check updateDoc called (update firestore document with new imageUrl)
       expect(firestore.updateDoc).toHaveBeenCalled();
 
-      // Check success alert shown
       expect(Alert.alert).toHaveBeenCalledWith(
         "Success",
         expect.stringContaining("updated")
@@ -570,13 +560,12 @@ describe("UtownReports component", () => {
       const editIcon = await waitFor(() => getByTestId("edit-icon-1"));
       fireEvent.press(editIcon);
 
-      // Wait for Save button to be ready before pressing
       await waitFor(() => fireEvent.press(getByText("Save")));
 
       expect(firestore.updateDoc).toHaveBeenCalledWith(
         expect.any(Object),
         expect.objectContaining({
-          imageUrl: "https://fakeimage.url/image.jpg", // match onSnapshot mock
+          imageUrl: "https://fakeimage.url/image.jpg",
         })
       );
       expect(Alert.alert).toHaveBeenCalledWith(
@@ -595,7 +584,6 @@ describe("UtownReports component", () => {
       const firestore = require("firebase/firestore");
       const storage = require("firebase/storage");
 
-      // Mock uuid.v4
       jest.spyOn(uuid, "v4").mockReturnValue("fixed-uuid");
 
       const { getByText, getByTestId } = render(<UtownReports />);
@@ -603,16 +591,12 @@ describe("UtownReports component", () => {
 
       fireEvent.press(getByTestId("select-bench-press"));
       fireEvent.press(getByTestId("select-damaged"));
-
-      // Pick image (simulate image pick)
       fireEvent.press(getByText("Pick from Gallery"));
 
-      // Wait for image URI state to update and image preview to render
       await waitFor(() => {
         expect(getByTestId("image-preview")).toBeTruthy();
       });
 
-      // Now submit
       await act(async () => {
         fireEvent.press(getByText("Submit"));
       });
@@ -653,7 +637,6 @@ describe("UtownReports component", () => {
       .spyOn(console, "warn")
       .mockImplementation(() => {});
 
-    // Setup getDoc with old image URL
     const firestore = require("firebase/firestore");
     const storage = require("firebase/storage");
 
@@ -662,19 +645,16 @@ describe("UtownReports component", () => {
       data: () => ({ imageUrl: "https://fakeimage.url/oldimage.jpg" }),
     });
 
-    // Make deleteObject throw error to simulate failure
     storage.deleteObject.mockRejectedValueOnce(
       new Error("Storage delete failed")
     );
 
-    // Mock fetch blob for upload
     global.fetch = jest.fn(() =>
       Promise.resolve({
         blob: () => Promise.resolve("blob-data"),
       })
     );
 
-    // Setup uuid.v4
     const uuid = require("uuid");
     jest.spyOn(uuid, "v4").mockReturnValue("fixed-uuid");
 
@@ -686,14 +666,12 @@ describe("UtownReports component", () => {
     const editIcon = await waitFor(() => getByTestId("edit-icon-1"));
     fireEvent.press(editIcon);
 
-    // Pick a new image (to trigger upload and deletion)
     await act(async () => {
       fireEvent.press(getByText("Pick from Gallery"));
     });
 
     await waitFor(() => getByTestId("image-preview"));
 
-    // Submit to trigger deletion of old image (which will fail)
     await act(async () => {
       fireEvent.press(getByText("Save"));
     });
@@ -719,7 +697,6 @@ describe("UtownReports component", () => {
       data: () => ({ imageUrl: "https://fakeimage.url/oldimage.jpg" }),
     });
 
-    // deleteObject rejects
     storage.deleteObject.mockRejectedValueOnce(
       new Error("Local delete failed")
     );
@@ -731,7 +708,6 @@ describe("UtownReports component", () => {
     const editIcon = await waitFor(() => getByTestId("edit-icon-1"));
     fireEvent.press(editIcon);
 
-    // Remove image locally
     fireEvent.press(getByTestId("removeImage"));
 
     await act(async () => {
@@ -753,7 +729,6 @@ describe("UtownReports component", () => {
       data: () => ({ imageUrl: "https://fakeimage.url/oldimage.jpg" }),
     });
 
-    // spy on updateDoc
     const updateDocSpy = jest.spyOn(firestore, "updateDoc");
 
     const { getByText, getByTestId } = render(<UtownReports />);
@@ -763,7 +738,6 @@ describe("UtownReports component", () => {
     const editIcon = await waitFor(() => getByTestId("edit-icon-1"));
     fireEvent.press(editIcon);
 
-    // Remove image locally
     fireEvent.press(getByTestId("removeImage"));
 
     await act(async () => {

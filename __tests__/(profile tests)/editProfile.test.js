@@ -2,7 +2,6 @@ import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import { Alert } from "react-native";
 import EditProfile from "../../app/(profiles)/editProfile";
 
-// 🔧 Mocks
 const mockGetDoc = jest.fn();
 const mockUpdateDoc = jest.fn();
 const mockUploadBytes = jest.fn();
@@ -57,7 +56,6 @@ jest.mock("expo-image-picker", () => ({
   ),
   Images: "Images",
 }));
-
 
 jest.mock("@react-native-async-storage/async-storage", () => ({
   setItem: jest.fn(),
@@ -334,51 +332,6 @@ describe("EditProfile Component", () => {
     );
   });
 
- /* test("deletePhoto clears profile picture when confirmed", async () => {
-    mockGetDoc.mockResolvedValueOnce({
-      exists: () => true,
-      data: () => ({
-        name: "Test",
-        bio: "Bio",
-        height: 180,
-        weight: 75,
-        age: 22,
-        profilePicUrl: "https://test.com/profile.jpg", // important
-      }),
-    });
-  
-    const { getByTestId, queryByTestId, getByText } = render(<EditProfile />);
-  
-    // Wait for user data to load
-    await waitFor(() => getByText("Save"));
-  
-    // Open modal
-    fireEvent.press(getByTestId("uploadPhotoButton"));
-  
-    // Wait for delete button to show
-    await waitFor(() => {
-      const deleteBtn = queryByTestId("deletePhotoButton");
-      expect(deleteBtn).toBeTruthy();
-    });
-  
-    // Mock Alert confirmation
-    Alert.alert.mockImplementationOnce((title, msg, buttons) => {
-      const deleteBtn = buttons.find((b) => b.text === "Delete");
-      deleteBtn?.onPress();
-    });
-  
-    fireEvent.press(getByTestId("deletePhotoButton"));
-  
-    await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith(
-        "Delete Profile Picture",
-        "Are you sure you want to delete your profile picture?",
-        expect.any(Array)
-      );
-    });
-  });*/
-  
-  
   test("takePhoto uploads taken image and sets profile pic URL", async () => {
     const { auth } = require("../../firebaseConfig");
     auth.currentUser = { uid: "test-uid" };
@@ -409,9 +362,6 @@ describe("EditProfile Component", () => {
       expect(mockGetDownloadURL).toHaveBeenCalled();
     });
   });
-  ;
-  
-
   test("validates weight as number", async () => {
     mockGetDoc.mockResolvedValueOnce({
       exists: () => true,
@@ -449,6 +399,4 @@ describe("EditProfile Component", () => {
       "Age must be a number."
     );
   });
-  
-
 });

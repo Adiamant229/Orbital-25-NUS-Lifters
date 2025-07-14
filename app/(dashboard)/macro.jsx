@@ -12,7 +12,7 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
-  Alert
+  Alert,
 } from "react-native";
 import { useEffect, useState } from "react";
 import { Searchbar } from "react-native-paper";
@@ -141,23 +141,22 @@ const Macro = () => {
       .toFixed(2);
   };
 
-const deleteItem = (id) => {
-  Alert.alert("Delete Meal", "Are you sure you want to delete this meal?", [
-    {
-      text: "Cancel",
-      style: "cancel",
-    },
-    {
-      text: "Delete",
-      style: "destructive",
-      onPress: () => {
-        const updated = mealList.filter((item) => item.id !== id);
-        setMealList(updated);
+  const deleteItem = (id) => {
+    Alert.alert("Delete Meal", "Are you sure you want to delete this meal?", [
+      {
+        text: "Cancel",
+        style: "cancel",
       },
-    },
-  ]);
-};
-
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          const updated = mealList.filter((item) => item.id !== id);
+          setMealList(updated);
+        },
+      },
+    ]);
+  };
 
   const handleSendToProgress = () => {
     router.push({
@@ -286,7 +285,6 @@ const deleteItem = (id) => {
           )}
         </View>
 
-        {/* Modal */}
         <Modal
           visible={searching}
           animationType="fade"
