@@ -1,10 +1,9 @@
-// __tests__/(forum tests)/forum.test.jsx
 import { Alert } from "react-native";
 import { deleteDoc, doc, getDoc } from "firebase/firestore";
 import { deleteObject, ref } from "firebase/storage";
 import { render, fireEvent, waitFor, act } from "@testing-library/react-native";
+import Forum, { deleteThread } from "../../app/(dashboard)/forum";
 
-// Mock react-native-dropdown-picker to simplify dropdown in tests
 jest.mock("react-native-dropdown-picker", () => {
   const React = require("react");
   const { View, Text } = require("react-native");
@@ -23,7 +22,6 @@ jest.mock("react-native-dropdown-picker", () => {
     );
 });
 
-// Mock expo-router with internal push mock function
 jest.mock("expo-router", () => {
   const push = jest.fn();
   return {
@@ -34,7 +32,6 @@ jest.mock("expo-router", () => {
   };
 });
 
-// Mock firebaseConfig completely
 jest.mock("../../firebaseConfig", () => ({
   auth: {},
   db: {},
@@ -43,7 +40,6 @@ jest.mock("../../firebaseConfig", () => ({
   functions: {},
 }));
 
-// Mock firebase/firestore methods
 const mockThread = {
   title: "Test Thread",
   category: "Training",
@@ -84,23 +80,20 @@ jest.mock("firebase/firestore", () => ({
         });
       },
     });
-    return jest.fn(); // unsubscribe mock
+    return jest.fn();
   }),
 }));
 
-// Mock firebase/auth
 jest.mock("firebase/auth", () => ({
   getAuth: () => ({
     currentUser: { uid: "user1" },
   }),
 }));
 
-// Mock firebase/storage methods
 jest.mock("firebase/storage", () => ({
   deleteObject: jest.fn(() => Promise.resolve()),
   ref: jest.fn(() => ({})),
 }));
-
 
 jest.mock("@react-native-async-storage/async-storage", () => ({
   setItem: jest.fn(),
@@ -113,11 +106,7 @@ jest.mock("../../components/themedContext", () => ({
   useThemeContext: () => ({ theme: "light", setTheme: jest.fn() }),
 }));
 
-
-// Spy and mock Alert.alert
 jest.spyOn(Alert, "alert").mockImplementation(() => {});
-
-import Forum, { deleteThread } from "../../app/(dashboard)/forum";
 
 const { __pushMock } = jest.requireMock("expo-router");
 
@@ -149,7 +138,6 @@ describe("Forum Page", () => {
     expect(__pushMock).toHaveBeenCalledWith("/(forum)/addEditThread");
   });
 
-
   test("DropDownPicker sorting by likes works", async () => {
     const { getByText } = render(<Forum />);
     fireEvent.press(getByText("Most Liked"));
@@ -166,23 +154,19 @@ describe("Forum Page", () => {
     const { getByTestId, getByText } = render(<Forum />);
     await waitFor(() => expect(getByText("Test Thread")).toBeTruthy());
 
-    // Fire the delete button press
     fireEvent.press(getByTestId("delete-thread-button"));
     expect(Alert.alert).toHaveBeenCalled();
 
-    // Find the alert dialog with title "Delete Thread"
     const alertCall = Alert.alert.mock.calls.find(
       ([title]) => title === "Delete Thread"
     );
     const buttons = alertCall[2];
     const deleteButton = buttons.find((btn) => btn.text === "Delete");
 
-    // Simulate pressing the Delete button inside alert
     await act(async () => {
       await deleteButton.onPress();
     });
 
-    // Check if deleteDoc called and success alert shown
     expect(deleteDoc).toHaveBeenCalled();
     expect(Alert.alert).toHaveBeenCalledWith(
       "Deleted",
@@ -191,29 +175,24 @@ describe("Forum Page", () => {
   });
 
   test("alerts error if thread does not exist", async () => {
-    // Mock getDoc to simulate thread not found
     getDoc.mockResolvedValueOnce({ exists: () => false });
 
     const { getByTestId, getByText } = render(<Forum />);
     await waitFor(() => expect(getByText("Test Thread")).toBeTruthy());
 
-    // Fire the delete button press
     fireEvent.press(getByTestId("delete-thread-button"));
     expect(Alert.alert).toHaveBeenCalled();
 
-    // Find the alert dialog with title "Delete Thread"
     const alertCall = Alert.alert.mock.calls.find(
       ([title]) => title === "Delete Thread"
     );
     const buttons = alertCall[2];
     const deleteButton = buttons.find((btn) => btn.text === "Delete");
 
-    // Simulate pressing the Delete button inside alert
     await act(async () => {
       await deleteButton.onPress();
     });
 
-    // Check error alert called for "Thread not found"
     expect(Alert.alert).toHaveBeenCalledWith("Error", "Thread not found.");
   });
 
@@ -222,7 +201,6 @@ describe("Forum Page", () => {
 
     beforeEach(() => {
       jest.clearAllMocks();
-      // Reset Alert.alert mock to a no-op
       Alert.alert.mockImplementation(() => {});
       console.warn = jest.fn();
       console.error = jest.fn();
@@ -239,8 +217,6 @@ describe("Forum Page", () => {
       deleteObject.mockResolvedValueOnce();
       deleteDoc.mockResolvedValueOnce();
 
-      // Call deleteThread and simulate user pressing "Delete" in Alert
-      // First call triggers Alert.alert with buttons - find Delete button and call onPress
       await deleteThread(threadId);
 
       expect(Alert.alert).toHaveBeenCalledWith(
@@ -249,17 +225,14 @@ describe("Forum Page", () => {
         expect.any(Array)
       );
 
-      // Extract the alert buttons from last Alert.alert call
       const buttons =
         Alert.alert.mock.calls[Alert.alert.mock.calls.length - 1][2];
       const deleteButton = buttons.find((b) => b.text === "Delete");
 
-      // Call the Delete button's onPress (which is async)
       await act(async () => {
         await deleteButton.onPress();
       });
 
-      // Verify doc and media deletion called correctly
       expect(doc).toHaveBeenCalledWith(expect.anything(), "threads", threadId);
       expect(getDoc).toHaveBeenCalled();
       expect(ref).toHaveBeenCalledWith(expect.anything(), "media/file.jpg");
@@ -274,7 +247,7 @@ describe("Forum Page", () => {
     test("deletes thread without mediaUrl", async () => {
       getDoc.mockResolvedValueOnce({
         exists: () => true,
-        data: () => ({}), // no mediaUrl
+        data: () => ({}),
       });
       deleteDoc.mockResolvedValueOnce();
 

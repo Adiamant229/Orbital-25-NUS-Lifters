@@ -1,10 +1,8 @@
-// __tests__/(forum tests)/addEditThread.test.jsx
-import React from "react";
 import { render, fireEvent, waitFor, act } from "@testing-library/react-native";
 import { Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import AddEditThread from "../../app/(forum)/addEditThread";
 
-// Mocks: Video
 jest.mock("expo-av", () => {
   const React = require("react");
   const { View } = require("react-native");
@@ -13,7 +11,6 @@ jest.mock("expo-av", () => {
   };
 });
 
-// Mocks: Image Picker
 jest.mock("expo-image-picker", () => ({
   requestMediaLibraryPermissionsAsync: jest.fn(() =>
     Promise.resolve({ status: "granted" })
@@ -35,7 +32,6 @@ jest.mock("expo-image-picker", () => ({
   ),
 }));
 
-// Mocks: Router
 jest.mock("expo-router", () => {
   const actual = jest.requireActual("expo-router");
   return {
@@ -48,12 +44,10 @@ jest.mock("expo-router", () => {
   };
 });
 
-// Mocks: uuid
 jest.mock("react-native-uuid", () => ({
   v4: jest.fn(() => "mock-uuid"),
 }));
 
-// Mocks: Firebase
 jest.mock("../../firebaseConfig", () => ({
   db: {},
   storage: {},
@@ -84,7 +78,6 @@ jest.mock("firebase/auth", () => ({
   getAuth: jest.fn(() => ({ currentUser: { uid: "mockUserId" } })),
 }));
 
-// Mocks: AsyncStorage
 jest.mock("@react-native-async-storage/async-storage", () => ({
   setItem: jest.fn(),
   getItem: jest.fn(),
@@ -96,12 +89,8 @@ jest.mock("../../components/themedContext", () => ({
   useThemeContext: () => ({ theme: "light", setTheme: jest.fn() }),
 }));
 
-// Spy: Alert
 jest.spyOn(Alert, "alert").mockImplementation(() => {});
 
-import AddEditThread from "../../app/(forum)/addEditThread";
-
-// Setup global fetch + Blob mocks
 beforeAll(() => {
   global.fetch = jest.fn(() =>
     Promise.resolve({
@@ -126,7 +115,6 @@ describe("AddEditThread Component", () => {
   });
 
   test("renders create mode correctly", async () => {
-    // no threadId param means create mode
     const { getByText, getByPlaceholderText } = render(<AddEditThread />);
 
     expect(getByText("Create New Thread")).toBeTruthy();
@@ -134,19 +122,10 @@ describe("AddEditThread Component", () => {
   });
 
   test("renders edit mode correctly and loads data", async () => {
-    // Mock useLocalSearchParams to return threadId
     jest.mock("expo-router", () => ({
       useLocalSearchParams: () => ({ threadId: "abc123" }),
       useRouter: () => ({ back: jest.fn(), push: jest.fn() }),
     }));
-
-    // We have to re-import component after mock change
-    // But for simplicity in test you might abstract this better.
-
-    // Instead, let's simulate by passing threadId as prop or
-    // just test load logic separately if needed.
-
-    // This test might need adaptation based on your usage.
   });
 
   test("shows alert if title or content is missing on submit", async () => {
@@ -169,7 +148,6 @@ describe("AddEditThread Component", () => {
       "Test content"
     );
 
-    // Mock Alert.alert to auto-press Confirm button if exists
     Alert.alert.mockImplementation((title, message, buttons) => {
       if (Array.isArray(buttons)) {
         const confirmButton = buttons.find((b) => b.text === "Confirm");
@@ -183,7 +161,6 @@ describe("AddEditThread Component", () => {
       fireEvent.press(getByText("Create"));
     });
 
-    // Expect addDoc called with correct data
     const { addDoc } = require("firebase/firestore");
     expect(addDoc).toHaveBeenCalled();
 
@@ -191,7 +168,6 @@ describe("AddEditThread Component", () => {
   });
 
   test("renders edit mode correctly and loads thread data", async () => {
-    // Mock useLocalSearchParams to return threadId for edit mode
     const mockThreadData = {
       title: "Existing Title",
       category: "Diet",
@@ -200,14 +176,12 @@ describe("AddEditThread Component", () => {
       mediaType: "image",
     };
 
-    // Mock getDoc to return the thread data
     const { getDoc } = require("firebase/firestore");
     getDoc.mockResolvedValueOnce({
       exists: () => true,
       data: () => mockThreadData,
     });
 
-    // Mock useLocalSearchParams to simulate edit mode
     jest.spyOn(require("expo-router"), "useLocalSearchParams").mockReturnValue({
       threadId: "abc123",
     });
@@ -216,7 +190,6 @@ describe("AddEditThread Component", () => {
       <AddEditThread />
     );
 
-    // Wait for useEffect fetch to update state
     await waitFor(() =>
       expect(getByPlaceholderText("Thread Title").props.value).toBe(
         mockThreadData.title
@@ -230,15 +203,11 @@ describe("AddEditThread Component", () => {
     expect(getByPlaceholderText("Thread content...").props.value).toBe(
       mockThreadData.content
     );
-
-    // Media should be rendered - since it's an image, check image exists (via mediaUri state)
-    // Note: you can add testID to Image component in your component for easier testing
   });
 
   test("calls updateDoc on submit for edited thread", async () => {
     const { getByText, getByPlaceholderText } = render(<AddEditThread />);
 
-    // Mock useLocalSearchParams to simulate edit mode
     jest.spyOn(require("expo-router"), "useLocalSearchParams").mockReturnValue({
       threadId: "abc123",
     });
@@ -251,7 +220,6 @@ describe("AddEditThread Component", () => {
       "Updated content"
     );
 
-    // Mock Alert.alert to auto-press Confirm button
     Alert.alert.mockImplementation((title, message, buttons) => {
       if (Array.isArray(buttons)) {
         const confirmButton = buttons.find((b) => b.text === "Confirm");
@@ -327,11 +295,9 @@ describe("AddEditThread Component", () => {
   test("uploads media and deletes old media if replaced on edit", async () => {
     const originalMediaUrl = "https://mockurl.com/oldmedia.jpg";
 
-    // Set threadId (edit mode)
     const { useLocalSearchParams } = require("expo-router");
     useLocalSearchParams.mockReturnValue({ threadId: "abc123" });
 
-    // Mocks
     const {
       getDownloadURL,
       uploadBytes,
@@ -352,17 +318,14 @@ describe("AddEditThread Component", () => {
 
     const { getByText, getByPlaceholderText } = render(<AddEditThread />);
 
-    // Wait for useEffect to populate form
     await waitFor(() =>
       expect(getByPlaceholderText("Thread Title").props.value).toBe("Old Title")
     );
 
-    // Trigger image picker
     await act(async () => {
       fireEvent.press(getByText("Pick from Gallery"));
     });
 
-    // Auto-confirm Alert
     Alert.alert.mockImplementation((title, msg, buttons) => {
       const confirm = buttons?.find((b) => b.text === "Confirm");
       if (confirm) confirm.onPress();
@@ -406,16 +369,12 @@ describe("AddEditThread Component", () => {
       )
     );
 
-    // Make sure media is shown
     expect(getByTestId("thread-image")).toBeTruthy();
 
-    // Remove media
-    fireEvent.press(getByTestId("remove-media-button")); 
+    fireEvent.press(getByTestId("remove-media-button"));
 
-    // Media should now be removed
     expect(queryByTestId("thread-image")).toBeNull();
 
-    // Simulate confirmation
     Alert.alert.mockImplementation((title, msg, buttons) => {
       if (Array.isArray(buttons)) {
         const confirm = buttons.find((b) => b.text === "Confirm");
@@ -432,21 +391,17 @@ describe("AddEditThread Component", () => {
     const { deleteObject } = require("firebase/storage");
     expect(deleteObject).toHaveBeenCalled();
   });
-  
 
   test("handleTakePhoto requests permission and handles photo and video capture", async () => {
-    // Mock permission granted
     ImagePicker.requestCameraPermissionsAsync.mockResolvedValueOnce({
       status: "granted",
     });
 
-    // Mock launchCameraAsync for photo
     ImagePicker.launchCameraAsync.mockResolvedValueOnce({
       canceled: false,
       assets: [{ uri: "photo-uri", type: "image" }],
     });
 
-    // Mock launchCameraAsync for video
     ImagePicker.launchCameraAsync.mockResolvedValueOnce({
       canceled: false,
       assets: [{ uri: "video-uri", type: "video" }],

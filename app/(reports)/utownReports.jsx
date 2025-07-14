@@ -122,7 +122,7 @@ const UtownReports = () => {
       },
       (error) => {
         console.error("Error fetching real-time reports:", error);
-      },
+      }
     );
 
     return () => unsubscribe();
@@ -159,7 +159,7 @@ const UtownReports = () => {
     if (!value || !issueValue) {
       Alert.alert(
         "Submission Error",
-        "Please select equipment and issue type.",
+        "Please select equipment and issue type."
       );
       return;
     }
@@ -258,7 +258,7 @@ const UtownReports = () => {
               setImageDeletedLocally(false);
               Alert.alert(
                 "Success",
-                editingReportId ? "Report updated!" : "Report submitted!",
+                editingReportId ? "Report updated!" : "Report submitted!"
               );
             } catch (error) {
               console.error("Error submitting report:", error);
@@ -266,7 +266,7 @@ const UtownReports = () => {
             }
           },
         },
-      ],
+      ]
     );
   };
 
@@ -297,7 +297,7 @@ const UtownReports = () => {
 
               if (reportToDelete?.imageUrl) {
                 const imagePath = getStoragePathFromUrl(
-                  reportToDelete.imageUrl,
+                  reportToDelete.imageUrl
                 );
                 const imageRef = ref(storage, imagePath);
                 await deleteObject(imageRef);
@@ -315,7 +315,7 @@ const UtownReports = () => {
             }
           },
         },
-      ],
+      ]
     );
   };
 
@@ -403,7 +403,7 @@ const UtownReports = () => {
               setImageDeletedLocally(false);
             },
           },
-        ],
+        ]
       );
     } else {
       setModalVisible(false);
@@ -422,7 +422,7 @@ const UtownReports = () => {
 
   const handleLink = () => {
     Linking.openURL(gymLocationUrl).catch((err) =>
-      console.error("Failed to open URL:", err),
+      console.error("Failed to open URL:", err)
     );
   };
 

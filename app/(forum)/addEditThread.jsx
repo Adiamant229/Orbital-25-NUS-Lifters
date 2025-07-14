@@ -1,6 +1,13 @@
 //react and expo imports
 import { useEffect, useState, useRef } from "react";
-import { Alert, View, Image, TouchableOpacity, ScrollView } from "react-native";
+import {
+  Alert,
+  View,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+} from "react-native";
 import uuid from "react-native-uuid";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Video } from "expo-av";
@@ -25,7 +32,7 @@ import {
 } from "firebase/storage";
 import { db, storage } from "../../firebaseConfig";
 
-//themed components
+//thenmed components
 import ThemedView from "../../components/themedView";
 import ThemedText from "../../components/themedText";
 import ThemedTextInput from "../../components/themedTextInput";
@@ -40,17 +47,12 @@ const AddEditThread = () => {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState(categories[0]);
   const [content, setContent] = useState("");
-
   const [mediaUri, setMediaUri] = useState(null);
   const [mediaType, setMediaType] = useState(null);
-
-  // Track original media URL to delete if replaced or removed
   const [originalMediaUrl, setOriginalMediaUrl] = useState(null);
-
   const [loading, setLoading] = useState(false);
   const isEdit = !!threadId;
 
-  // Video ref for playback control
   const videoRef = useRef(null);
 
   useEffect(() => {
@@ -82,7 +84,6 @@ const AddEditThread = () => {
     try {
       const { status } =
         await ImagePicker.requestMediaLibraryPermissionsAsync();
-
       if (status !== "granted") {
         Alert.alert("Permission required", "Media access is needed.");
         return;
@@ -94,10 +95,10 @@ const AddEditThread = () => {
         allowsEditing: false,
       });
 
-      if (!result.canceled && result.assets && result.assets.length > 0) {
+      if (!result.canceled && result.assets?.length > 0) {
         const picked = result.assets[0];
         setMediaUri(picked.uri);
-        setMediaType(picked.type); // "image" or "video"
+        setMediaType(picked.type);
       }
     } catch (error) {
       console.error("Error in handlePickMedia:", error);
@@ -146,7 +147,7 @@ const AddEditThread = () => {
             },
           },
           { text: "Cancel", style: "cancel" },
-        ],
+        ]
       );
     } catch (error) {
       console.error("Error in handleTakePhoto:", error);
@@ -154,7 +155,6 @@ const AddEditThread = () => {
     }
   };
 
-  // Upload media to Firebase Storage and return download URL
   const uploadMedia = async () => {
     if (!mediaUri) return null;
     const response = await fetch(mediaUri);
@@ -165,7 +165,6 @@ const AddEditThread = () => {
     return await getDownloadURL(fileRef);
   };
 
-  // Delete media from Firebase Storage by URL
   const deleteMediaFromStorage = async (mediaUrl) => {
     if (!mediaUrl) return;
     try {
@@ -201,24 +200,20 @@ const AddEditThread = () => {
               const user = auth.currentUser;
               if (!user) throw new Error("User not logged in");
 
-              // If editing and originalMediaUrl exists and mediaUri changed or removed,
-              // delete old media from storage
               if (isEdit && originalMediaUrl) {
                 const isMediaRemoved = !mediaUri;
                 const isMediaReplaced =
                   mediaUri && mediaUri !== originalMediaUrl;
                 if (isMediaRemoved || isMediaReplaced) {
                   await deleteMediaFromStorage(originalMediaUrl);
-                  setOriginalMediaUrl(null); // clear original media url state
+                  setOriginalMediaUrl(null);
                 }
               }
 
-              // Upload new media (if any)
               const mediaUrl = await uploadMedia();
 
               if (isEdit) {
-                const refDoc = doc(db, "threads", threadId);
-                await updateDoc(refDoc, {
+                await updateDoc(doc(db, "threads", threadId), {
                   title,
                   category,
                   content,
@@ -251,7 +246,7 @@ const AddEditThread = () => {
             }
           },
         },
-      ],
+      ]
     );
   };
 
@@ -267,7 +262,7 @@ const AddEditThread = () => {
             style: "destructive",
             onPress: () => router.back(),
           },
-        ],
+        ]
       );
     } else {
       router.back();
@@ -275,47 +270,31 @@ const AddEditThread = () => {
   };
 
   return (
-    <ThemedView style={{ flex: 1, padding: 20, paddingTop: 10 }}>
-      <ThemedText title style={{ fontSize: 20 }}>
+    <ThemedView style={styles.container}>
+      <ThemedText title style={styles.title}>
         {isEdit ? "Edit Thread" : "Create New Thread"}
       </ThemedText>
-      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         <ThemedTextInput
           placeholder="Thread Title"
-          style={{
-            borderWidth: 1,
-            borderRadius: 10,
-            marginVertical: 10,
-            padding: 10,
-            width: "100%",
-          }}
+          style={styles.input}
           value={title}
           onChangeText={setTitle}
           placeholderTextColor="grey"
         />
 
-        <ThemedText style={{ fontWeight: "bold", marginTop: 10 }}>
-          Select Category:
-        </ThemedText>
-        <View
-          style={{
-            flexDirection: "row",
-            gap: 7,
-          }}
-        >
+        <ThemedText style={styles.categoryLabel}>Select Category:</ThemedText>
+        <View style={styles.categoryContainer}>
           {categories.map((cat) => (
             <ThemedButton
               key={cat}
-              style={{
-                backgroundColor: category === cat ? "#7d015c" : "#2196f3",
-                borderRadius: 20,
-                height: 30,
-                paddingVertical: 4,
-                justifyContent: "center",
-              }}
+              style={[
+                styles.categoryButton,
+                { backgroundColor: category === cat ? "#7d015c" : "#2196f3" },
+              ]}
               onPress={() => setCategory(cat)}
             >
-              <ThemedText style={{ color: "white" }}>{cat}</ThemedText>
+              <ThemedText style={styles.categoryButtonText}>{cat}</ThemedText>
             </ThemedButton>
           ))}
         </View>
@@ -323,31 +302,25 @@ const AddEditThread = () => {
         <ThemedTextInput
           placeholder="Thread content..."
           multiline
-          style={{
-            height: 100,
-            borderWidth: 1,
-            borderRadius: 10,
-            padding: 10,
-            marginTop: 10,
-            textAlignVertical: "top",
-            width: "100%",
-          }}
+          style={styles.contentInput}
           value={content}
           onChangeText={setContent}
           placeholderTextColor="grey"
         />
 
-        <ThemedText style={{ marginTop: 20 }}>
+        <ThemedText style={styles.mediaLabel}>
           Attach Media (optional):
         </ThemedText>
-        <View style={{ flexDirection: "row", gap: 10, marginVertical: 10 }}>
+        <View style={styles.mediaButtonContainer}>
           <ThemedButton onPress={handlePickMedia}>
-            <ThemedText style={{ color: "white" }}>
+            <ThemedText style={styles.mediaButtonText}>
               Pick from Gallery
             </ThemedText>
           </ThemedButton>
           <ThemedButton testID="take-photo-button" onPress={handleTakePhoto}>
-            <ThemedText style={{ color: "white" }}>Take Photo/Video</ThemedText>
+            <ThemedText style={styles.mediaButtonText}>
+              Take Photo/Video
+            </ThemedText>
           </ThemedButton>
         </View>
 
@@ -356,7 +329,7 @@ const AddEditThread = () => {
             {mediaType === "image" ? (
               <Image
                 source={{ uri: mediaUri }}
-                style={{ height: 150, marginTop: 10 }}
+                style={styles.mediaPreview}
                 resizeMode="contain"
                 testID="thread-image"
               />
@@ -366,7 +339,7 @@ const AddEditThread = () => {
                 source={{ uri: mediaUri }}
                 useNativeControls
                 resizeMode="contain"
-                style={{ height: 200, marginTop: 10 }}
+                style={styles.mediaPreview}
                 onPlaybackStatusUpdate={onPlaybackStatusUpdate}
                 testID="thread-video"
               />
@@ -381,20 +354,64 @@ const AddEditThread = () => {
           </>
         )}
 
-        <View style={{ flexDirection: "row", marginTop: 30, gap: 10 }}>
-          <ThemedButton onPress={handleSubmit} style={{ flex: 1 }}>
-            <ThemedText style={{ color: "#fff", textAlign: "center" }}>
+        <View style={styles.buttonRow}>
+          <ThemedButton onPress={handleSubmit} style={styles.flexButton}>
+            <ThemedText style={styles.submitText}>
               {loading ? "Saving..." : isEdit ? "Save" : "Create"}
             </ThemedText>
           </ThemedButton>
-          <ThemedButton onPress={handleCancel} style={{ flex: 1 }}>
-            <ThemedText style={{ color: "#fff", textAlign: "center" }}>
-              Cancel
-            </ThemedText>
+          <ThemedButton onPress={handleCancel} style={styles.flexButton}>
+            <ThemedText style={styles.submitText}>Cancel</ThemedText>
           </ThemedButton>
         </View>
       </ScrollView>
     </ThemedView>
   );
 };
+
 export default AddEditThread;
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 20, paddingTop: 10 },
+  title: { fontSize: 20 },
+  scrollContent: { paddingBottom: 40 },
+  input: {
+    borderWidth: 1,
+    borderRadius: 10,
+    marginVertical: 10,
+    padding: 10,
+    width: "100%",
+  },
+  categoryLabel: { fontWeight: "bold", marginTop: 10 },
+  categoryContainer: {
+    flexDirection: "row",
+    gap: 7,
+  },
+  categoryButton: {
+    borderRadius: 20,
+    height: 30,
+    paddingVertical: 4,
+    justifyContent: "center",
+  },
+  categoryButtonText: { color: "white" },
+  contentInput: {
+    height: 100,
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 10,
+    marginTop: 10,
+    textAlignVertical: "top",
+    width: "100%",
+  },
+  mediaLabel: { marginTop: 20 },
+  mediaButtonContainer: {
+    flexDirection: "row",
+    gap: 10,
+    marginVertical: 10,
+  },
+  mediaButtonText: { color: "white" },
+  mediaPreview: { height: 150, marginTop: 10 },
+  buttonRow: { flexDirection: "row", marginTop: 30, gap: 10 },
+  flexButton: { flex: 1 },
+  submitText: { color: "#fff", textAlign: "center" },
+});

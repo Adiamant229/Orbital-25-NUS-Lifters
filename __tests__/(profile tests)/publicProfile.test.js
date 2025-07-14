@@ -1,19 +1,14 @@
-// __tests__/PublicProfile.test.jsx
-import React from "react";
 import { render, waitFor, fireEvent } from "@testing-library/react-native";
 import PublicProfile from "../../app/(profiles)/[userId]";
 
-// Mock expo-router
 jest.mock("expo-router", () => ({
   useLocalSearchParams: () => ({ userId: "testUserId" }),
 }));
 
-// Mock the entire firebaseConfig module (your db export)
 jest.mock("../../firebaseConfig", () => ({
-  db: {}, // empty object, no real Firebase instance needed
+  db: {},
 }));
 
-// Mock firestore methods completely
 const mockDoc = jest.fn();
 const mockGetDoc = jest.fn();
 
@@ -32,7 +27,7 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
 jest.mock("../../components/themedContext", () => ({
   useThemeContext: () => ({ theme: "light", setTheme: jest.fn() }),
 }));
-  
+
 describe("PublicProfile", () => {
   beforeEach(() => {
     mockDoc.mockClear();

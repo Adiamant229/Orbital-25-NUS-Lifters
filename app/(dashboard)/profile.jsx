@@ -33,7 +33,6 @@ const Profile = () => {
     profilePicUrl: null,
   });
 
-  // For modal visibility
   const [modalVisible, setModalVisible] = useState(false);
 
   const { theme, toggleTheme } = useThemeContext();
@@ -63,7 +62,7 @@ const Profile = () => {
       (error) => {
         console.error("Error listening to user data:", error);
         setUserData((prev) => ({ ...prev, name: "Error loading data" }));
-      },
+      }
     );
 
     return () => unsubscribe();
