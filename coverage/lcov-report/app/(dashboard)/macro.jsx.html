@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">85.55% </span>
+                <span class="strong">85.71% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>77/90</span>
+                <span class='fraction'>78/91</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">75% </span>
+                <span class="strong">77.14% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>24/32</span>
+                <span class='fraction'>27/35</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">81.08% </span>
+                <span class="strong">81.57% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>30/37</span>
+                <span class='fraction'>31/38</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">84.52% </span>
+                <span class="strong">84.88% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>71/84</span>
+                <span class='fraction'>73/86</span>
             </div>
         
             
@@ -585,7 +585,17 @@
 <a name='L520'></a><a href='#L520'>520</a>
 <a name='L521'></a><a href='#L521'>521</a>
 <a name='L522'></a><a href='#L522'>522</a>
-<a name='L523'></a><a href='#L523'>523</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L523'></a><a href='#L523'>523</a>
+<a name='L524'></a><a href='#L524'>524</a>
+<a name='L525'></a><a href='#L525'>525</a>
+<a name='L526'></a><a href='#L526'>526</a>
+<a name='L527'></a><a href='#L527'>527</a>
+<a name='L528'></a><a href='#L528'>528</a>
+<a name='L529'></a><a href='#L529'>529</a>
+<a name='L530'></a><a href='#L530'>530</a>
+<a name='L531'></a><a href='#L531'>531</a>
+<a name='L532'></a><a href='#L532'>532</a>
+<a name='L533'></a><a href='#L533'>533</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -618,6 +628,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -915,6 +927,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4x</span>
@@ -923,7 +936,14 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1139,17 +1159,19 @@ import ThemedView from "../../components/themedView";
 import Spacer from "../../components/spacer";
 import ThemedButton from "../../components/themedButton";
 &nbsp;
-const searchOptions = (query) =&gt; ({
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    query,
-    dataType: ["Foundation", "SR Legacy", "Survey (FNDDS)"],
-    pageSize: 25,
-  }),
-});
+const searchOptions = (query) =&gt; {
+  return {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      query,
+      dataType: ["Foundation", "SR Legacy", "Survey (FNDDS)"],
+      pageSize: 25,
+    }),
+  };
+};
 &nbsp;
 const searchDB = async (query) =&gt; {
   try {
@@ -1361,10 +1383,10 @@ const Macro = () =&gt; {
                     &lt;/ThemedText&gt;
                     &lt;ThemedText style={styles.value}&gt;
                       Calories:{" "}
-                      {((item.calories * item.servings) / 100).toFixed(2)}; Fat:{" "}
-                      {((item.fat * item.servings) / 100).toFixed(2)}; Protein:{" "}
-                      {((item.protein * item.servings) / 100).toFixed(2)};
-                      Carbs: {((item.carbs * item.servings) / 100).toFixed(2)}
+                      {((item.calories * item.servings) / 100).toFixed(2)}cal; Fat:{" "}
+                      {((item.fat * item.servings) / 100).toFixed(2)}g; Protein:{" "}
+                      {((item.protein * item.servings) / 100).toFixed(2)}g;
+                      Carbs: {((item.carbs * item.servings) / 100).toFixed(2)}g
                     &lt;/ThemedText&gt;
                     &lt;View style={styles.inputRow}&gt;
                       &lt;View
@@ -1437,9 +1459,16 @@ const Macro = () =&gt; {
                                   Energy: "calories",
                                   "Total lipid (fat)": "fat",
                                 };
+&nbsp;
                                 const mealItem = item.foodNutrients
                                   .filter((nutrient) =&gt;
                                     wanted.hasOwnProperty(nutrient.nutrientName)
+                                  )
+                                  .filter(
+                                    (nutrient) =&gt;
+                                      nutrient.nutrientName !== "Energy" ||
+                                      (nutrient.nutrientName === "Energy" &amp;&amp;
+                                        nutrient.unitName === "KCAL")
                                   )
                                   .reduce(
                                     (food, nutrient) =&gt; {
@@ -1452,6 +1481,7 @@ const Macro = () =&gt; {
                                       servings: 100,
                                     }
                                   );
+&nbsp;
                                 const newMealList = [...mealList, mealItem].map(
                                   (item, index) =&gt; ({
                                     ...item,
@@ -1636,7 +1666,7 @@ const styles = StyleSheet.create({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-07-14T11:45:09.632Z
+                at 2025-07-16T05:23:52.537Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
