@@ -524,7 +524,7 @@ const ProgressTracker = () => {
         { text: "Cancel", style: "cancel" },
         {
           text: editingWeight ? "Update" : "Submit",
-          style: "cancel",
+          style: "default",
           onPress: submit,
         },
       ]
