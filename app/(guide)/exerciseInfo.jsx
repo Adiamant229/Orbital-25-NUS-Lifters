@@ -1,12 +1,11 @@
 import { useLocalSearchParams } from "expo-router";
 import ThemedText from "../../components/themedText";
-import { exerciseAPIKey } from "../../firebaseConfig";
 import { Image, StyleSheet, Dimensions, ScrollView } from "react-native";
 import ThemedView from "../../components/themedView";
 import Spacer from "../../components/spacer";
 import { capWords } from "../index";
 
-const imgURL = `https://exercisedb.p.rapidapi.com/image?resolution=180&rapidapi-key=${exerciseAPIKey}`;
+const imgURL = `https://exercisedb.p.rapidapi.com/image?resolution=180&rapidapi-key=${process.env.EXPO_PUBLIC_EXERCISE_API_KEY}`;
 const screenWidth = Dimensions.get("window").width;
 export default function exerciseInfo() {
   const params = useLocalSearchParams();
@@ -18,6 +17,7 @@ export default function exerciseInfo() {
   const secondaryMuscles = capWords(
     (params?.secondaryMuscles || "").split(","),
   );
+  console.log(params.instructions)
   const instructions = JSON.parse(decodeURIComponent(params?.instructions));
 
   return (
