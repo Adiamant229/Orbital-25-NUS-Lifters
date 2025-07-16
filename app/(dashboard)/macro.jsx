@@ -30,17 +30,19 @@ import ThemedView from "../../components/themedView";
 import Spacer from "../../components/spacer";
 import ThemedButton from "../../components/themedButton";
 
-const searchOptions = (query) => ({
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    query,
-    dataType: ["Foundation", "SR Legacy", "Survey (FNDDS)"],
-    pageSize: 25,
-  }),
-});
+const searchOptions = (query) => {
+  return {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      query,
+      dataType: ["Foundation", "SR Legacy", "Survey (FNDDS)"],
+      pageSize: 25,
+    }),
+  };
+};
 
 const searchDB = async (query) => {
   try {
@@ -252,10 +254,10 @@ const Macro = () => {
                     </ThemedText>
                     <ThemedText style={styles.value}>
                       Calories:{" "}
-                      {((item.calories * item.servings) / 100).toFixed(2)}; Fat:{" "}
-                      {((item.fat * item.servings) / 100).toFixed(2)}; Protein:{" "}
-                      {((item.protein * item.servings) / 100).toFixed(2)};
-                      Carbs: {((item.carbs * item.servings) / 100).toFixed(2)}
+                      {((item.calories * item.servings) / 100).toFixed(2)}cal; Fat:{" "}
+                      {((item.fat * item.servings) / 100).toFixed(2)}g; Protein:{" "}
+                      {((item.protein * item.servings) / 100).toFixed(2)}g;
+                      Carbs: {((item.carbs * item.servings) / 100).toFixed(2)}g
                     </ThemedText>
                     <View style={styles.inputRow}>
                       <View
@@ -328,9 +330,16 @@ const Macro = () => {
                                   Energy: "calories",
                                   "Total lipid (fat)": "fat",
                                 };
+
                                 const mealItem = item.foodNutrients
                                   .filter((nutrient) =>
                                     wanted.hasOwnProperty(nutrient.nutrientName)
+                                  )
+                                  .filter(
+                                    (nutrient) =>
+                                      nutrient.nutrientName !== "Energy" ||
+                                      (nutrient.nutrientName === "Energy" &&
+                                        nutrient.unitName === "KCAL")
                                   )
                                   .reduce(
                                     (food, nutrient) => {
@@ -343,6 +352,7 @@ const Macro = () => {
                                       servings: 100,
                                     }
                                   );
+
                                 const newMealList = [...mealList, mealItem].map(
                                   (item, index) => ({
                                     ...item,
