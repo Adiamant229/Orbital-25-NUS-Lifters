@@ -22,7 +22,7 @@ import ThemedButton from "../../components/themedButton";
 import ThemedTextInput from "../../components/themedTextInput";
 
 //firebase imports
-import { db, auth, exerciseAPIKey } from "../../firebaseConfig";
+import { db, auth } from "../../firebaseConfig";
 import { collection, addDoc, doc, getDoc, updateDoc } from "firebase/firestore";
 
 const AddWorkout = () => {
@@ -66,7 +66,7 @@ const AddWorkout = () => {
       const options = {
         method: "GET",
         headers: {
-          "x-rapidapi-key": exerciseAPIKey,
+          "x-rapidapi-key": process.env.EXPO_PUBLIC_EXERCISE_API_KEY,
           "x-rapidapi-host": "exercisedb.p.rapidapi.com",
         },
       };
