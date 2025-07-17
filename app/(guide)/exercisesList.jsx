@@ -48,7 +48,7 @@ export default function exercisesList() {
             <Pressable onPress={() => {
               console.log(item);
               router.push({
-                pathname: "/exerciseInfo",
+                pathname: "/exerciseDetails",
                 params: {
                   name: item?.name,
                   id: item?.id,
@@ -57,7 +57,7 @@ export default function exercisesList() {
                   bodyPart: item?.bodyPart,
                   secondaryMuscles: item?.secondaryMuscles,
                   instructions: encodeURIComponent(
-                    JSON.stringify(item?.instructions),
+                    JSON.stringify(item?.instructions)
                   ),
                 },
               });
