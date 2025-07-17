@@ -1469,7 +1469,10 @@ const ProgressTracker = () => {
                       </ThemedText>
                     </ThemedButton>
 
-                    <ThemedButton onPress={handleCancelMacroEntry}>
+                    <ThemedButton
+                      onPress={handleCancelMacroEntry}
+                      style={{ backgroundColor: "grey" }}
+                    >
                       <ThemedText style={{ color: "white" }}>Cancel</ThemedText>
                     </ThemedButton>
                   </View>
@@ -1684,7 +1687,10 @@ const ProgressTracker = () => {
                     </ThemedText>
                   </ThemedButton>
 
-                  <ThemedButton onPress={handleCancelWeightEntry}>
+                  <ThemedButton
+                    onPress={handleCancelWeightEntry}
+                    style={{ backgroundColor: "grey" }}
+                  >
                     <ThemedText style={{ color: "white" }}>Cancel</ThemedText>
                   </ThemedButton>
                 </View>

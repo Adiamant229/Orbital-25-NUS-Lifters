@@ -658,7 +658,7 @@ const calories = () => {
                         <ThemedButton
                           style={[
                             styles.addButton,
-                            { flex: 1, marginLeft: 10 },
+                            { flex: 1, marginLeft: 10, backgroundColor: "grey"},
                           ]}
                           onPress={() => setModalVisible(false)}
                         >

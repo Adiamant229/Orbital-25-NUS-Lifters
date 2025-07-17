@@ -364,7 +364,7 @@ const EditProfile = () => {
               </ThemedText>
             </ThemedButton>
 
-            <ThemedButton onPress={handleCancel} style={{ flex: 1 }}>
+            <ThemedButton onPress={handleCancel} style={{ flex: 1, backgroundColor: "grey"}}>
               <ThemedText style={{ color: "white" }}>Cancel</ThemedText>
             </ThemedButton>
           </View>

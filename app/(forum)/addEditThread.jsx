@@ -355,12 +355,18 @@ const AddEditThread = () => {
         )}
 
         <View style={styles.buttonRow}>
-          <ThemedButton onPress={handleSubmit} style={styles.flexButton}>
+          <ThemedButton
+            onPress={handleSubmit}
+            style={{ flex: 1 }}
+          >
             <ThemedText style={styles.submitText}>
               {loading ? "Saving..." : isEdit ? "Save" : "Create"}
             </ThemedText>
           </ThemedButton>
-          <ThemedButton onPress={handleCancel} style={styles.flexButton}>
+          <ThemedButton
+            onPress={handleCancel}
+            style={{ flex: 1, backgroundColor: "grey" }}
+          >
             <ThemedText style={styles.submitText}>Cancel</ThemedText>
           </ThemedButton>
         </View>
@@ -412,6 +418,5 @@ const styles = StyleSheet.create({
   mediaButtonText: { color: "white" },
   mediaPreview: { height: 150, marginTop: 10 },
   buttonRow: { flexDirection: "row", marginTop: 30, gap: 10 },
-  flexButton: { flex: 1 },
   submitText: { color: "#fff", textAlign: "center" },
 });

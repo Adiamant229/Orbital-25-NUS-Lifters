@@ -668,7 +668,10 @@ const UtownReports = () => {
                   </ThemedText>
                 </ThemedButton>
                 <Spacer width="25" />
-                <ThemedButton onPress={handleCancelPress}>
+                <ThemedButton
+                  onPress={handleCancelPress}
+                  style={{ backgroundColor: "grey" }}
+                >
                   <ThemedText style={{ color: "white" }}>Cancel</ThemedText>
                 </ThemedButton>
               </View>

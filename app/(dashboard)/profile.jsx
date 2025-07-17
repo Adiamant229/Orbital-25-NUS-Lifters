@@ -150,7 +150,10 @@ const Profile = () => {
 
         <View style={{ width: 10 }} />
 
-        <ThemedButton onPress={handleLogout}>
+        <ThemedButton
+          onPress={handleLogout}
+          style={{ backgroundColor: "#2196f3" }}
+        >
           <ThemedText style={{ color: "white" }}>Logout</ThemedText>
         </ThemedButton>
       </View>
