@@ -18,7 +18,6 @@ import {
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import { useState } from "react";
-import Spacer from "../../components/spacer";
 import ThemedTextInput from "../../components/themedTextInput";
 import ThemedButton from "../../components/themedButton";
 import DropDownPicker from "react-native-dropdown-picker";
@@ -449,7 +448,6 @@ const calories = () => {
                       <ThemedButton
                         style={styles.addButton}
                         onPress={() => {
-                          setModalVisible(false);
                           if (workVal === 0) {
                             setErrWork(true);
                           }
@@ -492,21 +490,21 @@ const calories = () => {
 
                   let hasError = false;
 
-                  if (isNaN(tempWeight)) {
+                  if (isNaN(tempWeight) || tempWeight <= 0 || tempWeight > 250) {
                     setErrWeight(true);
                     hasError = true;
                   }
 
-                  if (isNaN(tempHeight)) {
+                  if (isNaN(tempHeight) || tempWeight <= 10 || tempWeight > 300) {
                     setErrHeight(true);
                     hasError = true;
                   }
 
-                  if (isNaN(tempAge)) {
+                  if (isNaN(tempAge) || tempAge <= 0 || tempAge > 150) {
                     setErrAge(true);
                     hasError = true;
                   }
-                  if (mode === "katch" && isNaN(tempFat)) {
+                  if (mode === "katch" && (isNaN(tempFat) || tempFat <= 0 || tempFat > 100)) {
                     setErrFat(true);
                     hasError = true;
                   }
@@ -584,7 +582,7 @@ const styles = StyleSheet.create({
     width:80
   },
   errorTxt: {
-    color: "dark-red",
+    color: "#B71C1C",
   },
   options: {
     flexDirection: "row",
