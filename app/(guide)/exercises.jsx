@@ -37,12 +37,19 @@ const Exercises = () => {
   const [toggleRec, setToggleRec] = useState(false);
 
   useEffect(() => {
-    const targetsUrl = baseURL + "targetList";
-    const equipmentUrl = baseURL + "equipmentList";
-    let response = fetch(targetsUrl, options);
-    response.then((res) => res.json()).then((res) => setTargets(res));
-    response = fetch(equipmentUrl, options);
-    response.then((res) => res.json()).then((res) => setEquipment(res));
+    const fetchData = () => {
+      try {
+        const targetsUrl = baseURL + "targetList";
+        const equipmentUrl = baseURL + "equipmentList";
+        let response1 = fetch(targetsUrl, options);
+        response1.then((res) => res.json()).then((res) => setTargets(res));
+        const response2 = fetch(equipmentUrl, options);
+        response2.then((res) => res.json()).then((res) => setEquipment(res));
+      } catch (err) {
+        console.error("Error fetching exercises: ", err)
+      }
+    }
+    fetchData();
   }, []);
 
 useEffect(() => {
