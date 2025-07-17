@@ -26,6 +26,28 @@ import { useRouter } from "expo-router";
 
 const screenWidth = Dimensions.get("window").width;
 
+  const katchBMRCalc = (sex, weight, height, age, fat = -1) => {
+    /*
+        Katch-McArdle Eqn:
+        More accurate for lean/ athletic individuals,
+        sex -> 0: female; 1: male;
+         */
+    const lbm = () => {
+      if (fat > 0) {
+        return weight * (1 - fat / 100);
+      } else if (sex === 1) {
+        return 0.407 * weight + 0.267 * height - 19.2;
+      } else if (sex === 0) {
+        return 0.252 * weight + 0.473 * height - 48.3;
+      }
+    };
+    return Math.round(370 + 21.6 * lbm());
+  };
+
+  const calculateActivityLevel = (work, leisure) => {
+    return (1.18 + work * 0.08 + (0.11 + work * 0.01) * leisure).toFixed(2);
+  };
+
 const calories = () => {
   const [mode, setMode] = useState("mifflin");
   const [sex, setSex] = useState(1);
@@ -117,19 +139,6 @@ const calories = () => {
     "Strenuous activities several times a week.",
   ];
 
-  const resetDefault = () => {
-    setMode("mifflin");
-    setSex(1);
-    setHeight("0");
-    setAge("0");
-    setFat("-1");
-    setBmr(0);
-    setTdee(0);
-    settoggletdee(false);
-    setToggletdeeres(false);
-    setModalVisible(false);
-  };
-
   const mifflinBMRCalc = (sex, weight, height, age) => {
     /*
         Mifflin-St. Jeor Equation:
@@ -145,27 +154,6 @@ const calories = () => {
     );
   };
 
-  const katchBMRCalc = (sex, weight, height, age, fat = -1) => {
-    /*
-        Katch-McArdle Eqn:
-        More accurate for lean/ athletic individuals,
-        sex -> 0: female; 1: male;
-         */
-    const lbm = () => {
-      if (fat > 0) {
-        return weight * (1 - fat / 100);
-      } else if (sex === 1) {
-        return 0.407 * weight + 0.267 * height - 19.2;
-      } else if (sex === 0) {
-        return 0.252 * weight + 0.473 * height - 48.3;
-      }
-    };
-    return Math.round(370 + 21.6 * lbm());
-  };
-
-  const calculateActivityLevel = (work, leisure) => {
-    return (1.18 + work * 0.08 + (0.11 + work * 0.01) * leisure).toFixed(2);
-  };
 
   const router = useRouter();
 
@@ -217,6 +205,7 @@ const calories = () => {
                 <View style={styles.closeLabelRow}>
                   <ThemedText style={styles.closeLabelText}>Mode</ThemedText>
                   <Pressable
+                    testID="mode-help-icon"
                     style={{ padding: 0, margin: 0 }}
                     onPress={() => setShowModeDescription(!showModeDescription)}
                   >
@@ -429,6 +418,7 @@ const calories = () => {
                       Calculate TDEE
                     </ThemedText>
                     <Pressable
+                      testID="tdee-help-icon"
                       style={{ padding: 0, margin: 0 }}
                       onPress={() =>
                         setShowTdeeDescription(!showTdeeDescription)
@@ -507,6 +497,7 @@ const calories = () => {
                         Physical Activity Level
                       </ThemedText>
                       <Pressable
+                        testID="pal-help-icon"
                         style={{ padding: 0, margin: 0 }}
                         onPress={() =>
                           setShowPalDescription(!showPalDescription)
@@ -618,7 +609,7 @@ const calories = () => {
                           Please select an activity level
                         </ThemedText>
                       )}
-                      
+
                       {/* Buttons side by side */}
                       <View
                         style={{
@@ -658,7 +649,11 @@ const calories = () => {
                         <ThemedButton
                           style={[
                             styles.addButton,
-                            { flex: 1, marginLeft: 10, backgroundColor: "grey"},
+                            {
+                              flex: 1,
+                              marginLeft: 10,
+                              backgroundColor: "grey",
+                            },
                           ]}
                           onPress={() => setModalVisible(false)}
                         >
@@ -689,54 +684,67 @@ const calories = () => {
                     styles.addButton,
                     { width: 50, height: 50, backgroundColor: "#7d015c" },
                   ]}
- onPress={() => {
-                  setErrWeight(false);
-                  setErrHeight(false);
-                  setErrAge(false);
-                  setErrFat(false);
-                  const tempWeight = parseInt(weight);
-                  const tempHeight = parseInt(height);
-                  const tempAge = parseInt(age);
-                  const tempFat = parseFloat(fat);
+                  onPress={() => {
+                    setErrWeight(false);
+                    setErrHeight(false);
+                    setErrAge(false);
+                    setErrFat(false);
+                    const tempWeight = parseInt(weight);
+                    const tempHeight = parseInt(height);
+                    const tempAge = parseInt(age);
+                    const tempFat = parseFloat(fat);
 
-                  let hasError = false;
+                    let hasError = false;
 
-                  if (isNaN(tempWeight) || tempWeight <= 0 || tempWeight > 250) {
-                    setErrWeight(true);
-                    hasError = true;
-                  }
+                    if (
+                      isNaN(tempWeight) ||
+                      tempWeight <= 0 ||
+                      tempWeight > 250
+                    ) {
+                      setErrWeight(true);
+                      hasError = true;
+                    }
 
-                  if (isNaN(tempHeight) || tempHeight <= 10 || tempHeight > 300) {
-                    setErrHeight(true);
-                    hasError = true;
-                  }
+                    if (
+                      isNaN(tempHeight) ||
+                      tempHeight <= 10 ||
+                      tempHeight > 300
+                    ) {
+                      setErrHeight(true);
+                      hasError = true;
+                    }
 
-                  if (isNaN(tempAge) || tempAge <= 0 || tempAge > 150) {
-                    setErrAge(true);
-                    hasError = true;
-                  }
-                  if (mode === "katch" && (isNaN(tempFat) || tempFat <= 0 || tempFat > 100)) {
-                    setErrFat(true);
-                    hasError = true;
-                  }
-                  if (hasError) {
-                    setShowResults(false);
-                    return;
-                  }
-                  if (mode === "mifflin") {
-                    setBmr(
-                      mifflinBMRCalc(sex, tempWeight, tempHeight, tempAge)
-                    );
-                  } else {
-                    setBmr(katchBMRCalc(sex, tempWeight, tempHeight, tempFat));
-                  }
-                  if (toggletdee) {
-                    setTdee(Math.round(bmr * physicalActivityLevel));
-                    setToggletdeeres(true);
-                  } else {
-                    setToggletdeeres(false);
-                  }
-                  setShowResults(true);
+                    if (isNaN(tempAge) || tempAge <= 0 || tempAge > 150) {
+                      setErrAge(true);
+                      hasError = true;
+                    }
+                    if (
+                      mode === "katch" &&
+                      (isNaN(tempFat) || tempFat <= 0 || tempFat > 100)
+                    ) {
+                      setErrFat(true);
+                      hasError = true;
+                    }
+                    if (hasError) {
+                      setShowResults(false);
+                      return;
+                    }
+                    if (mode === "mifflin") {
+                      setBmr(
+                        mifflinBMRCalc(sex, tempWeight, tempHeight, tempAge)
+                      );
+                    } else {
+                      setBmr(
+                        katchBMRCalc(sex, tempWeight, tempHeight, tempFat)
+                      );
+                    }
+                    if (toggletdee) {
+                      setTdee(Math.round(bmr * physicalActivityLevel));
+                      setToggletdeeres(true);
+                    } else {
+                      setToggletdeeres(false);
+                    }
+                    setShowResults(true);
                   }}
                 >
                   <ThemedText style={{ color: "white" }}>Calculate</ThemedText>
@@ -780,6 +788,8 @@ const calories = () => {
   );
 };
 export default calories;
+
+export { katchBMRCalc, calculateActivityLevel };
 
 const styles = StyleSheet.create({
   container: {
