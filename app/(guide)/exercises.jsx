@@ -52,17 +52,21 @@ const Exercises = () => {
     fetchData();
   }, []);
 
-  const searchName = (x) => {
-    x = x.toLowerCase().trim();
+useEffect(() => {
+  const delayDebounce = setTimeout(() => {
+    const x = query.toLowerCase().trim();
     if (!x || x === lastSearched) {
       return;
     }
     setLastSearched(x);
     const searchUrl = baseURL + "name/" + x;
-    const response = fetch(searchUrl, options);
-    response.then((res) => res.json()).then((res) => setSearchRes(res));
-  };
+    fetch(searchUrl, options)
+      .then((res) => res.json())
+      .then((data) => setSearchRes(data));
+  }, 300); // 300ms debounce
 
+  return () => clearTimeout(delayDebounce);
+}, [query]);
   const redirect = (mode, query) => {
     router.push({
       pathname: "/exercisesList",
@@ -78,69 +82,64 @@ const Exercises = () => {
         Exercises
       </ThemedText>
 
-      <Spacer />
-      <View style={{ flexDirection: "row" }}>
+      <View style={{ flexDirection: "row", marginBottom: 20 }}>
         <Searchbar
           placeholder={"Search Exercise"}
           onChangeText={setQuery}
-          onSubmitEditing={() => searchName(query)}
           value={query}
           style={{ flex: 3 }}
         />
-        <ThemedButton
-          style={styles.searchButton}
-          onPress={() => searchName(query)}
-        >
-          <View style={styles.searchContent}>
-            <MaterialIcons size={24} name="search" color="#f2f2f2" />
-          </View>
-        </ThemedButton>
       </View>
 
-      <View >
+      <View>
         {/* The Dropdown menu */}
         <Pressable onPress={() => setToggleRec(!toggleRec)}>
-          <View style={{flexDirection:"row", alignSelf:"center"}}>
-            <ThemedText>
-              Recommended Menus
-            </ThemedText>
-            {toggleRec ? (<Ionicons name={"chevron-up-outline"} color={"white"}/>)
-              : (<Ionicons name={"chevron-down-outline"} color={"white"}/>) }
+          <View style={{ flexDirection: "row", alignSelf: "center", gap: 4 }}>
+            <ThemedText>Find By</ThemedText>
+            {toggleRec ? (
+              <Ionicons name={"chevron-up-outline"} color={"white"} />
+            ) : (
+              <Ionicons name={"chevron-down-outline"} color={"white"} />
+            )}
           </View>
         </Pressable>
-        {toggleRec && (<ScrollView style={{padding:20}}>
-          <ThemedText>
-            Targets
-          </ThemedText>
-          <View style={{flexDirection:"row", flexWrap:"wrap"}}>
-            <>
-              {targets.map((item, index) => (
-                <ThemedButton key={index} onPress={() => redirect("target", item)}>
-                  <ThemedText style={styles.text} key={index}>
-                    {item}
-                  </ThemedText>
-                </ThemedButton>
-              ))}
-            </>
-          </View>
-          <ThemedText>
-            Equipment
-          </ThemedText>
-          <View style={{flexDirection:"row", flexWrap:"wrap"}}>
-            <>
-              {equipment.map((item, index) => {
-                return (
-                  <ThemedButton key={index} onPress={() => redirect("target", item)}>
+        {toggleRec && (
+          <ScrollView style={{ padding: 20 }}>
+            <ThemedText>Targets</ThemedText>
+            <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+              <>
+                {targets.map((item, index) => (
+                  <ThemedButton
+                    key={index}
+                    onPress={() => redirect("target", item)}
+                  >
                     <ThemedText style={styles.text} key={index}>
                       {item}
                     </ThemedText>
                   </ThemedButton>
-                );
-              })}
-            </>
-          </View>
-          <Spacer/>
-        </ScrollView>)}
+                ))}
+              </>
+            </View>
+            <ThemedText>Equipment</ThemedText>
+            <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+              <>
+                {equipment.map((item, index) => {
+                  return (
+                    <ThemedButton
+                      key={index}
+                      onPress={() => redirect("target", item)}
+                    >
+                      <ThemedText style={styles.text} key={index}>
+                        {item}
+                      </ThemedText>
+                    </ThemedButton>
+                  );
+                })}
+              </>
+            </View>
+            <Spacer />
+          </ScrollView>
+        )}
       </View>
 
       <View style={styles.listContainer}>
@@ -163,7 +162,7 @@ const Exercises = () => {
                         bodyPart: item?.bodyPart,
                         secondaryMuscles: item?.secondaryMuscles,
                         instructions: encodeURIComponent(
-                          JSON.stringify(item?.instructions),
+                          JSON.stringify(item?.instructions)
                         ),
                       },
                     });

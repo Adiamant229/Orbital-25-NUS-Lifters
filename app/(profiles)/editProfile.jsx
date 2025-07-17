@@ -296,7 +296,7 @@ const EditProfile = () => {
               onChangeText={setName}
               placeholder="Enter your name"
               placeholderColor="grey"
-              style={styles.input}
+              style={{ width: "100%" }}
             />
           </View>
 
@@ -309,7 +309,7 @@ const EditProfile = () => {
               multiline
               numberOfLines={3}
               placeholderTextColor="grey"
-              style={styles.input}
+              style={{ width: "100%" }}
             />
           </View>
 
@@ -321,7 +321,7 @@ const EditProfile = () => {
               placeholder="Height (cm)"
               keyboardType="numeric"
               placeholderTextColor="grey"
-              style={styles.input}
+              style={{ width: "100%" }}
             />
           </View>
 
@@ -333,7 +333,7 @@ const EditProfile = () => {
               placeholder="Weight (kg)"
               keyboardType="numeric"
               placeholderTextColor="grey"
-              style={styles.input}
+              style={{ width: "100%" }}
             />
           </View>
 
@@ -345,7 +345,7 @@ const EditProfile = () => {
               placeholder="Age (years)"
               keyboardType="numeric"
               placeholderTextColor="grey"
-              style={styles.input}
+              style={{ width: "100%" }}
             />
           </View>
 
@@ -359,11 +359,13 @@ const EditProfile = () => {
               disabled={saving || uploadingImage}
               style={{ flex: 1 }}
             >
-              <ThemedText>{saving ? "Saving..." : "Save"}</ThemedText>
+              <ThemedText style={{ color: "white" }}>
+                {saving ? "Saving..." : "Save"}
+              </ThemedText>
             </ThemedButton>
 
             <ThemedButton onPress={handleCancel} style={{ flex: 1 }}>
-              <ThemedText>Cancel</ThemedText>
+              <ThemedText style={{ color: "white" }}>Cancel</ThemedText>
             </ThemedButton>
           </View>
         </ScrollView>
@@ -472,7 +474,4 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
   },
 
-  input: {
-    width: "100%",
-  },
 });
