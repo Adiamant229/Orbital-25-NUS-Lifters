@@ -22,6 +22,7 @@ import ThemedTextInput from "../../components/themedTextInput";
 import ThemedButton from "../../components/themedButton";
 import DropDownPicker from "react-native-dropdown-picker";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -29,23 +30,23 @@ const calories = () => {
   const [mode, setMode] = useState("mifflin");
   const [sex, setSex] = useState(1);
 
-  const [height, setHeight] = useState("0");
+  const [height, setHeight] = useState("");
   const [errHeight, setErrHeight] = useState(false);
   const setHeightTemp = (x) => {
     setHeight(x.replace(/[^0-9.]/g, "").replace(/(\..*?)\..*/g, "$1"));
   };
 
-  const [weight, setWeight] = useState("0");
+  const [weight, setWeight] = useState("");
   const [errWeight, setErrWeight] = useState(false);
   const setWeightTemp = (x) => {
     setWeight(x.replace(/[^0-9.]/g, "").replace(/(\..*?)\..*/g, "$1"));
   };
-  const [age, setAge] = useState("0");
+  const [age, setAge] = useState("");
   const [errAge, setErrAge] = useState(false);
   const setAgeTemp = (x) => {
     setAge(x.replace(/[^0-9]/g, ""));
   };
-  const [fat, setFat] = useState("0");
+  const [fat, setFat] = useState("");
   const [errFat, setErrFat] = useState(false);
   const setFatTemp = (x) => {
     setFat(x.replace(/[^0-9.]/g, "").replace(/(\..*?)\..*/g, "$1"));
@@ -55,7 +56,7 @@ const calories = () => {
   const [physicalActivityLevel, setPhysicalActivityLevel] = useState("1");
   const setPALTemp = (x) => {
     setPhysicalActivityLevel(
-      x.replace(/[^0-9.]/g, "").replace(/(\..*?)\..*/g, "$1"),
+      x.replace(/[^0-9.]/g, "").replace(/(\..*?)\..*/g, "$1")
     );
   };
 
@@ -137,10 +138,10 @@ const calories = () => {
          */
     return Math.round(
       10 * weight +
-      6.25 * height -
-      5 * age +
-      ((sex + 1) % 2) * (-161) +
-      (sex % 2) * 5,
+        6.25 * height -
+        5 * age +
+        ((sex + 1) % 2) * -161 +
+        (sex % 2) * 5
     );
   };
 
@@ -166,6 +167,8 @@ const calories = () => {
     return (1.18 + work * 0.08 + (0.11 + work * 0.01) * leisure).toFixed(2);
   };
 
+  const router = useRouter();
+
   return (
     <>
       <KeyboardAvoidingView
@@ -187,25 +190,53 @@ const calories = () => {
               <ThemedText style={styles.title} title={true}>
                 Calorie Calculator
               </ThemedText>
-              <View style={{ height: 100 }}>
-                <ScrollView style={styles.faqBox}>
-                  <ThemedText style={styles.faqTxt}>{description}</ThemedText>
+
+              <View style={{ height: 150 }}>
+                <ScrollView style={styles.faqBox} nestedScrollEnabled={true}>
+                  <ThemedText style={[styles.faqTxt, { marginBottom: 20 }]}>
+                    {description}
+                  </ThemedText>
                 </ScrollView>
               </View>
-              <View style={styles.qnBox}>
-                <View style={{ width: 120, padding: 10, flexDirection: "row" }}>
-                  <ThemedText style={{ textAlign: "right" }}>Mode</ThemedText>
+
+              {/* Mode */}
+              <View
+                style={[
+                  styles.qnBox,
+                  {
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    flexWrap: "nowrap",
+                    paddingHorizontal: 0,
+                    width: "100%",
+                  },
+                ]}
+              >
+                {/* Left: Mode label + help icon tightly aligned */}
+                <View style={styles.closeLabelRow}>
+                  <ThemedText style={styles.closeLabelText}>Mode</ThemedText>
                   <Pressable
+                    style={{ padding: 0, margin: 0 }}
                     onPress={() => setShowModeDescription(!showModeDescription)}
                   >
                     <Ionicons
                       name="help-circle-outline"
-                      size={15}
+                      size={16}
                       color={"grey"}
+                      style={styles.closeHelpIcon}
                     />
                   </Pressable>
                 </View>
-                <View style={styles.options}>
+
+                {/* Right: Buttons side by side */}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    gap: 10,
+                    flexShrink: 0,
+                  }}
+                >
                   <TouchableOpacity
                     onPress={() => setMode("mifflin")}
                     style={[
@@ -219,6 +250,7 @@ const calories = () => {
                       </ThemedText>
                     </View>
                   </TouchableOpacity>
+
                   <TouchableOpacity
                     onPress={() => setMode("katch")}
                     style={[
@@ -234,160 +266,302 @@ const calories = () => {
                   </TouchableOpacity>
                 </View>
               </View>
+
               {showModeDescription && (
-                <View style={{ height: 100 }}>
-                  <ScrollView style={styles.faqBox}>
+                <View style={{ height: 300 }}>
+                  <View style={styles.faqBox}>
                     <ThemedText style={styles.faqTxt}>
                       {modeDescription}
                     </ThemedText>
-                  </ScrollView>
+                  </View>
                 </View>
               )}
-              <View style={styles.qnBox}>
-                <ThemedText style={styles.qnTxt}>Biological Sex</ThemedText>
-                <TouchableOpacity
-                  onPress={() => setSex(1)}
-                  style={[styles.addButton, sex === 1 && styles.selectedButton]}
-                >
-                  <View style={styles.buttonicons}>
-                    <ThemedText style={{ color: "white" }}>Male</ThemedText>
-                  </View>
-                </TouchableOpacity>
 
-                <TouchableOpacity
-                  onPress={() => setSex(0)}
-                  style={[styles.addButton, sex === 0 && styles.selectedButton]}
-                >
-                  <View style={styles.buttonicons}>
-                    <ThemedText style={{ color: "white" }}>Female</ThemedText>
-                  </View>
-                </TouchableOpacity>
-              </View>
+              {/* Biological Sex */}
               <View style={styles.qnBox}>
-                <ThemedText style={styles.qnTxt}>Age (in years)</ThemedText>
+                <View
+                  style={{
+                    width: 130,
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                >
+                  <ThemedText style={styles.qnTxt}>Biological Sex</ThemedText>
+                </View>
+                <View style={{ flex: 1, flexDirection: "row", gap: 10 }}>
+                  <TouchableOpacity
+                    onPress={() => setSex(1)}
+                    style={[
+                      styles.addButton,
+                      sex === 1 && styles.selectedButton,
+                    ]}
+                  >
+                    <View style={styles.buttonicons}>
+                      <ThemedText style={{ color: "white" }}>Male</ThemedText>
+                    </View>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={() => setSex(0)}
+                    style={[
+                      styles.addButton,
+                      sex === 0 && styles.selectedButton,
+                    ]}
+                  >
+                    <View style={styles.buttonicons}>
+                      <ThemedText style={{ color: "white" }}>Female</ThemedText>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Age */}
+              <View style={styles.qnBox}>
+                <View
+                  style={{
+                    width: 140,
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                >
+                  <ThemedText style={styles.qnTxt}>Age (in years)</ThemedText>
+                </View>
                 <ThemedTextInput
                   keyboardType={"number-pad"}
                   onChangeText={setAgeTemp}
                   value={age}
                   style={styles.textInput}
+                  placeholder="Enter age"
+                  placeholderTextColor="grey"
                 />
               </View>
-              {errAge && (<ThemedText style={styles.errorTxt}>Please input valid age</ThemedText>) }
+              {errAge && (
+                <ThemedText style={styles.errorTxt}>
+                  Please input valid age
+                </ThemedText>
+              )}
+
+              {/* Height */}
               <View style={styles.qnBox}>
-                <ThemedText>Height (in cm)</ThemedText>
+                <View
+                  style={{
+                    width: 140,
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                >
+                  <ThemedText style={styles.qnTxt}>Height (in cm)</ThemedText>
+                </View>
                 <ThemedTextInput
                   keyboardType={"number-pad"}
                   onChangeText={setHeightTemp}
                   value={height}
                   style={styles.textInput}
+                  placeholder="Enter height"
+                  placeholderTextColor="grey"
                 />
               </View>
-              {errHeight && (<ThemedText style={styles.errorTxt}>Please input valid height</ThemedText>) }
+              {errHeight && (
+                <ThemedText style={styles.errorTxt}>
+                  Please input valid height
+                </ThemedText>
+              )}
+
+              {/* Weight */}
               <View style={styles.qnBox}>
-                <ThemedText>Weight (in kg)</ThemedText>
+                <View
+                  style={{
+                    width: 140,
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                >
+                  <ThemedText style={styles.qnTxt}>Weight (in kg)</ThemedText>
+                </View>
                 <ThemedTextInput
                   keyboardType={"decimal-pad"}
                   onChangeText={setWeightTemp}
                   value={weight}
                   style={styles.textInput}
+                  placeholder="Enter weight"
+                  placeholderTextColor="grey"
                 />
               </View>
-              {errWeight && (<ThemedText style={styles.errorTxt}>Please input valid weight</ThemedText>) }
+              {errWeight && (
+                <ThemedText style={styles.errorTxt}>
+                  Please input valid weight
+                </ThemedText>
+              )}
+
+              {/* Fat % (only in Katch mode) */}
               {mode === "katch" && (
                 <View style={styles.qnBox}>
-                  <ThemedText>Fat(%)</ThemedText>
+                  <View
+                    style={{
+                      width: 140,
+                      flexDirection: "row",
+                      alignItems: "center",
+                    }}
+                  >
+                    <ThemedText style={styles.qnTxt}>Fat (%)</ThemedText>
+                  </View>
                   <ThemedTextInput
                     keyboardType={"decimal-pad"}
                     onChangeText={setFatTemp}
                     value={fat}
                     style={styles.textInput}
+                    placeholder="Enter fat %"
+                    placeholderTextColor="grey"
                   />
-                  {errFat && (<ThemedText style={styles.errorTxt}>Please input valid fat percentage</ThemedText>) }
+                  {errFat && (
+                    <ThemedText style={styles.errorTxt}>
+                      Please input valid fat percentage
+                    </ThemedText>
+                  )}
                 </View>
               )}
-              <View style={styles.qnBox}>
-                <View style={{flexDirection:"row", gap:8}}>
-                  <ThemedText style={styles.qnTxt}>Calculate TDEE</ThemedText>
-                  <Pressable
-                    onPress={() => setShowTdeeDescription(!showTdeeDescription)}
-                  >
-                    <Ionicons
-                      name="help-circle-outline"
-                      size={15}
-                      color={"grey"}
-                    />
-                  </Pressable>
-                </View>
-                <TouchableOpacity
-                  onPress={() => settoggletdee(false)}
-                  style={[
-                    styles.addButton,
-                    !toggletdee && styles.selectedButton,
-                  ]}
-                >
-                  <View style={styles.buttonicons}>
-                    <ThemedText style={{ color: "white" }}>No</ThemedText>
-                  </View>
-                </TouchableOpacity>
 
-                <TouchableOpacity
-                  onPress={() => settoggletdee(true)}
-                  style={[
-                    styles.addButton,
-                    toggletdee && styles.selectedButton,
-                  ]}
-                >
-                  <View style={styles.buttonicons}>
-                    <ThemedText style={{ color: "white" }}>Yes</ThemedText>
+              {/* Calculate TDEE */}
+              <View style={styles.qnBox}>
+                <View style={{ width: 135 }}>
+                  <View style={styles.closeLabelRow}>
+                    <ThemedText style={styles.closeLabelText}>
+                      Calculate TDEE
+                    </ThemedText>
+                    <Pressable
+                      style={{ padding: 0, margin: 0 }}
+                      onPress={() =>
+                        setShowTdeeDescription(!showTdeeDescription)
+                      }
+                    >
+                      <Ionicons
+                        name="help-circle-outline"
+                        size={16}
+                        color={"grey"}
+                        style={styles.closeHelpIcon}
+                      />
+                    </Pressable>
                   </View>
-                </TouchableOpacity>
+                </View>
+
+                <View style={{ flex: 1, flexDirection: "row", gap: 10 }}>
+                  <TouchableOpacity
+                    onPress={() => settoggletdee(false)}
+                    style={[
+                      styles.addButton,
+                      !toggletdee && styles.selectedButton,
+                    ]}
+                  >
+                    <View style={styles.buttonicons}>
+                      <ThemedText style={{ color: "white" }}>No</ThemedText>
+                    </View>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={() => settoggletdee(true)}
+                    style={[
+                      styles.addButton,
+                      toggletdee && styles.selectedButton,
+                    ]}
+                  >
+                    <View style={styles.buttonicons}>
+                      <ThemedText style={{ color: "white" }}>Yes</ThemedText>
+                    </View>
+                  </TouchableOpacity>
+                </View>
               </View>
-              { showTdeeDescription &&
-                (<View style={{ height: 100 }}>
-                  <ScrollView style={styles.faqBox}>
-                    <ThemedText style={styles.faqTxt}>{tdeeDescription}</ThemedText>
-                  </ScrollView>
-                </View>)}
+
+              {showTdeeDescription && (
+                <View style={{ height: 150 }}>
+                  <View style={styles.faqBox} nestedScrollEnabled={true}>
+                    <ThemedText style={styles.faqTxt}>
+                      {tdeeDescription}
+                    </ThemedText>
+                  </View>
+                </View>
+              )}
+
               {toggletdee === true && (
                 <>
-                  <View style={styles.qnBox}>
-                    <View style={{ flexDirection: "row" }}>
-                    <ThemedText style={styles.qnTxt}>
-                      Physical Activity Level
-                    </ThemedText>
+                  <View
+                    style={[
+                      styles.qnBox,
+                      {
+                        flexDirection: "column",
+                        alignItems: "flex-start",
+                        paddingVertical: 10,
+                      },
+                    ]}
+                  >
+                    {/* Row 1: Label + help icon */}
+                    <View
+                      style={[
+                        styles.closeLabelRow,
+                        {
+                          width: "100%",
+                          justifyContent: "flex-start",
+                        },
+                      ]}
+                    >
+                      <ThemedText style={styles.closeLabelText}>
+                        Physical Activity Level
+                      </ThemedText>
                       <Pressable
-                        onPress={() => setShowPalDescription(!showPalDescription)}
+                        style={{ padding: 0, margin: 0 }}
+                        onPress={() =>
+                          setShowPalDescription(!showPalDescription)
+                        }
                       >
                         <Ionicons
                           name="help-circle-outline"
-                          size={15}
+                          size={16}
                           color={"grey"}
+                          style={styles.closeHelpIcon}
                         />
                       </Pressable>
-                      <ThemedTextInput
-                        onChangeText={setPALTemp}
-                        value={physicalActivityLevel}
-                        keyboardType={"decimal-pad"}
-                        editable={false}
-                        style={styles.textInput}
-                      />
+                    </View>
+
+                    {/* Row 2: Your Level and Calculate button side by side */}
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 10,
+                        width: "100%",
+                      }}
+                    >
+                      <ThemedText>
+                        Activity Level: {physicalActivityLevel}
+                      </ThemedText>
+
                       <ThemedButton
                         onPress={() => setModalVisible(true)}
-                        style={styles.addButton}
+                        style={[
+                          styles.addButton,
+                          { minWidth: 150, backgroundColor: "#2196f3" },
+                        ]}
                       >
-                        <ThemedText>Calculate</ThemedText>
+                        <ThemedText style={{ color: "white" }}>
+                          Select Level
+                        </ThemedText>
                       </ThemedButton>
                     </View>
                   </View>
-                  { showPalDescription &&
+
+                  {showPalDescription && (
                     <View style={{ height: 100 }}>
                       <ScrollView style={styles.faqBox}>
-                        <ThemedText style={styles.faqTxt}>{palDescription}</ThemedText>
+                        <ThemedText style={styles.faqTxt}>
+                          {palDescription}
+                        </ThemedText>
                       </ScrollView>
                     </View>
-                  }
+                  )}
                 </>
               )}
+
+              {/* Modal for Work and Leisure Activity */}
               <Modal
                 visible={modalVisible}
                 animationType={"fade"}
@@ -395,13 +569,11 @@ const calories = () => {
                 onRequestClose={() => setModalVisible(false)}
               >
                 <TouchableWithoutFeedback
-                  onPress={() => {
-                    setModalVisible(false);
-                  }}
+                  onPress={() => setModalVisible(false)}
                 >
                   <View style={styles.modalBackdrop}>
                     <ThemedView style={styles.modalContainer}>
-                      <ThemedText style={styles.qnTxt}>
+                      <ThemedText style={[styles.qnTxt, { color: "black" }]}>
                         Work Activity
                       </ThemedText>
                       <DropDownPicker
@@ -423,7 +595,8 @@ const calories = () => {
                           Please select an activity level
                         </ThemedText>
                       )}
-                      <ThemedText style={styles.qnTxt}>
+
+                      <ThemedText style={[styles.qnTxt, { color: "black" }]}>
                         Leisure Activity
                       </ThemedText>
                       <DropDownPicker
@@ -445,40 +618,78 @@ const calories = () => {
                           Please select an activity level
                         </ThemedText>
                       )}
-                      <ThemedButton
-                        style={styles.addButton}
-                        onPress={() => {
-                          if (workVal === 0) {
-                            setErrWork(true);
-                          }
-                          if (leisureVal === 0) {
-                            setErrLeisure(true);
-                          }
-                          if (workVal !== 0 && leisureVal !== 0) {
-                            setPALTemp(
-                              calculateActivityLevel(workVal, leisureVal)
-                            );
-                            setModalVisible(false);
-                          }
+                      
+                      {/* Buttons side by side */}
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          justifyContent: "center",
+                          gap: 12, // space between buttons
+                          marginTop: 20,
                         }}
                       >
-                        <ThemedText>Calculate</ThemedText>
-                      </ThemedButton>
-                      <ThemedButton
-                        style={styles.addButton}
-                        onPress={() => {
-                          setModalVisible(false);
-                        }}
-                      >
-                        <ThemedText>Cancel</ThemedText>
-                      </ThemedButton>
+                        <ThemedButton
+                          style={[
+                            styles.addButton,
+                            {
+                              flex: 1,
+                              marginRight: 10,
+                              backgroundColor: "#7d015c",
+                            },
+                          ]}
+                          onPress={() => {
+                            if (workVal === 0) setErrWork(true);
+                            if (leisureVal === 0) setErrLeisure(true);
+                            if (workVal !== 0 && leisureVal !== 0) {
+                              setPALTemp(
+                                calculateActivityLevel(workVal, leisureVal)
+                              );
+                              setModalVisible(false);
+                            }
+                          }}
+                        >
+                          <ThemedText
+                            style={{ textAlign: "center", color: "white" }}
+                          >
+                            Calculate
+                          </ThemedText>
+                        </ThemedButton>
+
+                        <ThemedButton
+                          style={[
+                            styles.addButton,
+                            { flex: 1, marginLeft: 10 },
+                          ]}
+                          onPress={() => setModalVisible(false)}
+                        >
+                          <ThemedText
+                            style={{ textAlign: "center", color: "white" }}
+                          >
+                            Cancel
+                          </ThemedText>
+                        </ThemedButton>
+                      </View>
                     </ThemedView>
                   </View>
                 </TouchableWithoutFeedback>
               </Modal>
-              <ThemedButton
-                style={styles.addButton}
-                onPress={() => {
+
+              {/* Centered Row: Calculate + Cancel Buttons */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  gap: 16,
+                  marginTop: 20,
+                }}
+              >
+                <ThemedButton
+                  style={[
+                    styles.addButton,
+                    { width: 50, height: 50, backgroundColor: "#7d015c" },
+                  ]}
+ onPress={() => {
                   setErrWeight(false);
                   setErrHeight(false);
                   setErrAge(false);
@@ -495,7 +706,7 @@ const calories = () => {
                     hasError = true;
                   }
 
-                  if (isNaN(tempHeight) || tempWeight <= 10 || tempWeight > 300) {
+                  if (isNaN(tempHeight) || tempHeight <= 10 || tempHeight > 300) {
                     setErrHeight(true);
                     hasError = true;
                   }
@@ -526,10 +737,23 @@ const calories = () => {
                     setToggletdeeres(false);
                   }
                   setShowResults(true);
-                }}
-              >
-                <ThemedText>Calculate</ThemedText>
-              </ThemedButton>
+                  }}
+                >
+                  <ThemedText style={{ color: "white" }}>Calculate</ThemedText>
+                </ThemedButton>
+
+                <ThemedButton
+                  onPress={() => router.back()}
+                  style={[
+                    styles.addButton,
+                    { width: 50, height: 50, backgroundColor: "grey" },
+                  ]}
+                >
+                  <ThemedText style={{ color: "white" }}>Cancel</ThemedText>
+                </ThemedButton>
+              </View>
+
+              {/* Results */}
               {showResults && (
                 <>
                   <View style={{ flexDirection: "row" }}>
@@ -564,40 +788,47 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontWeight: "bold",
     alignSelf: "center",
+    textAlign: "center",
   },
   qnBox: {
     marginTop: 15,
     alignItems: "center",
-    gap: 10,
-    maxWidth: "70%",
+    gap: 8,
     flexDirection: "row",
   },
   qnTxt: {
-    padding: 10,
-    textAlign: "left",
+    width: 140,
+    fontSize: 16,
   },
   textInput: {
-    width:80
+    width: 97,
+    fontSize: 12,
+    lineHeight: 16,
+    height: 40,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
   },
   errorTxt: {
     color: "#B71C1C",
+    marginTop: 5,
+    marginLeft: 5,
   },
   options: {
     flexDirection: "row",
-    gap: 8,
+    gap: 10,
     flexWrap: "wrap",
     justifyContent: "flex-start",
-    borderRadius: 1,
   },
   addButton: {
     backgroundColor: "#2196f3",
     borderRadius: 20,
-    padding: 10,
-    width: 112,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
     alignItems: "center",
     justifyContent: "center",
+    minWidth: 100,
+    marginVertical: 5,
   },
   selectedButton: {
     backgroundColor: "#7d015c",
@@ -611,12 +842,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 20,
     maxHeight: "80%",
-    borderColor:"white"
-  },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 10,
+    backgroundColor: "white",
   },
   modalBackdrop: {
     flex: 1,
@@ -627,20 +853,38 @@ const styles = StyleSheet.create({
   faqBox: {
     backgroundColor: "rgba(211,211,211,0.2)",
     borderRadius: 20,
+    padding: 15,
     marginTop: 10,
-    flex: 1,
   },
   faqTxt: {
-    alignItems: "center",
-    margin: 20,
+    fontSize: 14,
+    lineHeight: 20,
   },
   resultsBox: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     height: 50,
+    marginVertical: 10,
   },
   resultsTxt: {
     textAlign: "center",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  closeLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  closeLabelText: {
+    fontSize: 16,
+    marginRight: 2,
+    width: "auto", // override the fixed width
+  },
+
+  closeHelpIcon: {
+    marginLeft: -2, // negative margin to pull icon close
+    marginTop: -8,
   },
 });
