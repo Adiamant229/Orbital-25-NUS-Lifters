@@ -1,13 +1,14 @@
 import { useLocalSearchParams } from "expo-router";
 import ThemedText from "../../components/themedText";
-import { Image, StyleSheet, Dimensions, ScrollView } from "react-native";
+import { StyleSheet, Dimensions, ScrollView } from "react-native";
+import { Image } from "expo-image";
 import ThemedView from "../../components/themedView";
 import Spacer from "../../components/spacer";
 import { capWords } from "../index";
 
 const imgURL = `https://exercisedb.p.rapidapi.com/image?resolution=180&rapidapi-key=${process.env.EXPO_PUBLIC_EXERCISE_API_KEY}`;
 const screenWidth = Dimensions.get("window").width;
-export default function exerciseInfo() {
+export default function ExceriseDetails() {
   const params = useLocalSearchParams();
   const name = capWords(params?.name.split(" ")).join(" ");
   const description = params?.description;
