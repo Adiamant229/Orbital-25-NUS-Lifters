@@ -1,44 +1,40 @@
 //react imports
 import {
   StyleSheet,
-  Image,
-  ScrollView,
   FlatList,
   View,
-  Pressable,
-  Dimensions,
+  Dimensions, Pressable, ScrollView,
 } from "react-native";
 
 //themed components
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
-import ThemedCard from "../../components/themedCard";
 import Spacer from "../../components/spacer";
-import { exerciseAPIKey } from "../../firebaseConfig";
 import { useEffect, useState } from "react";
 import { Searchbar } from "react-native-paper";
 import ThemedButton from "../../components/themedButton";
-import { MaterialIcons } from "@expo/vector-icons";
+import {Ionicons, MaterialIcons} from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { capWords } from "../index";
 
 const screenWidth = Dimensions.get("window").width;
-const baseURL = "https://exercisedb.p.rapidapi.com/";
+const baseURL = "https://exercisedb.p.rapidapi.com/exercises/";
 const options = {
   method: "GET",
   headers: {
-    "x-rapidapi-key": exerciseAPIKey,
+    "x-rapidapi-key": process.env.EXPO_PUBLIC_EXERCISE_API_KEY,
     "x-rapidapi-host": "exercisedb.p.rapidapi.com",
   },
 };
 
 const Exercises = () => {
   const router = useRouter();
-  //const [targets, setTargets] = useState([]); //for filtering
-  //const [equipment, setEquipment] = useState([])
+  const [targets, setTargets] = useState(['']) //for filtering
+  const [equipment, setEquipment] = useState([''])
   const [searchRes, setSearchRes] = useState([]);
   const [query, setQuery] = useState("");
   const [lastSearched, setLastSearched] = useState("");
+  const [toggleRec, setToggleRec] = useState(false);
 
   useEffect(() => {
     const targetsUrl = baseURL + "targetList";
@@ -55,10 +51,19 @@ const Exercises = () => {
       return;
     }
     setLastSearched(x);
-    const searchUrl = baseURL + "exercises/name/" + x;
+    const searchUrl = baseURL + "name/" + x;
     const response = fetch(searchUrl, options);
     response.then((res) => res.json()).then((res) => setSearchRes(res));
   };
+
+  const redirect = (mode, query) => {
+    router.push({
+      pathname: "/exercisesList",
+      params: {mode,
+        query,
+      }
+    });
+  }
 
   return (
     <ThemedView style={styles.container}>
@@ -84,6 +89,53 @@ const Exercises = () => {
           </View>
         </ThemedButton>
       </View>
+
+      <View >
+        {/* The Dropdown menu */}
+        <Pressable onPress={() => setToggleRec(!toggleRec)}>
+          <View style={{flexDirection:"row", alignSelf:"center"}}>
+            <ThemedText>
+              Recommended Menus
+            </ThemedText>
+            {toggleRec ? (<Ionicons name={"chevron-up-outline"} color={"white"}/>)
+              : (<Ionicons name={"chevron-down-outline"} color={"white"}/>) }
+          </View>
+        </Pressable>
+        {toggleRec && (<ScrollView style={{padding:20}}>
+          <ThemedText>
+            Targets
+          </ThemedText>
+          <View style={{flexDirection:"row", flexWrap:"wrap"}}>
+            <>
+              {targets.map((item, index) => (
+                <ThemedButton key={index} onPress={() => redirect("target", item)}>
+                  <ThemedText style={styles.text} key={index}>
+                    {item}
+                  </ThemedText>
+                </ThemedButton>
+              ))}
+            </>
+          </View>
+          <ThemedText>
+            Equipment
+          </ThemedText>
+          <View style={{flexDirection:"row", flexWrap:"wrap"}}>
+            <>
+              {equipment.map((item, index) => {
+                return (
+                  <ThemedButton key={index} onPress={() => redirect("target", item)}>
+                    <ThemedText style={styles.text} key={index}>
+                      {item}
+                    </ThemedText>
+                  </ThemedButton>
+                );
+              })}
+            </>
+          </View>
+          <Spacer/>
+        </ScrollView>)}
+      </View>
+
       <View style={styles.listContainer}>
         <FlatList
           contentContainerStyle={{ alignContent: "center", width: "100%" }}
@@ -165,4 +217,8 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
   },
+  buttonCluster: {
+    flexDirection:"row",
+    flexWrap:"wrap",
+  }
 });

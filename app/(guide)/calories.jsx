@@ -138,10 +138,10 @@ const calories = () => {
          */
     return Math.round(
       10 * weight +
-        6.25 * height -
-        5 * age +
-        ((sex + 1) % 2) * -161 +
-        (sex % 2) * 5,
+      6.25 * height -
+      5 * age +
+      ((sex + 1) % 2) * (-161) +
+      (sex % 2) * 5,
     );
   };
 
@@ -273,6 +273,7 @@ const calories = () => {
                   style={styles.textInput}
                 />
               </View>
+              {errAge && (<ThemedText style={styles.errorTxt}>Please input valid age</ThemedText>) }
               <View style={styles.qnBox}>
                 <ThemedText>Height (in cm)</ThemedText>
                 <ThemedTextInput
@@ -282,6 +283,7 @@ const calories = () => {
                   style={styles.textInput}
                 />
               </View>
+              {errHeight && (<ThemedText style={styles.errorTxt}>Please input valid height</ThemedText>) }
               <View style={styles.qnBox}>
                 <ThemedText>Weight (in kg)</ThemedText>
                 <ThemedTextInput
@@ -291,6 +293,7 @@ const calories = () => {
                   style={styles.textInput}
                 />
               </View>
+              {errWeight && (<ThemedText style={styles.errorTxt}>Please input valid weight</ThemedText>) }
               {mode === "katch" && (
                 <View style={styles.qnBox}>
                   <ThemedText>Fat(%)</ThemedText>
@@ -300,15 +303,27 @@ const calories = () => {
                     value={fat}
                     style={styles.textInput}
                   />
+                  {errFat && (<ThemedText style={styles.errorTxt}>Please input valid fat percentage</ThemedText>) }
                 </View>
               )}
               <View style={styles.qnBox}>
-                <ThemedText style={styles.qnTxt}>Calculate TDEE</ThemedText>
+                <View style={{flexDirection:"row", gap:8}}>
+                  <ThemedText style={styles.qnTxt}>Calculate TDEE</ThemedText>
+                  <Pressable
+                    onPress={() => setShowTdeeDescription(!showTdeeDescription)}
+                  >
+                    <Ionicons
+                      name="help-circle-outline"
+                      size={15}
+                      color={"grey"}
+                    />
+                  </Pressable>
+                </View>
                 <TouchableOpacity
-                  onPress={() => settoggletdee(0)}
+                  onPress={() => settoggletdee(false)}
                   style={[
                     styles.addButton,
-                    toggletdee === 0 && styles.selectedButton,
+                    !toggletdee && styles.selectedButton,
                   ]}
                 >
                   <View style={styles.buttonicons}>
@@ -317,10 +332,10 @@ const calories = () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  onPress={() => settoggletdee(1)}
+                  onPress={() => settoggletdee(true)}
                   style={[
                     styles.addButton,
-                    toggletdee === 1 && styles.selectedButton,
+                    toggletdee && styles.selectedButton,
                   ]}
                 >
                   <View style={styles.buttonicons}>
@@ -328,27 +343,50 @@ const calories = () => {
                   </View>
                 </TouchableOpacity>
               </View>
-              {toggletdee === 1 && (
+              { showTdeeDescription &&
+                (<View style={{ height: 100 }}>
+                  <ScrollView style={styles.faqBox}>
+                    <ThemedText style={styles.faqTxt}>{tdeeDescription}</ThemedText>
+                  </ScrollView>
+                </View>)}
+              {toggletdee === true && (
                 <>
                   <View style={styles.qnBox}>
+                    <View style={{ flexDirection: "row" }}>
                     <ThemedText style={styles.qnTxt}>
                       Physical Activity Level
                     </ThemedText>
-                    <View style={{ flexDirection: "row" }}>
+                      <Pressable
+                        onPress={() => setShowPalDescription(!showPalDescription)}
+                      >
+                        <Ionicons
+                          name="help-circle-outline"
+                          size={15}
+                          color={"grey"}
+                        />
+                      </Pressable>
                       <ThemedTextInput
                         onChangeText={setPALTemp}
                         value={physicalActivityLevel}
                         keyboardType={"decimal-pad"}
-                        style={{ ...styles.textInput, flex: 1 }}
+                        editable={false}
+                        style={styles.textInput}
                       />
                       <ThemedButton
                         onPress={() => setModalVisible(true)}
-                        style={{ flex: 1 }}
+                        style={styles.addButton}
                       >
                         <ThemedText>Calculate</ThemedText>
                       </ThemedButton>
                     </View>
                   </View>
+                  { showPalDescription &&
+                    <View style={{ height: 100 }}>
+                      <ScrollView style={styles.faqBox}>
+                        <ThemedText style={styles.faqTxt}>{palDescription}</ThemedText>
+                      </ScrollView>
+                    </View>
+                  }
                 </>
               )}
               <Modal
@@ -363,7 +401,7 @@ const calories = () => {
                   }}
                 >
                   <View style={styles.modalBackdrop}>
-                    <View style={styles.modalContainer}>
+                    <ThemedView style={styles.modalContainer}>
                       <ThemedText style={styles.qnTxt}>
                         Work Activity
                       </ThemedText>
@@ -436,11 +474,12 @@ const calories = () => {
                       >
                         <ThemedText>Cancel</ThemedText>
                       </ThemedButton>
-                    </View>
+                    </ThemedView>
                   </View>
                 </TouchableWithoutFeedback>
               </Modal>
               <ThemedButton
+                style={styles.addButton}
                 onPress={() => {
                   setErrWeight(false);
                   setErrHeight(false);
@@ -491,7 +530,7 @@ const calories = () => {
                   setShowResults(true);
                 }}
               >
-                <ThemedText style={{ color: "white" }}>Calculate</ThemedText>
+                <ThemedText>Calculate</ThemedText>
               </ThemedButton>
               {showResults && (
                 <>
@@ -539,11 +578,10 @@ const styles = StyleSheet.create({
   },
   qnTxt: {
     padding: 10,
-    width: 120,
-    textAlign: "right",
+    textAlign: "left",
   },
   textInput: {
-    flex: 1,
+    width:80
   },
   errorTxt: {
     color: "dark-red",
@@ -572,10 +610,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalContainer: {
-    backgroundColor: "white",
     borderRadius: 10,
     padding: 20,
     maxHeight: "80%",
+    borderColor:"white"
   },
   modalTitle: {
     fontSize: 22,

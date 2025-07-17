@@ -21,9 +21,6 @@ import { useRouter } from "expo-router";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 
-//firebase imports
-import { APIKey } from "../../firebaseConfig";
-
 //themed components
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
@@ -46,8 +43,9 @@ const searchOptions = (query) => {
 
 const searchDB = async (query) => {
   try {
+    console.log(`https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${process.env.EXPO_PUBLIC_FOOD_API_KEY}`)
     const response = await fetch(
-      `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${APIKey}`,
+      `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${process.env.EXPO_PUBLIC_FOOD_API_KEY}`,
       searchOptions(query)
     );
     const data = await response.json();
