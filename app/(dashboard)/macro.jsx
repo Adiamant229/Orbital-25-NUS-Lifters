@@ -247,13 +247,14 @@ const Macro = () => {
               renderItem={({ item }) => (
                 <TouchableWithoutFeedback>
                   <View style={styles.contentCards}>
-                    <ThemedText style={styles.label}>
+                    <ThemedText style={[styles.label, { color: "white" }]}>
                       {item.description}
                     </ThemedText>
-                    <ThemedText style={styles.value}>
+                    <ThemedText style={[styles.value, { color: "white" }]}>
                       Calories:{" "}
-                      {((item.calories * item.servings) / 100).toFixed(2)}cal; Fat:{" "}
-                      {((item.fat * item.servings) / 100).toFixed(2)}g; Protein:{" "}
+                      {((item.calories * item.servings) / 100).toFixed(2)}cal;
+                      Fat: {((item.fat * item.servings) / 100).toFixed(2)}g;
+                      Protein:{" "}
                       {((item.protein * item.servings) / 100).toFixed(2)}g;
                       Carbs: {((item.carbs * item.servings) / 100).toFixed(2)}g
                     </ThemedText>
