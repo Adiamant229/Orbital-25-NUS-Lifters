@@ -618,7 +618,7 @@ const calories = () => {
                           Please select an activity level
                         </ThemedText>
                       )}
-
+                      
                       {/* Buttons side by side */}
                       <View
                         style={{
@@ -689,62 +689,54 @@ const calories = () => {
                     styles.addButton,
                     { width: 50, height: 50, backgroundColor: "#7d015c" },
                   ]}
-                  onPress={() => {
-                    setErrWeight(false);
-                    setErrHeight(false);
-                    setErrAge(false);
-                    setErrFat(false);
+ onPress={() => {
+                  setErrWeight(false);
+                  setErrHeight(false);
+                  setErrAge(false);
+                  setErrFat(false);
+                  const tempWeight = parseInt(weight);
+                  const tempHeight = parseInt(height);
+                  const tempAge = parseInt(age);
+                  const tempFat = parseFloat(fat);
 
-                    const tempWeight = parseInt(weight);
-                    const tempHeight = parseInt(height);
-                    const tempAge = parseInt(age);
-                    const tempFat = parseFloat(fat);
+                  let hasError = false;
 
-                    let hasError = false;
+                  if (isNaN(tempWeight) || tempWeight <= 0 || tempWeight > 250) {
+                    setErrWeight(true);
+                    hasError = true;
+                  }
 
-                    if (isNaN(tempWeight)) {
-                      setErrWeight(true);
-                      hasError = true;
-                    }
+                  if (isNaN(tempHeight) || tempHeight <= 10 || tempHeight > 300) {
+                    setErrHeight(true);
+                    hasError = true;
+                  }
 
-                    if (isNaN(tempHeight)) {
-                      setErrHeight(true);
-                      hasError = true;
-                    }
-
-                    if (isNaN(tempAge)) {
-                      setErrAge(true);
-                      hasError = true;
-                    }
-
-                    if (mode === "katch" && isNaN(tempFat)) {
-                      setErrFat(true);
-                      hasError = true;
-                    }
-
-                    if (hasError) {
-                      setShowResults(false);
-                      return;
-                    }
-
-                    if (mode === "mifflin") {
-                      setBmr(
-                        mifflinBMRCalc(sex, tempWeight, tempHeight, tempAge)
-                      );
-                    } else {
-                      setBmr(
-                        katchBMRCalc(sex, tempWeight, tempHeight, tempFat)
-                      );
-                    }
-
-                    if (toggletdee) {
-                      setTdee(Math.round(bmr * physicalActivityLevel));
-                      setToggletdeeres(true);
-                    } else {
-                      setToggletdeeres(false);
-                    }
-
-                    setShowResults(true);
+                  if (isNaN(tempAge) || tempAge <= 0 || tempAge > 150) {
+                    setErrAge(true);
+                    hasError = true;
+                  }
+                  if (mode === "katch" && (isNaN(tempFat) || tempFat <= 0 || tempFat > 100)) {
+                    setErrFat(true);
+                    hasError = true;
+                  }
+                  if (hasError) {
+                    setShowResults(false);
+                    return;
+                  }
+                  if (mode === "mifflin") {
+                    setBmr(
+                      mifflinBMRCalc(sex, tempWeight, tempHeight, tempAge)
+                    );
+                  } else {
+                    setBmr(katchBMRCalc(sex, tempWeight, tempHeight, tempFat));
+                  }
+                  if (toggletdee) {
+                    setTdee(Math.round(bmr * physicalActivityLevel));
+                    setToggletdeeres(true);
+                  } else {
+                    setToggletdeeres(false);
+                  }
+                  setShowResults(true);
                   }}
                 >
                   <ThemedText style={{ color: "white" }}>Calculate</ThemedText>
@@ -818,7 +810,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   errorTxt: {
-    color: "red",
+    color: "#B71C1C",
     marginTop: 5,
     marginLeft: 5,
   },
