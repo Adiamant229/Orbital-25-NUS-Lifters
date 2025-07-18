@@ -5,6 +5,7 @@ import { Image } from "expo-image";
 import ThemedView from "../../components/themedView";
 import Spacer from "../../components/spacer";
 import { capWords } from "../index";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const imgURL = `https://exercisedb.p.rapidapi.com/image?resolution=180&rapidapi-key=${process.env.EXPO_PUBLIC_EXERCISE_API_KEY}`;
 const screenWidth = Dimensions.get("window").width;
