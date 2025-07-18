@@ -14,6 +14,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import DropDownPicker from "react-native-dropdown-picker";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 
 //themed components
 import ThemedText from "../../components/themedText";
@@ -345,9 +346,19 @@ const AddWorkout = () => {
           showsVerticalScrollIndicator={false}
           automaticallyAdjustKeyboardInsets={true}
         >
-          <ThemedText style={styles.title}>
-            {editWorkoutId ? "Edit Workout" : "Track New Workout"}
-          </ThemedText>
+          <View style={{ flexDirection: "row", alignContent: "center" }}>
+            <ThemedText style={styles.title}>
+              {editWorkoutId ? "Edit Workout" : "Track New Workout"}
+            </ThemedText>
+            <TouchableOpacity
+              testID="exercises-button"
+              onPress={() => router.push("/exercises")}
+              style={styles.guideButton}
+            >
+              <FontAwesome5 name="book-open" size={15} color="white"  />
+            </TouchableOpacity>
+          </View>
+
           <ThemedTextInput
             placeholder="Add in workout title"
             value={workoutName}
@@ -585,7 +596,10 @@ const AddWorkout = () => {
                 {editWorkoutId ? "Save" : "Submit"}
               </ThemedText>
             </ThemedButton>
-            <ThemedButton onPress={handleCancelPress}>
+            <ThemedButton
+              onPress={handleCancelPress}
+              style={{ backgroundColor: "grey" }}
+            >
               <ThemedText style={{ color: "white" }}>Cancel</ThemedText>
             </ThemedButton>
           </View>
@@ -690,5 +704,15 @@ const styles = StyleSheet.create({
   },
   timeDropdown: {
     borderColor: "#ccc",
+  },
+  guideButton: {
+    backgroundColor: "#2196f3",
+    borderRadius: 20,
+    padding: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    width: 37,
+    height: 35,
+    marginLeft: 20
   },
 });

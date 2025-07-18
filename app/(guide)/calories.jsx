@@ -1,54 +1,54 @@
+//react and expo imports 
 import {
-  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Pressable,
   SafeAreaView,
   ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
   Platform,
   Dimensions,
 } from "react-native";
-
-import ThemedText from "../../components/themedText";
-import ThemedView from "../../components/themedView";
 import { useState } from "react";
-import ThemedTextInput from "../../components/themedTextInput";
-import ThemedButton from "../../components/themedButton";
-import DropDownPicker from "react-native-dropdown-picker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
+//themed components 
+import ThemedText from "../../components/themedText";
+import ThemedView from "../../components/themedView";
+import ThemedTextInput from "../../components/themedTextInput";
+import ThemedButton from "../../components/themedButton";
+import DropDownPicker from "react-native-dropdown-picker";
+
 const screenWidth = Dimensions.get("window").width;
 
-  const katchBMRCalc = (sex, weight, height, age, fat = -1) => {
-    /*
+const katchBMRCalc = (sex, weight, height, age, fat = -1) => {
+  /*
         Katch-McArdle Eqn:
         More accurate for lean/ athletic individuals,
         sex -> 0: female; 1: male;
          */
-    const lbm = () => {
-      if (fat > 0) {
-        return weight * (1 - fat / 100);
-      } else if (sex === 1) {
-        return 0.407 * weight + 0.267 * height - 19.2;
-      } else if (sex === 0) {
-        return 0.252 * weight + 0.473 * height - 48.3;
-      }
-    };
-    return Math.round(370 + 21.6 * lbm());
+  const lbm = () => {
+    if (fat > 0) {
+      return weight * (1 - fat / 100);
+    } else if (sex === 1) {
+      return 0.407 * weight + 0.267 * height - 19.2;
+    } else if (sex === 0) {
+      return 0.252 * weight + 0.473 * height - 48.3;
+    }
   };
+  return Math.round(370 + 21.6 * lbm());
+};
 
-  const calculateActivityLevel = (work, leisure) => {
-    return (1.18 + work * 0.08 + (0.11 + work * 0.01) * leisure).toFixed(2);
-  };
+const calculateActivityLevel = (work, leisure) => {
+  return (1.18 + work * 0.08 + (0.11 + work * 0.01) * leisure).toFixed(2);
+};
 
-const calories = () => {
+const Calories = () => {
   const [mode, setMode] = useState("mifflin");
   const [sex, setSex] = useState(1);
 
@@ -98,15 +98,15 @@ const calories = () => {
   const [showPalDescription, setShowPalDescription] = useState(false);
 
   const description =
-    "There are 2 main body composition strategies: cutting and bulking. Cutting involves reducing body fat while maintaining muscle mass, while bulking involves increasing muscle mass, regardless of fat gain. Cutting involves eating in a calorie deficit, while bulking involves eating in a calorie surplus, both relative to one\'s maintenance calories.\n" +
-    "Eating with too large of a calorie deficit or surplus may lead hinder one\'s progress, such as losing excessive muscle mass or gaining disproportionate amounts of body fat to muscle mass. A slower cut/bulk with a smaller deficit/surplus of 10-15\% of your Total Daily Energy Expenditure (TDEE) is commonly used.\n" +
+    "There are 3 main body composition strategies: cutting, bulking and maintaining. Cutting involves reducing body fat while retaining muscle mass, while bulking involves increasing muscle mass, regardless of fat gain and maintaining involves keeping your current muscle mass and weight the same without significant gains or losses. Cutting involves eating in a calorie deficit, bulking involves eating in a calorie surplus, while maintaining involves eating in a calorie equilibrium, both relative to one\'s maintenance calories or Total Daily Energy Expenditure (TDEE). " +
+    "Eating with too large of a calorie deficit or surplus may lead hinder one\'s progress, such as losing excessive muscle mass or gaining disproportionate amounts of body fat to muscle mass. A slower cut/bulk with a smaller deficit/surplus of 10-15\% of your TDEE or around 200-300cal is commonly used. The crucial thing to remember is to never drop your calories below your Basal Metabolic Rate (BMR). This may result in poor bodily functions. " +
     "Calculate your calorie needs with our calculator!";
   const modeDescription =
-    "Two equations are mainly used to calculate Basal Metabolic Rate (BMR), the energy your body needs to function at a basic level. They are: the Mifflin St-Jeor Equation and the Katch-McArdle Equation. The Mifflin St-Jeor Equation is more commonly used, while the Katch-McArdle Equation is more accurate by using body fat percentages, depending on the accuracy of the method of measuring it. It is also generally more accurate for athletic/lean individuals.";
+    "Two equations: the Mifflin St-Jeor and Katch-McArdle Equation are mainly used to calculate your body's calorie requirement. The Mifflin St-Jeor Equation is more commonly used, while the Katch-McArdle Equation is generally more accurate for athletic/lean individuals by using body fat percentages";
   const tdeeDescription =
-    "The Total Daily Energy Expenditure, which is an estimation of the energy burned by your body taking into account your physical activity.";
+    "The Total Daily Energy Expenditure (TDEE) is the estimated calories burnt by your body taking into account your physical activities, while the Basal Metabolic Rate (BMR) is the estimated calories burnt by your body per day in the rested state wtih no activity done throughout the day.";
   const palDescription =
-    "A factor to be multiplied to your BMR, calculated from your activity during work and leisure time.";
+    "A factor to be multiplied to your BMR, calculated from your activities during work and leisure time.";
 
   const workActivity = [
     { label: "Please Select Activity Level", value: 0 },
@@ -153,7 +153,6 @@ const calories = () => {
         (sex % 2) * 5
     );
   };
-
 
   const router = useRouter();
 
@@ -257,7 +256,7 @@ const calories = () => {
               </View>
 
               {showModeDescription && (
-                <View style={{ height: 300 }}>
+                <View style={{ height: 200 }}>
                   <View style={styles.faqBox}>
                     <ThemedText style={styles.faqTxt}>
                       {modeDescription}
@@ -384,7 +383,12 @@ const calories = () => {
 
               {/* Fat % (only in Katch mode) */}
               {mode === "katch" && (
-                <View style={styles.qnBox}>
+                <View
+                  style={[
+                    styles.qnBox,
+                    { flexWrap: "wrap", alignItems: "flex-start" },
+                  ]}
+                >
                   <View
                     style={{
                       width: 140,
@@ -403,19 +407,19 @@ const calories = () => {
                     placeholderTextColor="grey"
                   />
                   {errFat && (
-                    <ThemedText style={styles.errorTxt}>
+                    <ThemedText style={[styles.errorTxt, { marginLeft: 5  }]}>
                       Please input valid fat percentage
                     </ThemedText>
                   )}
                 </View>
               )}
 
-              {/* Calculate TDEE */}
+              {/* Calorie Type */}
               <View style={styles.qnBox}>
-                <View style={{ width: 135 }}>
+                <View style={{ width: 120 }}>
                   <View style={styles.closeLabelRow}>
                     <ThemedText style={styles.closeLabelText}>
-                      Calculate TDEE
+                      Calorie Type
                     </ThemedText>
                     <Pressable
                       testID="tdee-help-icon"
@@ -443,7 +447,7 @@ const calories = () => {
                     ]}
                   >
                     <View style={styles.buttonicons}>
-                      <ThemedText style={{ color: "white" }}>No</ThemedText>
+                      <ThemedText style={{ color: "white" }}>BMR</ThemedText>
                     </View>
                   </TouchableOpacity>
 
@@ -455,14 +459,16 @@ const calories = () => {
                     ]}
                   >
                     <View style={styles.buttonicons}>
-                      <ThemedText style={{ color: "white" }}>Yes</ThemedText>
+                      <ThemedText style={{ color: "white" }}>
+                        TDEE + BMR
+                      </ThemedText>
                     </View>
                   </TouchableOpacity>
                 </View>
               </View>
 
               {showTdeeDescription && (
-                <View style={{ height: 150 }}>
+                <View style={{ height: 200 }}>
                   <View style={styles.faqBox} nestedScrollEnabled={true}>
                     <ThemedText style={styles.faqTxt}>
                       {tdeeDescription}
@@ -494,7 +500,7 @@ const calories = () => {
                       ]}
                     >
                       <ThemedText style={styles.closeLabelText}>
-                        Physical Activity Level
+                        Physical Activity Level (PAL)
                       </ThemedText>
                       <Pressable
                         testID="pal-help-icon"
@@ -522,9 +528,7 @@ const calories = () => {
                         width: "100%",
                       }}
                     >
-                      <ThemedText>
-                        Activity Level: {physicalActivityLevel}
-                      </ThemedText>
+                      <ThemedText>PAL: {physicalActivityLevel}</ThemedText>
 
                       <ThemedButton
                         onPress={() => setModalVisible(true)}
@@ -534,7 +538,7 @@ const calories = () => {
                         ]}
                       >
                         <ThemedText style={{ color: "white" }}>
-                          Select Level
+                          Calculate PAL
                         </ThemedText>
                       </ThemedButton>
                     </View>
@@ -568,6 +572,7 @@ const calories = () => {
                         Work Activity
                       </ThemedText>
                       <DropDownPicker
+                        testID="work-dropdown"
                         zIndex={2}
                         items={workActivity}
                         value={workVal}
@@ -587,10 +592,16 @@ const calories = () => {
                         </ThemedText>
                       )}
 
-                      <ThemedText style={[styles.qnTxt, { color: "black" }]}>
+                      <ThemedText
+                        style={[
+                          styles.qnTxt,
+                          { color: "black", marginTop: 15 },
+                        ]}
+                      >
                         Leisure Activity
                       </ThemedText>
                       <DropDownPicker
+                        testID="leisure-dropdown"
                         zIndex={1}
                         items={leisureActivity}
                         value={leisureVal}
@@ -685,65 +696,63 @@ const calories = () => {
                     { width: 50, height: 50, backgroundColor: "#7d015c" },
                   ]}
                   onPress={() => {
+                    // Reset error flags
                     setErrWeight(false);
                     setErrHeight(false);
                     setErrAge(false);
                     setErrFat(false);
+
+                    // Parse inputs
                     const tempWeight = parseInt(weight);
                     const tempHeight = parseInt(height);
                     const tempAge = parseInt(age);
                     const tempFat = parseFloat(fat);
 
-                    let hasError = false;
-
-                    if (
-                      isNaN(tempWeight) ||
-                      tempWeight <= 0 ||
-                      tempWeight > 250
-                    ) {
-                      setErrWeight(true);
-                      hasError = true;
-                    }
-
-                    if (
-                      isNaN(tempHeight) ||
-                      tempHeight <= 10 ||
-                      tempHeight > 300
-                    ) {
-                      setErrHeight(true);
-                      hasError = true;
-                    }
-
-                    if (isNaN(tempAge) || tempAge <= 0 || tempAge > 150) {
-                      setErrAge(true);
-                      hasError = true;
-                    }
-                    if (
+                    // Input validation
+                    const hasWeightError =
+                      isNaN(tempWeight) || tempWeight <= 0 || tempWeight > 250;
+                    const hasHeightError =
+                      isNaN(tempHeight) || tempHeight <= 10 || tempHeight > 300;
+                    const hasAgeError =
+                      isNaN(tempAge) || tempAge <= 0 || tempAge > 150;
+                    const hasFatError =
                       mode === "katch" &&
-                      (isNaN(tempFat) || tempFat <= 0 || tempFat > 100)
+                      (isNaN(tempFat) || tempFat <= 0 || tempFat > 100);
+
+                    setErrWeight(hasWeightError);
+                    setErrHeight(hasHeightError);
+                    setErrAge(hasAgeError);
+                    setErrFat(hasFatError);
+
+                    if (
+                      hasWeightError ||
+                      hasHeightError ||
+                      hasAgeError ||
+                      hasFatError
                     ) {
-                      setErrFat(true);
-                      hasError = true;
-                    }
-                    if (hasError) {
                       setShowResults(false);
                       return;
                     }
-                    if (mode === "mifflin") {
-                      setBmr(
-                        mifflinBMRCalc(sex, tempWeight, tempHeight, tempAge)
-                      );
-                    } else {
-                      setBmr(
-                        katchBMRCalc(sex, tempWeight, tempHeight, tempFat)
-                      );
-                    }
+
+                    // Calculate BMR
+                    const newBmr =
+                      mode === "mifflin"
+                        ? mifflinBMRCalc(sex, tempWeight, tempHeight, tempAge)
+                        : katchBMRCalc(sex, tempWeight, tempHeight, tempFat);
+
+                    setBmr(newBmr);
+
+                    // Calculate TDEE if toggled
                     if (toggletdee) {
-                      setTdee(Math.round(bmr * physicalActivityLevel));
+                      const newTdee = Math.round(
+                        newBmr * physicalActivityLevel
+                      );
+                      setTdee(newTdee);
                       setToggletdeeres(true);
                     } else {
                       setToggletdeeres(false);
                     }
+
                     setShowResults(true);
                   }}
                 >
@@ -787,7 +796,7 @@ const calories = () => {
     </>
   );
 };
-export default calories;
+export default Calories;
 
 export { katchBMRCalc, calculateActivityLevel };
 
