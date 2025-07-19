@@ -59,32 +59,41 @@ const Exercises = () => {
     "upper back",
   ];
   const equipment = [
-    "abductors",
-    "abs",
-    "adductors",
-    "biceps",
-    "calves",
-    "cardiovascular system",
-    "delts",
-    "forearms",
-    "glutes",
-    "hamstrings",
-    "lats",
-    "levator scapulae",
-    "pectorals",
-    "quads",
-    "serratus anterior",
-    "spine",
-    "traps",
-    "triceps",
-    "upper back",
+    "assisted",
+    "band",
+    "barbell",
+    "body weight",
+    "bosu ball",
+    "cable",
+    "dumbbell",
+    "elliptical machine",
+    "ez barbell",
+    "hammer",
+    "kettlebell",
+    "leverage machine",
+    "medicine ball",
+    "olympic barbell",
+    "resistance band",
+    "roller",
+    "rope",
+    "skierg machine",
+    "sled machine",
+    "smith machine",
+    "stability ball",
+    "stationary bike",
+    "stepmill machine",
+    "tire",
+    "trap bar",
+    "upper body ergometer",
+    "weighted",
+    "wheel roller"
   ];
   const [searchRes, setSearchRes] = useState([]);
   const [query, setQuery] = useState("");
   const [lastSearched, setLastSearched] = useState("");
   const [toggleRec, setToggleRec] = useState(false);
 
-  
+
   useEffect(() => {
     const fetchData = () => {
       try {
@@ -101,7 +110,7 @@ const Exercises = () => {
     };
     fetchData();
   }, []);
-  
+
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
@@ -127,7 +136,7 @@ const Exercises = () => {
 
   const sortedTargets = [...targets].sort((a, b) => a.localeCompare(b));
   const sortedEquipment = [...equipment].sort((a, b) => a.localeCompare(b));
-  
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
