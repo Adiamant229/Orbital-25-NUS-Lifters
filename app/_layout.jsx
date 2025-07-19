@@ -20,12 +20,10 @@ const InnerLayout = () => {
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(dashboard)" options={{ headerShown: false }} />
         <Stack.Screen name="index" options={{ headerShown: false }} />
-
         <Stack.Screen
           name="(reports)"
           options={{ title: "Gym Facility Info" }}
         />
-
         <Stack.Screen
           name="(progress)"
           options={{ title: "Progress Tracker" }}
@@ -34,9 +32,11 @@ const InnerLayout = () => {
           name="(guide)"
           options={{ title: "Gym Info and Guide" }}
         />
-
+        <Stack.Screen
+          name="(exercises)"
+          options={{ title: "" }}
+        />
         <Stack.Screen name="(profiles)" options={{ title: "" }} />
-
         <Stack.Screen name="(forum)" options={{ title: "" }} />
       </Stack>
     </>

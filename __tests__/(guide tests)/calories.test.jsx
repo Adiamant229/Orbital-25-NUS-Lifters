@@ -1,4 +1,3 @@
-import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import Calories from "../../app/(guide)/calories";
 import {
@@ -6,9 +5,6 @@ import {
   calculateActivityLevel,
 } from "../../app/(guide)/calories";
 
-import { Alert } from "react-native";
-
-// Mock dependencies
 jest.mock("@expo/vector-icons", () => {
   const React = require("react");
   return {
@@ -25,10 +21,24 @@ jest.mock("expo-router", () => ({
 }));
 
 jest.mock("react-native-dropdown-picker", () => {
-  return ({ items, value, setValue }) => {
-    return <></>;
+  const React = require("react");
+  return function MockDropDownPicker({ items, setValue, testID }) {
+    return (
+      <>
+        {items.map((item) => (
+          <button
+            key={item.value}
+            testID={`${testID}-item-${item.value}`}
+            onClick={() => setValue(item.value)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </>
+    );
   };
 });
+
 
 jest.mock("@react-native-async-storage/async-storage", () => ({
   setItem: jest.fn(),
@@ -84,7 +94,7 @@ describe("Calories Screen", () => {
     fireEvent.changeText(getByPlaceholderText("Enter weight"), "70");
     fireEvent.changeText(getByPlaceholderText("Enter height"), "175");
     fireEvent.changeText(getByPlaceholderText("Enter age"), "25");
-    fireEvent.changeText(getByPlaceholderText("Enter fat %"), "0"); // invalid fat %
+    fireEvent.changeText(getByPlaceholderText("Enter fat %"), "0"); 
     fireEvent.press(getByText("Calculate"));
     await waitFor(() => {
       expect(getByText("Please input valid fat percentage")).toBeTruthy();
@@ -100,20 +110,21 @@ describe("Calories Screen", () => {
   test("toggles mode description when help icon pressed", () => {
     const { getByTestId, queryByText } = render(<Calories />);
     fireEvent.press(getByTestId("mode-help-icon"));
-    expect(queryByText(/Two equations are mainly used/)).toBeTruthy();
+    expect(queryByText(/Two equations:/)).toBeTruthy();
   });
+
   test("toggles TDEE and shows PAL section", async () => {
     const { getByText, queryByText } = render(<Calories />);
-    fireEvent.press(getByText("Yes")); // Enable TDEE
+    fireEvent.press(getByText("TDEE + BMR")); 
     await waitFor(() => {
-      expect(queryByText(/Activity Level:/)).toBeTruthy();
-      expect(queryByText("Select Level")).toBeTruthy();
+      expect(queryByText(/PAL:/)).toBeTruthy();
+      expect(queryByText("Calculate PAL")).toBeTruthy();
     });
   });
 
   test("toggles PAL help icon to show description", () => {
     const { getByTestId, getByText } = render(<Calories />);
-    fireEvent.press(getByText("Yes")); // enable TDEE first
+    fireEvent.press(getByText("TDEE + BMR"));
     fireEvent.press(getByTestId("pal-help-icon"));
     expect(getByText(/A factor to be multiplied to your BMR/)).toBeTruthy();
   });
@@ -121,13 +132,13 @@ describe("Calories Screen", () => {
   test("disables TDEE again and hides PAL", async () => {
     const { getByText, findByText, queryByText } = render(<Calories />);
 
-    fireEvent.press(getByText("Yes"));
-    await findByText("Activity Level: 1");
+    fireEvent.press(getByText("TDEE + BMR"));
+    await findByText("PAL: 1");
 
-    fireEvent.press(getByText("No")); // Turn off
+    fireEvent.press(getByText("BMR"));
 
     await waitFor(() => {
-      expect(queryByText("Activity Level: 1")).toBeNull();
+      expect(queryByText("PAL: 1")).toBeNull();
     });
   });
 
@@ -143,7 +154,6 @@ describe("Calories Screen", () => {
       expect(queryByText(/Your BMR:/)).toBeTruthy();
     });
 
-    // Re-enter with invalid weight
     fireEvent.changeText(getByPlaceholderText("Enter weight"), "0");
     fireEvent.press(getByText("Calculate"));
     await waitFor(() => {
@@ -151,10 +161,30 @@ describe("Calories Screen", () => {
     });
   });
 
+test("calculates correct PAL from modal inputs", async () => {
+  const { getByText, getByTestId, queryByText } = render(<Calories />);
+
+  fireEvent.press(getByText("TDEE + BMR"));
+
+  await waitFor(() => {
+    expect(getByText("Calculate PAL")).toBeTruthy();
+  });
+
+  fireEvent.press(getByText("Calculate PAL"));
+
+  fireEvent.press(getByTestId("work-dropdown-item-0"));
+
+  fireEvent.press(getByText("Calculate"));
+
+  await waitFor(() => {
+    expect(queryByText("PAL: 1")).toBeTruthy();
+  });
+});
+
   describe("katchBMRCalc", () => {
     test("calculates BMR using body fat % (male)", () => {
-      const result = katchBMRCalc(1, 70, 175, 25, 15); // 70kg, 15% fat
-      const expectedLBM = 70 * (1 - 0.15); // 59.5
+      const result = katchBMRCalc(1, 70, 175, 25, 15); 
+      const expectedLBM = 70 * (1 - 0.15); 
       const expectedBMR = Math.round(370 + 21.6 * expectedLBM);
       expect(result).toBe(expectedBMR);
     });

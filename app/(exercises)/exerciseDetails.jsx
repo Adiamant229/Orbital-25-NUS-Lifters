@@ -1,3 +1,4 @@
+import { View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import ThemedText from "../../components/themedText";
 import { StyleSheet, Dimensions, ScrollView } from "react-native";
@@ -27,19 +28,46 @@ export default function ExceriseDetails() {
       <ThemedView style={styles.container}>
         <ScrollView contentContainerStyle={styles.container}>
           <ThemedText style={styles.title}>{name}</ThemedText>
+
+          <View
+            style={{
+              backgroundColor: "#7d015c",
+              borderRadius: 15,
+              padding: 15,
+              paddingHorizontal: 10,
+            }}
+          >
+            <Image
+              source={{ uri: imgURL + "&exerciseId=" + id }}
+              style={{
+                width: "80%",
+                aspectRatio: 1,
+                alignSelf: "center",
+                borderRadius: 20,
+              }}
+            />
+          </View>
           <Spacer />
-          <Image
-            source={{ uri: imgURL + "&exerciseId=" + id }}
-            style={{ width: "80%", aspectRatio: 1, alignSelf: "center" }}
-          />
-          <Spacer />
-          <ThemedText style={styles.text}>{description}</ThemedText>
-          <ThemedText style={styles.text}> Equipment: {equipment}</ThemedText>
-          <ThemedText style={styles.text}>Targets: {bodyPart};</ThemedText>
           <ThemedText style={styles.text}>
+            Description: {description}
+          </ThemedText>
+          <ThemedText style={styles.text}>
+            {" "}
+            Equipment: {equipment.charAt(0).toUpperCase() + equipment.slice(1)}
+          </ThemedText>
+          <ThemedText style={styles.text}>
+            {" "}
+            Primary Muscles:{" "}
+            {bodyPart.charAt(0).toUpperCase() + bodyPart.slice(1)}
+          </ThemedText>
+          <ThemedText style={styles.text}>
+            {" "}
             Secondary Muscles: {secondaryMuscles.join(", ")}
           </ThemedText>
-          <ThemedText style={styles.text}>Instructions</ThemedText>
+          <ThemedText style={[styles.text, { marginBottom: 10 }]}>
+            {" "}
+            Instructions:
+          </ThemedText>
           {instructions.map((item, index) => {
             return (
               <ThemedText style={styles.text} key={item}>
@@ -63,14 +91,12 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   title: {
-    fontWeight: "bold",
     fontSize: 20,
     marginBottom: 20,
     textAlign: "center",
   },
   text: {
-    marginBottom: 20,
-    textAlign: "justify",
+    marginBottom: 30,
     fontSize: 16,
   },
 });
