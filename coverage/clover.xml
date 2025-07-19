@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1752803826985" clover="3.2.0">
-  <project timestamp="1752803826985" name="All files">
-    <metrics statements="1909" coveredstatements="1595" conditionals="1147" coveredconditionals="785" methods="439" coveredmethods="322" elements="3495" coveredelements="2702" complexity="0" loc="1909" ncloc="1909" packages="11" files="24" classes="24"/>
+<coverage generated="1752912490292" clover="3.2.0">
+  <project timestamp="1752912490292" name="All files">
+    <metrics statements="1970" coveredstatements="1658" conditionals="1163" coveredconditionals="801" methods="455" coveredmethods="338" elements="3588" coveredelements="2797" complexity="0" loc="1970" ncloc="1970" packages="12" files="27" classes="27"/>
     <package name="app">
-      <metrics statements="38" coveredstatements="35" conditionals="20" coveredconditionals="16" methods="6" coveredmethods="5"/>
+      <metrics statements="38" coveredstatements="38" conditionals="20" coveredconditionals="16" methods="6" coveredmethods="6"/>
       <file name="index.jsx" path="C:\Users\senge\Ernest\VSCODE\Orbital25\app\index.jsx">
-        <metrics statements="38" coveredstatements="35" conditionals="20" coveredconditionals="16" methods="6" coveredmethods="5"/>
-        <line num="29" count="0" type="stmt"/>
-        <line num="30" count="0" type="stmt"/>
-        <line num="32" count="0" type="stmt"/>
-        <line num="35" count="1" type="stmt"/>
+        <metrics statements="38" coveredstatements="38" conditionals="20" coveredconditionals="16" methods="6" coveredmethods="6"/>
+        <line num="29" count="13" type="stmt"/>
+        <line num="30" count="20" type="stmt"/>
+        <line num="32" count="13" type="stmt"/>
+        <line num="35" count="3" type="stmt"/>
         <line num="36" count="16" type="stmt"/>
         <line num="38" count="16" type="stmt"/>
         <line num="39" count="16" type="stmt"/>
@@ -43,7 +43,7 @@
         <line num="95" count="11" type="cond" truecount="1" falsecount="1"/>
         <line num="96" count="11" type="cond" truecount="1" falsecount="1"/>
         <line num="98" count="11" type="stmt"/>
-        <line num="151" count="1" type="stmt"/>
+        <line num="151" count="3" type="stmt"/>
       </file>
     </package>
     <package name="app.(auth)">
@@ -772,6 +772,60 @@
         <line num="1708" count="1" type="stmt"/>
       </file>
     </package>
+    <package name="app.(exercises)">
+      <metrics statements="45" coveredstatements="44" conditionals="8" coveredconditionals="7" methods="9" coveredmethods="8"/>
+      <file name="exerciseDetails.jsx" path="C:\Users\senge\Ernest\VSCODE\Orbital25\app\(exercises)\exerciseDetails.jsx">
+        <metrics statements="14" coveredstatements="14" conditionals="2" coveredconditionals="1" methods="2" coveredmethods="2"/>
+        <line num="11" count="1" type="stmt"/>
+        <line num="12" count="1" type="stmt"/>
+        <line num="14" count="2" type="stmt"/>
+        <line num="15" count="2" type="stmt"/>
+        <line num="16" count="2" type="stmt"/>
+        <line num="17" count="2" type="stmt"/>
+        <line num="18" count="2" type="stmt"/>
+        <line num="19" count="2" type="stmt"/>
+        <line num="20" count="2" type="stmt"/>
+        <line num="23" count="2" type="stmt"/>
+        <line num="24" count="2" type="stmt"/>
+        <line num="26" count="2" type="stmt"/>
+        <line num="72" count="6" type="stmt"/>
+        <line num="83" count="1" type="stmt"/>
+      </file>
+      <file name="exercisesList.jsx" path="C:\Users\senge\Ernest\VSCODE\Orbital25\app\(exercises)\exercisesList.jsx">
+        <metrics statements="31" coveredstatements="30" conditionals="6" coveredconditionals="6" methods="7" coveredmethods="6"/>
+        <line num="10" count="1" type="stmt"/>
+        <line num="11" count="1" type="stmt"/>
+        <line num="19" count="1" type="stmt"/>
+        <line num="20" count="1" type="stmt"/>
+        <line num="23" count="6" type="stmt"/>
+        <line num="24" count="6" type="stmt"/>
+        <line num="25" count="6" type="stmt"/>
+        <line num="26" count="6" type="stmt"/>
+        <line num="27" count="6" type="stmt"/>
+        <line num="29" count="6" type="stmt"/>
+        <line num="30" count="3" type="stmt"/>
+        <line num="31" count="3" type="stmt"/>
+        <line num="33" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="34" count="2" type="stmt"/>
+        <line num="35" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="36" count="1" type="stmt"/>
+        <line num="37" count="1" type="stmt"/>
+        <line num="41" count="2" type="stmt"/>
+        <line num="42" count="2" type="stmt"/>
+        <line num="43" count="2" type="stmt"/>
+        <line num="44" count="2" type="stmt"/>
+        <line num="46" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="47" count="1" type="stmt"/>
+        <line num="48" count="1" type="stmt"/>
+        <line num="51" count="3" type="stmt"/>
+        <line num="54" count="6" type="stmt"/>
+        <line num="62" count="6" type="stmt"/>
+        <line num="65" count="3" type="stmt"/>
+        <line num="68" count="1" type="stmt"/>
+        <line num="89" count="0" type="stmt"/>
+        <line num="96" count="1" type="stmt"/>
+      </file>
+    </package>
     <package name="app.(forum)">
       <metrics statements="219" coveredstatements="183" conditionals="168" coveredconditionals="120" methods="50" coveredmethods="36"/>
       <file name="[threadId].jsx" path="C:\Users\senge\Ernest\VSCODE\Orbital25\app\(forum)\[threadId].jsx">
@@ -1445,7 +1499,7 @@
         <line num="541" count="4" type="stmt"/>
         <line num="561" count="0" type="stmt"/>
         <line num="575" count="6" type="stmt"/>
-        <line num="611" count="1" type="stmt"/>
+        <line num="614" count="1" type="stmt"/>
       </file>
       <file name="exerciseProgress.jsx" path="C:\Users\senge\Ernest\VSCODE\Orbital25\app\(progress)\exerciseProgress.jsx">
         <metrics statements="66" coveredstatements="64" conditionals="20" coveredconditionals="11" methods="20" coveredmethods="19"/>
@@ -1968,52 +2022,71 @@
       <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
       <file name="NUS_Lifters.png" path="C:\Users\senge\Ernest\VSCODE\Orbital25\assets\img\NUS_Lifters.png">
         <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
-        <line num="1" count="2" type="stmt"/>
+        <line num="1" count="4" type="stmt"/>
       </file>
     </package>
     <package name="components">
-      <metrics statements="20" coveredstatements="20" conditionals="13" coveredconditionals="9" methods="6" coveredmethods="6"/>
+      <metrics statements="36" coveredstatements="36" conditionals="21" coveredconditionals="18" methods="13" coveredmethods="13"/>
       <file name="spacer.jsx" path="C:\Users\senge\Ernest\VSCODE\Orbital25\components\spacer.jsx">
         <metrics statements="2" coveredstatements="2" conditionals="2" coveredconditionals="2" methods="1" coveredmethods="1"/>
-        <line num="3" count="9" type="cond" truecount="2" falsecount="0"/>
-        <line num="4" count="934" type="stmt"/>
+        <line num="3" count="11" type="cond" truecount="2" falsecount="0"/>
+        <line num="4" count="936" type="stmt"/>
       </file>
       <file name="themedButton.jsx" path="C:\Users\senge\Ernest\VSCODE\Orbital25\components\themedButton.jsx">
         <metrics statements="4" coveredstatements="4" conditionals="2" coveredconditionals="1" methods="2" coveredmethods="2"/>
-        <line num="4" count="14" type="stmt"/>
-        <line num="5" count="1293" type="stmt"/>
-        <line num="7" count="1293" type="cond" truecount="1" falsecount="1"/>
-        <line num="15" count="14" type="stmt"/>
+        <line num="4" count="16" type="stmt"/>
+        <line num="5" count="1296" type="stmt"/>
+        <line num="7" count="1296" type="cond" truecount="1" falsecount="1"/>
+        <line num="15" count="16" type="stmt"/>
+      </file>
+      <file name="themedContext.jsx" path="C:\Users\senge\Ernest\VSCODE\Orbital25\components\themedContext.jsx">
+        <metrics statements="16" coveredstatements="16" conditionals="8" coveredconditionals="7" methods="7" coveredmethods="7"/>
+        <line num="5" count="2" type="stmt"/>
+        <line num="7" count="2" type="stmt"/>
+        <line num="8" count="6" type="stmt"/>
+        <line num="9" count="6" type="cond" truecount="1" falsecount="1"/>
+        <line num="12" count="6" type="stmt"/>
+        <line num="13" count="3" type="stmt"/>
+        <line num="14" count="3" type="stmt"/>
+        <line num="15" count="3" type="cond" truecount="4" falsecount="0"/>
+        <line num="16" count="1" type="stmt"/>
+        <line num="19" count="3" type="stmt"/>
+        <line num="23" count="6" type="stmt"/>
+        <line num="24" count="6" type="stmt"/>
+        <line num="27" count="6" type="stmt"/>
+        <line num="28" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="31" count="6" type="stmt"/>
+        <line num="38" count="21" type="stmt"/>
       </file>
       <file name="themedText.jsx" path="C:\Users\senge\Ernest\VSCODE\Orbital25\components\themedText.jsx">
-        <metrics statements="5" coveredstatements="5" conditionals="5" coveredconditionals="4" methods="1" coveredmethods="1"/>
-        <line num="5" count="17" type="cond" truecount="1" falsecount="0"/>
-        <line num="6" count="6331" type="stmt"/>
-        <line num="7" count="6331" type="cond" truecount="1" falsecount="1"/>
-        <line num="9" count="6331" type="cond" truecount="2" falsecount="0"/>
-        <line num="11" count="6331" type="stmt"/>
+        <metrics statements="5" coveredstatements="5" conditionals="5" coveredconditionals="5" methods="1" coveredmethods="1"/>
+        <line num="5" count="19" type="cond" truecount="1" falsecount="0"/>
+        <line num="6" count="6358" type="stmt"/>
+        <line num="7" count="6358" type="cond" truecount="2" falsecount="0"/>
+        <line num="9" count="6358" type="cond" truecount="2" falsecount="0"/>
+        <line num="11" count="6358" type="stmt"/>
       </file>
       <file name="themedTextInput.jsx" path="C:\Users\senge\Ernest\VSCODE\Orbital25\components\themedTextInput.jsx">
         <metrics statements="5" coveredstatements="5" conditionals="2" coveredconditionals="1" methods="1" coveredmethods="1"/>
-        <line num="4" count="8" type="stmt"/>
+        <line num="4" count="10" type="stmt"/>
         <line num="5" count="873" type="stmt"/>
         <line num="6" count="873" type="cond" truecount="1" falsecount="1"/>
         <line num="8" count="873" type="stmt"/>
-        <line num="26" count="8" type="stmt"/>
+        <line num="26" count="10" type="stmt"/>
       </file>
       <file name="themedView.jsx" path="C:\Users\senge\Ernest\VSCODE\Orbital25\components\themedView.jsx">
-        <metrics statements="4" coveredstatements="4" conditionals="2" coveredconditionals="1" methods="1" coveredmethods="1"/>
-        <line num="5" count="17" type="stmt"/>
-        <line num="6" count="818" type="stmt"/>
-        <line num="7" count="818" type="cond" truecount="1" falsecount="1"/>
-        <line num="9" count="818" type="stmt"/>
+        <metrics statements="4" coveredstatements="4" conditionals="2" coveredconditionals="2" methods="1" coveredmethods="1"/>
+        <line num="5" count="19" type="stmt"/>
+        <line num="6" count="826" type="stmt"/>
+        <line num="7" count="826" type="cond" truecount="2" falsecount="0"/>
+        <line num="9" count="826" type="stmt"/>
       </file>
     </package>
     <package name="constants">
       <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
       <file name="colors.js" path="C:\Users\senge\Ernest\VSCODE\Orbital25\constants\colors.js">
         <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
-        <line num="1" count="17" type="stmt"/>
+        <line num="1" count="19" type="stmt"/>
       </file>
     </package>
   </project>

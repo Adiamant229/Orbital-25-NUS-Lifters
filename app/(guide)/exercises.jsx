@@ -84,7 +84,7 @@ const Exercises = () => {
   const [lastSearched, setLastSearched] = useState("");
   const [toggleRec, setToggleRec] = useState(false);
 
-  /*
+  
   useEffect(() => {
     const fetchData = () => {
       try {
@@ -101,7 +101,7 @@ const Exercises = () => {
     };
     fetchData();
   }, []);
-  */
+  
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
