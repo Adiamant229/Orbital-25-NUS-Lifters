@@ -64,9 +64,6 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
   clear: jest.fn(),
 }));
 
-jest.mock("../../components/themedContext", () => ({
-  useThemeContext: () => ({ theme: "light", setTheme: jest.fn() }),
-}));
 global.fetch = jest.fn(() =>
   Promise.resolve({
     blob: () => Promise.resolve(new Blob(["test"])),

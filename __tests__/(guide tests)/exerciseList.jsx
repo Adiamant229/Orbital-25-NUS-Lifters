@@ -1,5 +1,5 @@
 import { render, waitFor, fireEvent } from "@testing-library/react-native";
-import ExercisesList from "../../app/(exercises)/exercisesList"; 
+import ExercisesList from "../../app/(exercises)/exercisesList";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -71,10 +71,8 @@ describe("ExercisesList Component", () => {
   test("renders exercises fetched from API and caches them", async () => {
     useLocalSearchParams.mockReturnValue({ mode: "bodyPart", query: "chest" });
 
-    // Mock AsyncStorage returns no cache
-    AsyncStorage.getItem.mockResolvedValue('{}');
+    AsyncStorage.getItem.mockResolvedValue("{}");
 
-    // Mock fetch response
     global.fetch = jest.fn(() =>
       Promise.resolve({
         json: () =>
@@ -98,7 +96,6 @@ describe("ExercisesList Component", () => {
       expect(getByText("Push Up")).toBeTruthy();
     });
 
-    // Ensure AsyncStorage.setItem was called to cache results
     expect(AsyncStorage.setItem).toHaveBeenCalledWith(
       "bodyPart",
       expect.stringContaining('"chest"')
@@ -127,7 +124,6 @@ describe("ExercisesList Component", () => {
 
     AsyncStorage.getItem.mockResolvedValue(cachedData);
 
-    // fetch should NOT be called if cache exists
     global.fetch = jest.fn();
 
     const { getByText } = render(<ExercisesList />);

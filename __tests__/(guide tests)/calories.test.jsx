@@ -39,16 +39,11 @@ jest.mock("react-native-dropdown-picker", () => {
   };
 });
 
-
 jest.mock("@react-native-async-storage/async-storage", () => ({
   setItem: jest.fn(),
   getItem: jest.fn(),
   removeItem: jest.fn(),
   clear: jest.fn(),
-}));
-
-jest.mock("../../components/themedContext", () => ({
-  useThemeContext: () => ({ theme: "light", setTheme: jest.fn() }),
 }));
 
 describe("Calories Screen", () => {
@@ -94,7 +89,7 @@ describe("Calories Screen", () => {
     fireEvent.changeText(getByPlaceholderText("Enter weight"), "70");
     fireEvent.changeText(getByPlaceholderText("Enter height"), "175");
     fireEvent.changeText(getByPlaceholderText("Enter age"), "25");
-    fireEvent.changeText(getByPlaceholderText("Enter fat %"), "0"); 
+    fireEvent.changeText(getByPlaceholderText("Enter fat %"), "0");
     fireEvent.press(getByText("Calculate"));
     await waitFor(() => {
       expect(getByText("Please input valid fat percentage")).toBeTruthy();
@@ -115,7 +110,7 @@ describe("Calories Screen", () => {
 
   test("toggles TDEE and shows PAL section", async () => {
     const { getByText, queryByText } = render(<Calories />);
-    fireEvent.press(getByText("TDEE + BMR")); 
+    fireEvent.press(getByText("TDEE + BMR"));
     await waitFor(() => {
       expect(queryByText(/PAL:/)).toBeTruthy();
       expect(queryByText("Calculate PAL")).toBeTruthy();
@@ -161,30 +156,30 @@ describe("Calories Screen", () => {
     });
   });
 
-test("calculates correct PAL from modal inputs", async () => {
-  const { getByText, getByTestId, queryByText } = render(<Calories />);
+  test("calculates correct PAL from modal inputs", async () => {
+    const { getByText, getByTestId, queryByText } = render(<Calories />);
 
-  fireEvent.press(getByText("TDEE + BMR"));
+    fireEvent.press(getByText("TDEE + BMR"));
 
-  await waitFor(() => {
-    expect(getByText("Calculate PAL")).toBeTruthy();
+    await waitFor(() => {
+      expect(getByText("Calculate PAL")).toBeTruthy();
+    });
+
+    fireEvent.press(getByText("Calculate PAL"));
+
+    fireEvent.press(getByTestId("work-dropdown-item-0"));
+
+    fireEvent.press(getByText("Calculate"));
+
+    await waitFor(() => {
+      expect(queryByText("PAL: 1")).toBeTruthy();
+    });
   });
-
-  fireEvent.press(getByText("Calculate PAL"));
-
-  fireEvent.press(getByTestId("work-dropdown-item-0"));
-
-  fireEvent.press(getByText("Calculate"));
-
-  await waitFor(() => {
-    expect(queryByText("PAL: 1")).toBeTruthy();
-  });
-});
 
   describe("katchBMRCalc", () => {
     test("calculates BMR using body fat % (male)", () => {
-      const result = katchBMRCalc(1, 70, 175, 25, 15); 
-      const expectedLBM = 70 * (1 - 0.15); 
+      const result = katchBMRCalc(1, 70, 175, 25, 15);
+      const expectedLBM = 70 * (1 - 0.15);
       const expectedBMR = Math.round(370 + 21.6 * expectedLBM);
       expect(result).toBe(expectedBMR);
     });
