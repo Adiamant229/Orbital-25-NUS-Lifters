@@ -1,5 +1,5 @@
 import { Alert } from "react-native";
-import { render, waitFor, fireEvent, act } from "@testing-library/react-native";
+import { render, waitFor, fireEvent } from "@testing-library/react-native";
 import ThreadDetailPage from "../../app/(forum)/[threadId]";
 
 jest.mock("@react-native-async-storage/async-storage", () => ({
@@ -9,12 +9,9 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
   clear: jest.fn(),
 }));
 
-jest.mock("../../components/themedContext", () => ({
-  useThemeContext: () => ({ theme: "light", setTheme: jest.fn() }),
-}));
-
 const mockPush = jest.fn();
 const mockBack = jest.fn();
+
 jest.mock("expo-router", () => ({
   useLocalSearchParams: () => ({ threadId: "testThreadId" }),
   useRouter: () => ({
