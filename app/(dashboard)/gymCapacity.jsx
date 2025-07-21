@@ -55,11 +55,11 @@ const GymCapacity = () => {
   }, []);
 
   // Extract capacities with fallbacks
-  const utownCapacityNum = parseInt(gyms[2]?.capacity) || 0;
-  const utownMaxNum = parseInt(gyms[2]?.maxCapacity) || 120;
+  const utownCapacityNum = parseInt(gyms[0]?.capacity) || 0;
+  const utownMaxNum = parseInt(gyms[0]?.maxCapacity) || 120;
 
   const uscCapacityNum = parseInt(gyms[1]?.capacity) || 0;
-  const uscMaxNum = parseInt(gyms[1]?.maxCapacity) || 50;
+  const uscMaxNum = parseInt(gyms[1]?.maxCapacity) || 120;
 
   return (
     <ThemedView style={styles.safeArea}>
@@ -113,7 +113,7 @@ const GymCapacity = () => {
               UTown Gym:{" "}
               {loading || gyms.length === 0
                 ? "Loading"
-                : `${gyms[2]?.capacity ?? "-"}`}
+                : `${gyms[0]?.capacity ?? "-"}`}
             </ThemedText>
             <MaterialIcons size={50} name="groups" />
           </ThemedButton>
