@@ -334,6 +334,17 @@ const AddWorkout = () => {
     }
   };
 
+  const getDropdownItemsForExercise = (exerciseName) => {
+    if (!exerciseName) return exerciseApiOptions;
+    if (!exerciseApiOptions.some((item) => item.value === exerciseName)) {
+      return [
+        ...exerciseApiOptions,
+        { label: exerciseName, value: exerciseName },
+      ];
+    }
+    return exerciseApiOptions;
+  };
+
   return (
     <ThemedView style={styles.container}>
       <KeyboardAvoidingView
@@ -355,7 +366,7 @@ const AddWorkout = () => {
               onPress={() => router.push("/exercises")}
               style={styles.guideButton}
             >
-              <FontAwesome5 name="book-open" size={15} color="white"  />
+              <FontAwesome5 name="book-open" size={15} color="white" />
             </TouchableOpacity>
           </View>
 
@@ -437,13 +448,13 @@ const AddWorkout = () => {
                   <View style={{ flex: 1 }}>
                     <DropDownPicker
                       open={openDropdownIndex === exerciseIndex}
-                      value={exercise.name}
-                      items={exerciseApiOptions}
+                      value={exercise.name ?? ""}
+                      items={getDropdownItemsForExercise(exercise.name)}
                       setOpen={(isOpen) =>
                         setOpenDropdownIndex(isOpen ? exerciseIndex : null)
                       }
                       setValue={(callback) => {
-                        const value = callback(exercise.name);
+                        const value = callback(exercise.name ?? "");
                         handleChangeExerciseName(exerciseIndex, value);
                       }}
                       searchable={true}

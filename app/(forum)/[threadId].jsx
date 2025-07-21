@@ -327,6 +327,7 @@ const ThreadDetailPage = () => {
         <FlatList
           data={comments}
           keyExtractor={(item) => item.id}
+          contentContainerStyle={{ paddingBottom: 30 }}
           renderItem={({ item }) => (
             <View style={{ marginBottom: 12 }}>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
