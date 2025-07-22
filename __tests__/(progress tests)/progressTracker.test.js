@@ -1,7 +1,13 @@
-import { render, fireEvent, waitFor, act } from "@testing-library/react-native";
+import { render, fireEvent, waitFor, act, } from "@testing-library/react-native";
 import ProgressTracker from "../../app/(dashboard)/progressTracker";
 import { Alert } from "react-native";
+import firestore, {onSnapshot} from "firebase/firestore";
+import store from "firebase/firestore";
+import store2 from "firebase/firestore";
 
+const defaultWeights = {
+
+}
 jest.mock("@react-native-async-storage/async-storage", () => ({
   setItem: jest.fn(),
   getItem: jest.fn(),
@@ -113,7 +119,7 @@ jest.mock("firebase/firestore", () => {
   ];
 
   return {
-    collection: jest.fn((db, path) => ({ path })),
+    collection: jest.fn((...args) => ({path: args.join('')})),
     query: jest.fn((collectionRef) => ({ ...collectionRef })),
     orderBy: jest.fn((queryRef) => ({ ...queryRef })), // Pass queryRef along
     where: jest.fn((queryRef) => ({ ...queryRef })), // Pass queryRef along
@@ -356,20 +362,20 @@ describe("ProgressTracker Component - Workouts", () => {
     });
   });
 
-    test("workout year dropdown changes workout list", async () => {
-      const { getByText, getByTestId, queryByText } = render(
-        <ProgressTracker />
-      );
+  test("workout year dropdown changes workout list", async () => {
+    const { getByText, getByTestId, queryByText } = render(
+      <ProgressTracker />
+    );
 
-      const yearButton = getByText("All");
-      fireEvent.press(yearButton);
-      const yearOption = getByText("2023");
-      fireEvent.press(yearOption);
+    const yearButton = getByText("All");
+    fireEvent.press(yearButton);
+    const yearOption = getByText("2023");
+    fireEvent.press(yearOption);
 
-      await waitFor(() => {
-        expect(queryByText("Workout A")).toBeTruthy();
-      });
+    await waitFor(() => {
+      expect(queryByText("Workout A")).toBeTruthy();
     });
+  });
 
   test("displays workout date formatted and relative", async () => {
     // Utility to calculate day difference ignoring time
@@ -478,6 +484,7 @@ describe("ProgressTracker Component - Workouts", () => {
 });
 
 describe("ProgressTracker Component - Bodyweight", () => {
+  const firestore = require("firebase/firestore");
   test("opens modal for adding new weight", () => {
     const { getByText, getByPlaceholderText } = render(<ProgressTracker />);
     fireEvent.press(getByText("Bodyweight"));
@@ -487,15 +494,15 @@ describe("ProgressTracker Component - Bodyweight", () => {
     expect(getByPlaceholderText("Enter weight (kg)")).toBeTruthy();
   });
 
-    test("empty weight input shows alert", () => {
-      const { getByText } = render(<ProgressTracker />);
-      fireEvent.press(getByText("Bodyweight"));
-      fireEvent.press(getByText("+"));
-      fireEvent.press(getByText("Submit"));
+  test("empty weight input shows alert", () => {
+    const { getByText } = render(<ProgressTracker />);
+    fireEvent.press(getByText("Bodyweight"));
+    fireEvent.press(getByText("+"));
+    fireEvent.press(getByText("Submit"));
 
-      expect(Alert.alert).toHaveBeenCalledWith("Please enter your weight");
-    });
-    
+    expect(Alert.alert).toHaveBeenCalledWith("Please enter your weight");
+  });
+
   test("cancelling weight entry with changes prompts confirmation", async () => {
     const { getByText, getByPlaceholderText } = render(<ProgressTracker />);
     fireEvent.press(getByText("Bodyweight"));
@@ -533,7 +540,6 @@ describe("ProgressTracker Component - Bodyweight", () => {
     fireEvent.changeText(getByPlaceholderText("Enter weight (kg)"), "75.5");
     fireEvent.press(getByText("Submit"));
 
-    const firestore = require("firebase/firestore");
     console.log("addDoc mock is function?", typeof firestore.addDoc);
 
     try {
@@ -556,7 +562,7 @@ describe("ProgressTracker Component - Bodyweight", () => {
     }
   });
 
- /* test("editing an existing weight entry updates Firestore", async () => {
+  test("editing an existing weight entry updates Firestore", async () => {
     // Wrap initial render in act
     const {
       getByText,
@@ -564,7 +570,10 @@ describe("ProgressTracker Component - Bodyweight", () => {
       getByDisplayValue,
       queryByText,
       queryAllByText,
+      queryByTestId,
+      debug
     } = render(<ProgressTracker />);
+    const firestore = require("firebase/firestore")
 
     // Wrap fireEvent and subsequent state updates in act
     await act(async () => {
@@ -572,30 +581,44 @@ describe("ProgressTracker Component - Bodyweight", () => {
     });
     console.log("✅ Pressed Bodyweight tab");
 
-    await act(async () => {
-      fireEvent.press(getByText("Select Year"));
+    await act(async() => {
+      const mockCollection = firestore.collection("gay", 'ass', "weights")
+      const mockQuery = firestore.query(mockCollection)
+      const unsubscribe = firestore.onSnapshot(mockQuery, (snapshot) => {
+        console.log("Callback received snapshot with", snapshot?.docs.length, "docs");
+        snapshot?.docs.map((doc) => {
+          const data = {id:doc.id, ...doc.data()};
+          console.log(data)
+        });
+      });
+      unsubscribe();
+    });
+
+    /* await act(async () => {
+      fireEvent.press(getByTestId("weightDropdown"));
     });
     console.log("✅ Pressed Select Year dropdown");
 
     // Wait for the dropdown items to appear and then assert
+
     await waitFor(() => {
-      const year2024 = queryByText("2024");
       const yearTexts = queryAllByText(/\d{4}/).map(
         (el) => el.props?.children || el
       );
       console.log("📅 Dropdown year options rendered:", yearTexts);
-      expect(year2024).not.toBeNull();
+      expect(yearTexts).not.toBeNull();
     });
 
     fireEvent.press(getByText("2024"));
-    console.log("✅ Selected 2024");
+    console.log("✅ Selected 2024"); */
 
     // Confirm the weight graph appears
     const graph = await waitFor(() => {
-      const el = getByTestId("bodyweight-graph");
-      console.log("📈 Found bodyweight graph");
+      console.log("test");
+      const el = getByTestId("bodyweight-graph")
+      expect(el).toBeTruthy();
       return el;
-    });
+    }, {timeout:5000});
 
     fireEvent.press(graph);
     console.log("✅ Pressed bodyweight graph to open weight list modal");
@@ -619,7 +642,6 @@ describe("ProgressTracker Component - Bodyweight", () => {
     fireEvent.press(getByText("Save"));
     console.log("✅ Pressed Save");
 
-    const firestore = require("firebase/firestore");
 
     await waitFor(() => {
       expect(firestore.updateDoc).toHaveBeenCalledTimes(1);
@@ -633,15 +655,17 @@ describe("ProgressTracker Component - Bodyweight", () => {
     console.log("🎉 Test completed successfully");
   });
 
-  /*test("deleting an existing weight entry calls Firestore deleteDoc", async () => {
+  test("deleting an existing weight entry calls Firestore deleteDoc", async () => {
     const { getByText, getByTestId } = render(<ProgressTracker />);
     fireEvent.press(getByText("Bodyweight"));
 
     // Find a way to trigger deletion, e.g., by long-pressing or clicking a delete icon
     // For this mock, let's assume we can find a delete button associated with "wgt1"
-    const weightEntryText = await waitFor(() => getByText(/70.5 kg/i));
+    const graph = getByTestId("bodyweight-graph")
+    fireEvent.press(graph);
+    const weightEntryText = await waitFor(() => getByText(/70.5/i));
     fireEvent.press(weightEntryText); // Open edit/delete modal
-    const deleteButton = getByText("Delete"); // Assuming a delete button exists in the modal
+    const deleteButton = getByTestId("delete-button-wgt1"); // Assuming a delete button exists in the modal
     fireEvent.press(deleteButton);
 
     const firestore = require("firebase/firestore");
@@ -650,7 +674,7 @@ describe("ProgressTracker Component - Bodyweight", () => {
       const docRef = firestore.deleteDoc.mock.calls[0][0];
       expect(docRef.id).toBe("wgt1");
     });
-  });*/
+  });
 });
 
 describe("ProgressTracker Component - Macros", () => {
@@ -724,34 +748,49 @@ describe("ProgressTracker Component - Macros", () => {
     });
   });
 
-  /*test("renders macro cards fetched from Firestore", async () => {
-  const { getByText } = render(<ProgressTracker />);
+  test("renders macro cards fetched from Firestore", async () => {
+    const { getByText , debug} = render(<ProgressTracker />);
 
-  fireEvent.press(getByText("Macros"));
+    fireEvent.press(getByText("Macros"));
 
-  // Wait for macro cards to appear
-  await waitFor(() => {
-    expect(getByText("Cut Day 1")).toBeTruthy();
+    // Wait for macro cards to appear
+    const cut = getByText("Cut Day 1")
+    expect(cut).toBeTruthy();
+    await act(() => {
+      fireEvent.press(cut);
+    })
+    const bulk = getByText("Bulk Day 1")
     expect(getByText("Bulk Day 1")).toBeTruthy();
-    expect(getByText("Calories: 1800 cal")).toBeTruthy();
-    expect(getByText("Protein: 140g, Carbs: 100g, Fats: 60g")).toBeTruthy();
+    await act(() => {
+      fireEvent.press(bulk);
+    })
+    expect(getByText(/Calories: 1800 cal/i)).toBeTruthy();
+    expect(getByText(/protein: 140 g/i)).toBeTruthy();
+    expect(getByText(/carbs: 100 g/i)).toBeTruthy();
+    expect(getByText(/fats: 60 g/i)).toBeTruthy();
   });
-});*/
 
-  /*test("editing an existing macro entry updates Firestore", async () => {
-    const { getByText, getByTestId, getByDisplayValue } = render(
+  test("editing an existing macro entry updates Firestore", async () => {
+    const { getByText, getByTestId, getByDisplayValue, debug } = render(
       <ProgressTracker />
     );
     fireEvent.press(getByText("Macros"));
 
     // Open the macro edit modal for "Cut Day 1"
     const macroTitle = await waitFor(() => getByText("Cut Day 1"));
-    fireEvent.press(macroTitle); // Assuming clicking the card opens the edit modal
+    fireEvent.press(macroTitle);
+    act(() => {
+      fireEvent.press(getByTestId(/edit-button-macro1/i))
+    })
 
-    const caloriesInput = getByDisplayValue("1800");
-    fireEvent.changeText(caloriesInput, "1900");
-
-    fireEvent.press(getByText("Update"));
+    const caloriesInput = await waitFor(() => getByDisplayValue(/1800/i));
+    act(() => {
+      fireEvent.changeText(caloriesInput, "1900");
+    })
+    debug()
+    act(() => {
+      fireEvent.press(getByText(/Save/i));
+    })
 
     const firestore = require("firebase/firestore");
     await waitFor(() => {
@@ -780,7 +819,7 @@ describe("ProgressTracker Component - Macros", () => {
       const docRef = firestore.deleteDoc.mock.calls[0][0];
       expect(docRef.id).toBe("macro1");
     });
-  });*/
+  });
 
   test("empty macro input fields show alert on submit", async () => {
     const { getByText, getByPlaceholderText } = render(<ProgressTracker />);
