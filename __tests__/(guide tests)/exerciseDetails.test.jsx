@@ -13,10 +13,6 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
   clear: jest.fn(),
 }));
 
-jest.mock("../../components/themedContext", () => ({
-  useThemeContext: () => ({ theme: "light", setTheme: jest.fn() }),
-}));
-
 jest.mock("firebase/app", () => ({
   initializeApp: jest.fn(() => ({})),
 }));
@@ -123,5 +119,4 @@ describe("ExerciseDetails Screen", () => {
     expect(mockedImage).toBeTruthy();
     expect(getByText(/exerciseId=1234/)).toBeTruthy();
   });
-  
 });

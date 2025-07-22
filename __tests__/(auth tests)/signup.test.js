@@ -1,5 +1,6 @@
 import { render, fireEvent, act, waitFor } from "@testing-library/react-native";
 import { Alert } from "react-native";
+import Signup from "../../app/(auth)/signup";
 
 const mockReplace = jest.fn();
 
@@ -50,12 +51,6 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
   removeItem: jest.fn(),
   clear: jest.fn(),
 }));
-
-jest.mock("../../components/themedContext", () => ({
-  useThemeContext: () => ({ theme: "light", setTheme: jest.fn() }),
-}));
-
-import Signup from "../../app/(auth)/signup";
 
 jest.spyOn(Alert, "alert");
 

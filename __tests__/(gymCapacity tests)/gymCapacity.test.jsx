@@ -6,9 +6,8 @@ const fetchMock = jest.fn(() =>
       Promise.resolve({
         timestamp: { _seconds: 1719300000 },
         gym_capacity: [
-          {},
-          { name: "USC", capacity: 35, maxCapacity: 50 },
-          { name: "UTown", capacity: 100, maxCapacity: 120 },
+          { name: "UTown", capacity: 100, maxCapacity: 110 }, 
+          { name: "USC", capacity: 35, maxCapacity: 120 }, 
         ],
       }),
   })
@@ -28,10 +27,6 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
   getItem: jest.fn(),
   removeItem: jest.fn(),
   clear: jest.fn(),
-}));
-
-jest.mock("../../components/themedContext", () => ({
-  useThemeContext: () => ({ theme: "light", setTheme: jest.fn() }),
 }));
 
 const mockPush = jest.fn();
