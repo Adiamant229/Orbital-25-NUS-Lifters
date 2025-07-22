@@ -1501,6 +1501,7 @@ const ProgressTracker = () => {
             </TouchableOpacity>
 
             <DropDownPicker
+              testID="weightDropdown"
               open={openYearDropdown}
               value={selectedYear}
               items={yearOptions}
@@ -1618,6 +1619,7 @@ const ProgressTracker = () => {
                         />
                       </TouchableOpacity>
                       <TouchableOpacity
+                        testID={`delete-button-${w.id}`}
                         onPress={() => handleDeleteWeight(w.id)}
                       >
                         <Ionicons
