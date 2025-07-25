@@ -810,7 +810,7 @@ describe("ProgressTracker Component - Macros", () => {
     const macroTitle = await waitFor(() => getByText("Cut Day 1"));
     fireEvent.press(macroTitle);
 
-    const deleteButton = getByText("Delete"); // Assuming a delete button exists in the modal
+    const deleteButton = getByTestId("delete-button-macro1"); // Assuming a delete button exists in the modal
     fireEvent.press(deleteButton);
 
     const firestore = require("firebase/firestore");
