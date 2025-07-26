@@ -32,10 +32,7 @@ const InnerLayout = () => {
           name="(guide)"
           options={{ title: "Gym Info and Guide" }}
         />
-        <Stack.Screen
-          name="(exercises)"
-          options={{ title: "" }}
-        />
+        <Stack.Screen name="(exercises)" options={{ title: "" }} />
         <Stack.Screen name="(profiles)" options={{ title: "" }} />
         <Stack.Screen name="(forum)" options={{ title: "" }} />
       </Stack>

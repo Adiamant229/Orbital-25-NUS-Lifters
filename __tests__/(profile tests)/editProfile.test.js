@@ -37,22 +37,22 @@ jest.mock("expo-router", () => ({
 
 jest.mock("expo-image-picker", () => ({
   requestMediaLibraryPermissionsAsync: jest.fn(() =>
-    Promise.resolve({ granted: true })
+    Promise.resolve({ granted: true }),
   ),
   requestCameraPermissionsAsync: jest.fn(() =>
-    Promise.resolve({ granted: true })
+    Promise.resolve({ granted: true }),
   ),
   launchImageLibraryAsync: jest.fn(() =>
     Promise.resolve({
       canceled: false,
       assets: [{ uri: "library-uri" }],
-    })
+    }),
   ),
   launchCameraAsync: jest.fn(() =>
     Promise.resolve({
       canceled: false,
       assets: [{ uri: "camera-uri" }],
-    })
+    }),
   ),
   Images: "Images",
 }));
@@ -67,7 +67,7 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
 global.fetch = jest.fn(() =>
   Promise.resolve({
     blob: () => Promise.resolve(new Blob(["test"])),
-  })
+  }),
 );
 
 describe("EditProfile Component", () => {
@@ -119,7 +119,7 @@ describe("EditProfile Component", () => {
 
     expect(Alert.alert).toHaveBeenCalledWith(
       "Validation Error",
-      "Name cannot be empty."
+      "Name cannot be empty.",
     );
   });
 
@@ -137,7 +137,7 @@ describe("EditProfile Component", () => {
 
     expect(Alert.alert).toHaveBeenCalledWith(
       "Validation Error",
-      "Height must be a number."
+      "Height must be a number.",
     );
   });
 
@@ -230,7 +230,7 @@ describe("EditProfile Component", () => {
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith(
         "Error",
-        "Could not load profile data."
+        "Could not load profile data.",
       );
     });
   });
@@ -247,7 +247,7 @@ describe("EditProfile Component", () => {
 
     fireEvent.changeText(
       getByPlaceholderText("Enter your name"),
-      "Changed Name"
+      "Changed Name",
     );
 
     Alert.alert.mockImplementationOnce((title, msg, buttons) => {
@@ -260,7 +260,7 @@ describe("EditProfile Component", () => {
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith(
         "Error",
-        "Failed to save profile."
+        "Failed to save profile.",
       );
     });
   });
@@ -278,7 +278,7 @@ describe("EditProfile Component", () => {
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith(
         "Upload Error",
-        "Failed to upload profile picture."
+        "Failed to upload profile picture.",
       );
     });
   });
@@ -304,7 +304,7 @@ describe("EditProfile Component", () => {
 
     expect(Alert.alert).toHaveBeenCalledWith(
       "Permission denied",
-      "Allow access to photos."
+      "Allow access to photos.",
     );
   });
 
@@ -325,7 +325,7 @@ describe("EditProfile Component", () => {
 
     expect(Alert.alert).toHaveBeenCalledWith(
       "Permission denied",
-      "Allow access to camera."
+      "Allow access to camera.",
     );
   });
 
@@ -374,7 +374,7 @@ describe("EditProfile Component", () => {
 
     expect(Alert.alert).toHaveBeenCalledWith(
       "Validation Error",
-      "Weight must be a number."
+      "Weight must be a number.",
     );
   });
 
@@ -393,7 +393,7 @@ describe("EditProfile Component", () => {
 
     expect(Alert.alert).toHaveBeenCalledWith(
       "Validation Error",
-      "Age must be a number."
+      "Age must be a number.",
     );
   });
 });

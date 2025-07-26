@@ -16,9 +16,9 @@ jest.mock("react-native-dropdown-picker", () => {
         React.createElement(
           Text,
           { key: item.value, onPress: () => props.setValue(item.value) },
-          item.label
-        )
-      )
+          item.label,
+        ),
+      ),
     );
 });
 
@@ -60,7 +60,7 @@ jest.mock("firebase/firestore", () => ({
     Promise.resolve({
       exists: () => true,
       data: () => mockThread,
-    })
+    }),
   ),
   deleteDoc: jest.fn(() => Promise.resolve()),
   updateDoc: jest.fn(() => Promise.resolve()),
@@ -154,7 +154,7 @@ describe("Forum Page", () => {
     expect(Alert.alert).toHaveBeenCalled();
 
     const alertCall = Alert.alert.mock.calls.find(
-      ([title]) => title === "Delete Thread"
+      ([title]) => title === "Delete Thread",
     );
     const buttons = alertCall[2];
     const deleteButton = buttons.find((btn) => btn.text === "Delete");
@@ -166,7 +166,7 @@ describe("Forum Page", () => {
     expect(deleteDoc).toHaveBeenCalled();
     expect(Alert.alert).toHaveBeenCalledWith(
       "Deleted",
-      "Thread removed successfully."
+      "Thread removed successfully.",
     );
   });
 
@@ -180,7 +180,7 @@ describe("Forum Page", () => {
     expect(Alert.alert).toHaveBeenCalled();
 
     const alertCall = Alert.alert.mock.calls.find(
-      ([title]) => title === "Delete Thread"
+      ([title]) => title === "Delete Thread",
     );
     const buttons = alertCall[2];
     const deleteButton = buttons.find((btn) => btn.text === "Delete");
@@ -218,7 +218,7 @@ describe("Forum Page", () => {
       expect(Alert.alert).toHaveBeenCalledWith(
         "Delete Thread",
         "Are you sure you want to delete this thread?",
-        expect.any(Array)
+        expect.any(Array),
       );
 
       const buttons =
@@ -236,7 +236,7 @@ describe("Forum Page", () => {
       expect(deleteDoc).toHaveBeenCalled();
       expect(Alert.alert).toHaveBeenCalledWith(
         "Deleted",
-        "Thread removed successfully."
+        "Thread removed successfully.",
       );
     });
 
@@ -261,7 +261,7 @@ describe("Forum Page", () => {
       expect(deleteDoc).toHaveBeenCalled();
       expect(Alert.alert).toHaveBeenCalledWith(
         "Deleted",
-        "Thread removed successfully."
+        "Thread removed successfully.",
       );
     });
 
@@ -307,12 +307,12 @@ describe("Forum Page", () => {
 
       expect(console.warn).toHaveBeenCalledWith(
         "Failed to delete media file:",
-        expect.any(Error)
+        expect.any(Error),
       );
       expect(deleteDoc).toHaveBeenCalled();
       expect(Alert.alert).toHaveBeenCalledWith(
         "Deleted",
-        "Thread removed successfully."
+        "Thread removed successfully.",
       );
     });
 
@@ -335,11 +335,11 @@ describe("Forum Page", () => {
 
       expect(Alert.alert).toHaveBeenCalledWith(
         "Error",
-        "Could not delete thread."
+        "Could not delete thread.",
       );
       expect(console.error).toHaveBeenCalledWith(
         "Error deleting thread: ",
-        expect.any(Error)
+        expect.any(Error),
       );
     });
   });

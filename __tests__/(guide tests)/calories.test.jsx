@@ -1,6 +1,5 @@
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
-import Calories from "../../app/(guide)/calories";
-import {
+import Calories, {
   katchBMRCalc,
   calculateActivityLevel,
 } from "../../app/(guide)/calories";
@@ -66,7 +65,7 @@ describe("Calories Screen", () => {
 
   test("calculates BMR with valid Mifflin inputs", async () => {
     const { getByText, getByPlaceholderText, queryByText } = render(
-      <Calories />
+      <Calories />,
     );
     fireEvent.changeText(getByPlaceholderText("Enter weight"), "70");
     fireEvent.changeText(getByPlaceholderText("Enter height"), "175");
@@ -139,7 +138,7 @@ describe("Calories Screen", () => {
 
   test("hides results on invalid input after valid BMR", async () => {
     const { getByText, getByPlaceholderText, queryByText } = render(
-      <Calories />
+      <Calories />,
     );
     fireEvent.changeText(getByPlaceholderText("Enter weight"), "70");
     fireEvent.changeText(getByPlaceholderText("Enter height"), "175");

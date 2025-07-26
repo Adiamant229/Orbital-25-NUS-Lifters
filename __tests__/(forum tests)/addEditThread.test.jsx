@@ -13,22 +13,22 @@ jest.mock("expo-av", () => {
 
 jest.mock("expo-image-picker", () => ({
   requestMediaLibraryPermissionsAsync: jest.fn(() =>
-    Promise.resolve({ status: "granted" })
+    Promise.resolve({ status: "granted" }),
   ),
   launchImageLibraryAsync: jest.fn(() =>
     Promise.resolve({
       canceled: false,
       assets: [{ uri: "new-image-uri", type: "image" }],
-    })
+    }),
   ),
   requestCameraPermissionsAsync: jest.fn(() =>
-    Promise.resolve({ status: "granted" })
+    Promise.resolve({ status: "granted" }),
   ),
   launchCameraAsync: jest.fn(() =>
     Promise.resolve({
       canceled: false,
       assets: [{ uri: "camera-uri", type: "image" }],
-    })
+    }),
   ),
 }));
 
@@ -60,7 +60,7 @@ jest.mock("firebase/firestore", () => ({
   collection: jest.fn(),
   doc: jest.fn(() => ({})),
   getDoc: jest.fn(() =>
-    Promise.resolve({ exists: () => true, data: () => ({}) })
+    Promise.resolve({ exists: () => true, data: () => ({}) }),
   ),
   addDoc: jest.fn(() => Promise.resolve({ id: "mockId" })),
   updateDoc: jest.fn(() => Promise.resolve()),
@@ -91,7 +91,7 @@ beforeAll(() => {
   global.fetch = jest.fn(() =>
     Promise.resolve({
       blob: jest.fn(() => Promise.resolve("mockBlob")),
-    })
+    }),
   );
   global.Blob = class {
     constructor(parts, options) {
@@ -131,7 +131,7 @@ describe("AddEditThread Component", () => {
 
     expect(Alert.alert).toHaveBeenCalledWith(
       "Missing Fields",
-      "Title and content are required."
+      "Title and content are required.",
     );
   });
 
@@ -141,7 +141,7 @@ describe("AddEditThread Component", () => {
     fireEvent.changeText(getByPlaceholderText("Thread Title"), "Test Title");
     fireEvent.changeText(
       getByPlaceholderText("Thread content..."),
-      "Test content"
+      "Test content",
     );
 
     Alert.alert.mockImplementation((title, message, buttons) => {
@@ -183,21 +183,21 @@ describe("AddEditThread Component", () => {
     });
 
     const { getByText, getByPlaceholderText, queryByTestId } = render(
-      <AddEditThread />
+      <AddEditThread />,
     );
 
     await waitFor(() =>
       expect(getByPlaceholderText("Thread Title").props.value).toBe(
-        mockThreadData.title
-      )
+        mockThreadData.title,
+      ),
     );
 
     expect(getByText("Edit Thread")).toBeTruthy();
     expect(getByPlaceholderText("Thread Title").props.value).toBe(
-      mockThreadData.title
+      mockThreadData.title,
     );
     expect(getByPlaceholderText("Thread content...").props.value).toBe(
-      mockThreadData.content
+      mockThreadData.content,
     );
   });
 
@@ -213,7 +213,7 @@ describe("AddEditThread Component", () => {
     fireEvent.changeText(getByPlaceholderText("Thread Title"), "Updated Title");
     fireEvent.changeText(
       getByPlaceholderText("Thread content..."),
-      "Updated content"
+      "Updated content",
     );
 
     Alert.alert.mockImplementation((title, message, buttons) => {
@@ -243,7 +243,7 @@ describe("AddEditThread Component", () => {
     expect(Alert.alert).toHaveBeenCalledWith(
       "Discard Changes?",
       "You have unsaved changes. Are you sure?",
-      expect.any(Array)
+      expect.any(Array),
     );
   });
 
@@ -315,7 +315,9 @@ describe("AddEditThread Component", () => {
     const { getByText, getByPlaceholderText } = render(<AddEditThread />);
 
     await waitFor(() =>
-      expect(getByPlaceholderText("Thread Title").props.value).toBe("Old Title")
+      expect(getByPlaceholderText("Thread Title").props.value).toBe(
+        "Old Title",
+      ),
     );
 
     await act(async () => {
@@ -361,8 +363,8 @@ describe("AddEditThread Component", () => {
 
     await waitFor(() =>
       expect(getByPlaceholderText("Thread Title").props.value).toBe(
-        "With Media"
-      )
+        "With Media",
+      ),
     );
 
     expect(getByTestId("thread-image")).toBeTruthy();

@@ -37,7 +37,7 @@ global.fetch = jest.fn(() =>
           },
         ],
       }),
-  })
+  }),
 );
 
 describe("Macro Component", () => {
@@ -56,7 +56,7 @@ describe("Macro Component", () => {
 
   test("opens and closes search modal", async () => {
     const { getByText, getByPlaceholderText, queryByPlaceholderText } = render(
-      <Macro />
+      <Macro />,
     );
 
     fireEvent.press(getByText("Search Food"));
@@ -96,7 +96,7 @@ describe("Macro Component", () => {
           fat: 3.6,
           carbs: 0,
         },
-      ])
+      ]),
     );
 
     const { getByDisplayValue, getByText } = render(<Macro />);
@@ -126,7 +126,7 @@ describe("Macro Component", () => {
           fat: 3.6,
           carbs: 0,
         },
-      ])
+      ]),
     );
 
     const { getByText, queryByText, getByTestId } = render(<Macro />);
@@ -144,7 +144,7 @@ describe("Macro Component", () => {
     await waitFor(() => {
       expect(AsyncStorage.setItem).toHaveBeenCalledWith(
         "mealList",
-        JSON.stringify([])
+        JSON.stringify([]),
       );
     });
   });

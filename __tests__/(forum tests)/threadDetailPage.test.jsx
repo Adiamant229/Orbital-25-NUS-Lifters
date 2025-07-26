@@ -33,7 +33,7 @@ jest.mock("firebase/auth", () => ({
 
 const mockDoc = jest.fn((dbArg, ...pathSegments) => pathSegments.join("/"));
 const mockCollection = jest.fn((dbArg, ...pathSegments) =>
-  pathSegments.join("/")
+  pathSegments.join("/"),
 );
 const mockOnSnapshot = jest.fn();
 const mockUpdateDoc = jest.fn();
@@ -256,7 +256,7 @@ describe("ThreadDetailPage", () => {
     const mockAlert = jest.spyOn(Alert, "alert").mockImplementation(() => {});
 
     const { getByText, getByTestId, getByPlaceholderText } = render(
-      <ThreadDetailPage />
+      <ThreadDetailPage />,
     );
 
     await waitFor(() => getByTestId("addCommentButton"));
@@ -264,7 +264,7 @@ describe("ThreadDetailPage", () => {
 
     fireEvent.changeText(
       getByPlaceholderText("Write your comment here..."),
-      "   "
+      "   ",
     );
     fireEvent.press(getByText("Post"));
 
@@ -276,7 +276,7 @@ describe("ThreadDetailPage", () => {
   test("shows discard changes alert if editing with unsaved changes", async () => {
     const mockAlert = jest.spyOn(Alert, "alert");
     const { getByText, getByTestId, getByPlaceholderText } = render(
-      <ThreadDetailPage />
+      <ThreadDetailPage />,
     );
 
     await waitFor(() => getByTestId("addCommentButton"));
@@ -284,7 +284,7 @@ describe("ThreadDetailPage", () => {
 
     fireEvent.changeText(
       getByPlaceholderText("Write your comment here..."),
-      "unsaved"
+      "unsaved",
     );
 
     fireEvent.press(getByText("Cancel"));
@@ -292,7 +292,7 @@ describe("ThreadDetailPage", () => {
     expect(mockAlert).toHaveBeenCalledWith(
       "Discard changes?",
       "You have unsaved changes.",
-      expect.any(Array)
+      expect.any(Array),
     );
   });
 
@@ -357,7 +357,7 @@ describe("ThreadDetailPage", () => {
         {
           likes: 3,
           likedBy: ["user123"],
-        }
+        },
       );
     });
   });
@@ -404,7 +404,7 @@ describe("ThreadDetailPage", () => {
         expect.objectContaining({
           likes: 2,
           likedBy: expect.arrayContaining(["user123"]),
-        })
+        }),
       );
     });
   });
@@ -451,7 +451,7 @@ describe("ThreadDetailPage", () => {
         expect.objectContaining({
           likes: 1,
           likedBy: expect.not.arrayContaining(["user123"]),
-        })
+        }),
       );
     });
   });
@@ -461,7 +461,7 @@ describe("ThreadDetailPage", () => {
 
     jest.spyOn(Alert, "alert").mockImplementation((title, message, buttons) => {
       const confirmButton = buttons.find(
-        (button) => button.text === "Post" || button.text === "Save"
+        (button) => button.text === "Post" || button.text === "Save",
       );
       if (confirmButton && confirmButton.onPress) {
         confirmButton.onPress();
@@ -504,7 +504,7 @@ describe("ThreadDetailPage", () => {
 
     fireEvent.changeText(
       getByPlaceholderText("Write your comment here..."),
-      "New comment"
+      "New comment",
     );
 
     fireEvent.press(getByText("Post"));
@@ -549,7 +549,7 @@ describe("ThreadDetailPage", () => {
     });
 
     const { getByTestId, getByText, queryByTestId } = render(
-      <ThreadDetailPage />
+      <ThreadDetailPage />,
     );
 
     await waitFor(() => getByTestId("addCommentButton"));
@@ -630,7 +630,7 @@ describe("ThreadDetailPage", () => {
 
     await waitFor(() => {
       expect(mockDeleteDoc).toHaveBeenCalledWith(
-        "threads/testThreadId/comments/commentDel"
+        "threads/testThreadId/comments/commentDel",
       );
     });
 

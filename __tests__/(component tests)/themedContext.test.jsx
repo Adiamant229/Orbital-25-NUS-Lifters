@@ -34,17 +34,18 @@ describe("ThemeProvider", () => {
     const { getByTestId } = render(
       <ThemeProvider>
         <TestComponent />
-      </ThemeProvider>
+      </ThemeProvider>,
     );
 
     await waitFor(() => {
       expect(getByTestId("theme").props.children).toBe("dark");
     });
 
+    // Allow setItem to be called but ensure last call is 'dark'
     await waitFor(() => {
       expect(AsyncStorage.setItem).toHaveBeenLastCalledWith(
         "user-theme",
-        "dark"
+        "dark",
       );
     });
   });
@@ -56,7 +57,7 @@ describe("ThemeProvider", () => {
     const { getByTestId } = render(
       <ThemeProvider>
         <TestComponent />
-      </ThemeProvider>
+      </ThemeProvider>,
     );
 
     await waitFor(() => {
@@ -75,7 +76,7 @@ describe("ThemeProvider", () => {
     const { getByTestId } = render(
       <ThemeProvider>
         <TestComponent />
-      </ThemeProvider>
+      </ThemeProvider>,
     );
 
     await waitFor(() => {

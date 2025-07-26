@@ -10,7 +10,7 @@ const fetchMock = jest.fn(() =>
           { name: "USC", capacity: 35, maxCapacity: 120 }, 
         ],
       }),
-  })
+  }),
 );
 
 jest.mock("react-native-safe-area-context", () => {
