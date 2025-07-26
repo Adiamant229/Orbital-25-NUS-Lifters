@@ -20,10 +20,6 @@ const firebaseConfig = {
   measurementId: "G-QPDRWZTXRQ",
 };
 
-/*const APIKey = "4j4b8esUycdw4DpH2UamWkubDirsyaQ2Cwe7jHrI";
-const exerciseAPIKey = "e16a490ab1msh1061dbe8d947e34p190f97jsn64f881f442d0";
-export {exerciseAPIKey, APIKey}; */
-
 const app = initializeApp(firebaseConfig);
 
 const auth =
