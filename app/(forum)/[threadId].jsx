@@ -285,6 +285,17 @@ const ThreadDetailPage = () => {
           useNativeControls
           style={{ height: 200, marginTop: 10 }}
           resizeMode="contain"
+          onPlaybackStatusUpdate={async (status) => {
+            if (status.didJustFinish && !status.isLooping) {
+              try {
+                await videoRef.current?.setPositionAsync(0, {
+                  shouldPlay: false,
+                });
+              } catch (e) {
+                console.warn("Failed to reset video", e);
+              }
+            }
+          }}
         />
       ) : null}
 
