@@ -1,7 +1,6 @@
-import { View } from "react-native";
+import { View, StyleSheet, Dimensions, ScrollView } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import ThemedText from "../../components/themedText";
-import { StyleSheet, Dimensions, ScrollView } from "react-native";
 import { Image } from "expo-image";
 import ThemedView from "../../components/themedView";
 import Spacer from "../../components/spacer";
@@ -20,7 +19,6 @@ export default function ExceriseDetails() {
   const secondaryMuscles = capWords(
     (params?.secondaryMuscles || "").split(","),
   );
-  console.log(params.instructions)
   const instructions = JSON.parse(decodeURIComponent(params?.instructions));
 
   return (

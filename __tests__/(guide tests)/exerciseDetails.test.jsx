@@ -30,7 +30,7 @@ jest.mock("firebase/auth", () => ({
     callback({
       uid: "test-user-id",
       email: "user@example.com",
-    })
+    }),
   ),
 }));
 
@@ -38,7 +38,7 @@ jest.mock("firebase/firestore", () => ({
   getFirestore: jest.fn(() => ({})),
   doc: jest.fn(),
   getDoc: jest.fn(() =>
-    Promise.resolve({ exists: () => true, data: () => ({}) })
+    Promise.resolve({ exists: () => true, data: () => ({}) }),
   ),
   setDoc: jest.fn(),
   updateDoc: jest.fn(),
@@ -86,7 +86,7 @@ describe("ExerciseDetails Screen", () => {
         "Start in a high plank position",
         "Lower your body until your chest nearly touches the floor",
         "Push yourself back up to the starting position",
-      ])
+      ]),
     ),
   };
 
@@ -106,10 +106,10 @@ describe("ExerciseDetails Screen", () => {
 
     expect(getByText("1: Start in a high plank position")).toBeTruthy();
     expect(
-      getByText("2: Lower your body until your chest nearly touches the floor")
+      getByText("2: Lower your body until your chest nearly touches the floor"),
     ).toBeTruthy();
     expect(
-      getByText("3: Push yourself back up to the starting position")
+      getByText("3: Push yourself back up to the starting position"),
     ).toBeTruthy();
   });
 

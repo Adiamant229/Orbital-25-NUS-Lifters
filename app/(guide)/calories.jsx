@@ -1,4 +1,4 @@
-//react and expo imports 
+//react and expo imports
 import {
   KeyboardAvoidingView,
   Modal,
@@ -17,7 +17,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
-//themed components 
+//themed components
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import ThemedTextInput from "../../components/themedTextInput";
@@ -78,7 +78,7 @@ const Calories = () => {
   const [physicalActivityLevel, setPhysicalActivityLevel] = useState("1");
   const setPALTemp = (x) => {
     setPhysicalActivityLevel(
-      x.replace(/[^0-9.]/g, "").replace(/(\..*?)\..*/g, "$1")
+      x.replace(/[^0-9.]/g, "").replace(/(\..*?)\..*/g, "$1"),
     );
   };
 
@@ -150,7 +150,7 @@ const Calories = () => {
         6.25 * height -
         5 * age +
         ((sex + 1) % 2) * -161 +
-        (sex % 2) * 5
+        (sex % 2) * 5,
     );
   };
 
@@ -407,7 +407,7 @@ const Calories = () => {
                     placeholderTextColor="grey"
                   />
                   {errFat && (
-                    <ThemedText style={[styles.errorTxt, { marginLeft: 5  }]}>
+                    <ThemedText style={[styles.errorTxt, { marginLeft: 5 }]}>
                       Please input valid fat percentage
                     </ThemedText>
                   )}
@@ -644,7 +644,7 @@ const Calories = () => {
                             if (leisureVal === 0) setErrLeisure(true);
                             if (workVal !== 0 && leisureVal !== 0) {
                               setPALTemp(
-                                calculateActivityLevel(workVal, leisureVal)
+                                calculateActivityLevel(workVal, leisureVal),
                               );
                               setModalVisible(false);
                             }
@@ -745,7 +745,7 @@ const Calories = () => {
                     // Calculate TDEE if toggled
                     if (toggletdee) {
                       const newTdee = Math.round(
-                        newBmr * physicalActivityLevel
+                        newBmr * physicalActivityLevel,
                       );
                       setTdee(newTdee);
                       setToggletdeeres(true);

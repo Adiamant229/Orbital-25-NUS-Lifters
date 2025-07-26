@@ -48,9 +48,9 @@ jest.mock("react-native-dropdown-picker", () => {
               }
             },
           },
-          React.createElement(Text, null, item.label)
-        )
-      )
+          React.createElement(Text, null, item.label),
+        ),
+      ),
     );
 });
 

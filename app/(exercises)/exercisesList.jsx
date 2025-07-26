@@ -51,46 +51,45 @@ export default function ExercisesList() {
     fetchData();
   }, []);
 
-return (
-  <ThemedView style={styles.container}>
-    <ThemedText style={styles.heading}>
-      {capWords(query?.split(" ")).join(" ")} exercises
-    </ThemedText>
+  return (
+    <ThemedView style={styles.container}>
+      <ThemedText style={styles.heading}>
+        {capWords(query?.split(" ")).join(" ")} exercises
+      </ThemedText>
 
-    <FlatList
-      data={searchRes}
-      keyExtractor={(item) => item.id}
-      contentContainerStyle={{ width: "100%", paddingBottom: 20 }}
-      renderItem={({ item }) => (
-        <ThemedButton
-          style={styles.results}
-          onPress={() => {
-            router.push({
-              pathname: "/exerciseDetails",
-              params: {
-                name: item?.name,
-                id: item?.id,
-                equipment: item?.equipment,
-                description: item?.description,
-                bodyPart: item?.bodyPart,
-                secondaryMuscles: item?.secondaryMuscles,
-                instructions: encodeURIComponent(
-                  JSON.stringify(item?.instructions)
-                ),
-              },
-            });
-          }}
-        >
-          <ThemedText style={{ color: "white" }}>
-            {capWords(item.name.split(" ")).join(" ")}
-          </ThemedText>
-        </ThemedButton>
-      )}
-      ItemSeparatorComponent={() => <View style={styles.separator} />}
-    />
-  </ThemedView>
-);
-
+      <FlatList
+        data={searchRes}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{ width: "100%", paddingBottom: 20 }}
+        renderItem={({ item }) => (
+          <ThemedButton
+            style={styles.results}
+            onPress={() => {
+              router.push({
+                pathname: "/exerciseDetails",
+                params: {
+                  name: item?.name,
+                  id: item?.id,
+                  equipment: item?.equipment,
+                  description: item?.description,
+                  bodyPart: item?.bodyPart,
+                  secondaryMuscles: item?.secondaryMuscles,
+                  instructions: encodeURIComponent(
+                    JSON.stringify(item?.instructions),
+                  ),
+                },
+              });
+            }}
+          >
+            <ThemedText style={{ color: "white" }}>
+              {capWords(item.name.split(" ")).join(" ")}
+            </ThemedText>
+          </ThemedButton>
+        )}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
+      />
+    </ThemedView>
+  );
 }
 
 const styles = StyleSheet.create({

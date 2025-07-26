@@ -12,7 +12,7 @@ jest.mock("expo-router", () => {
       React.createElement(
         "Text",
         { onPress: () => mockReplace(href) },
-        children
+        children,
       ),
     useRouter: () => ({
       replace: mockReplace,
@@ -26,7 +26,7 @@ jest.mock("../../firebaseConfig", () => ({
 }));
 
 const mockCreateUserWithEmailAndPassword = jest.fn(() =>
-  Promise.resolve({ user: { uid: "test-uid" } })
+  Promise.resolve({ user: { uid: "test-uid" } }),
 );
 const mockUpdateProfile = jest.fn(() => Promise.resolve());
 
@@ -76,8 +76,8 @@ test("shows alert if username is empty", async () => {
   await waitFor(() =>
     expect(Alert.alert).toHaveBeenCalledWith(
       "Error",
-      "Please enter your username."
-    )
+      "Please enter your username.",
+    ),
   );
 });
 
@@ -89,8 +89,8 @@ test("shows alert if email or password is empty", async () => {
   await waitFor(() =>
     expect(Alert.alert).toHaveBeenCalledWith(
       "Error",
-      "Please enter both email and password."
-    )
+      "Please enter both email and password.",
+    ),
   );
 });
 
@@ -101,12 +101,15 @@ test("shows alert if passwords do not match", async () => {
   fireEvent.changeText(getByPlaceholderText("Password"), "password123");
   fireEvent.changeText(
     getByPlaceholderText("Confirm Password"),
-    "different123"
+    "different123",
   );
   fireEvent.press(getByText("Create"));
 
   await waitFor(() =>
-    expect(Alert.alert).toHaveBeenCalledWith("Error", "Passwords do not match.")
+    expect(Alert.alert).toHaveBeenCalledWith(
+      "Error",
+      "Passwords do not match.",
+    ),
   );
 });
 
@@ -128,7 +131,7 @@ test("shows Firebase alert for auth/invalid-email", async () => {
   await waitFor(() => {
     expect(Alert.alert).toHaveBeenCalledWith(
       "Sign Up Failed",
-      "Please enter a valid email address."
+      "Please enter a valid email address.",
     );
   });
 });
@@ -151,7 +154,7 @@ test("shows Firebase alert for auth/weak-password", async () => {
   await waitFor(() => {
     expect(Alert.alert).toHaveBeenCalledWith(
       "Sign Up Failed",
-      "Password should be at least 6 characters."
+      "Password should be at least 6 characters.",
     );
   });
 });
@@ -174,8 +177,8 @@ test("shows Firebase alert if email is already in use", async () => {
   await waitFor(() =>
     expect(Alert.alert).toHaveBeenCalledWith(
       "Sign Up Failed",
-      "This email address is already in use."
-    )
+      "This email address is already in use.",
+    ),
   );
 });
 
@@ -194,16 +197,16 @@ test("successful signup calls Firebase methods and shows success alert", async (
     expect(mockCreateUserWithEmailAndPassword).toHaveBeenCalledWith(
       expect.anything(),
       "test@example.com",
-      "password123"
+      "password123",
     );
     expect(mockUpdateProfile).toHaveBeenCalledWith(
       { uid: "test-uid" },
-      { displayName: "testuser" }
+      { displayName: "testuser" },
     );
     expect(mockDoc).toHaveBeenCalledWith(
       expect.anything(),
       "users",
-      "test-uid"
+      "test-uid",
     );
     expect(mockSetDoc).toHaveBeenCalled();
     expect(Alert.alert).toHaveBeenCalledWith("Success", "Account created!");
@@ -227,7 +230,7 @@ test("handles Firebase signup error correctly", async () => {
   await waitFor(() => {
     expect(Alert.alert).toHaveBeenCalledWith(
       "Sign Up Failed",
-      "This email address is already in use."
+      "This email address is already in use.",
     );
   });
 });
@@ -249,7 +252,7 @@ test("handles unknown Firebase error gracefully", async () => {
   await waitFor(() => {
     expect(Alert.alert).toHaveBeenCalledWith(
       "Sign Up Failed",
-      "An error occurred during sign up."
+      "An error occurred during sign up.",
     );
   });
 });

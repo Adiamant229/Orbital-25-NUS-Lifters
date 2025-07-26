@@ -30,7 +30,7 @@ jest.mock("firebase/auth", () => ({
     callback({
       uid: "test-user-id",
       email: "user@example.com",
-    })
+    }),
   ),
 }));
 
@@ -38,7 +38,7 @@ jest.mock("firebase/firestore", () => ({
   getFirestore: jest.fn(() => ({})),
   doc: jest.fn(),
   getDoc: jest.fn(() =>
-    Promise.resolve({ exists: () => true, data: () => ({}) })
+    Promise.resolve({ exists: () => true, data: () => ({}) }),
   ),
   setDoc: jest.fn(),
   updateDoc: jest.fn(),
@@ -71,6 +71,7 @@ describe("ExercisesList Component", () => {
   test("renders exercises fetched from API and caches them", async () => {
     useLocalSearchParams.mockReturnValue({ mode: "bodyPart", query: "chest" });
 
+    // Mock AsyncStorage returns no cache
     AsyncStorage.getItem.mockResolvedValue("{}");
 
     global.fetch = jest.fn(() =>
@@ -87,7 +88,7 @@ describe("ExercisesList Component", () => {
               instructions: ["step 1", "step 2"],
             },
           ]),
-      })
+      }),
     );
 
     const { getByText } = render(<ExercisesList />);
@@ -98,7 +99,7 @@ describe("ExercisesList Component", () => {
 
     expect(AsyncStorage.setItem).toHaveBeenCalledWith(
       "bodyPart",
-      expect.stringContaining('"chest"')
+      expect.stringContaining('"chest"'),
     );
   });
 
@@ -153,7 +154,7 @@ describe("ExercisesList Component", () => {
               instructions: ["step 1", "step 2"],
             },
           ]),
-      })
+      }),
     );
 
     const { getByText } = render(<ExercisesList />);

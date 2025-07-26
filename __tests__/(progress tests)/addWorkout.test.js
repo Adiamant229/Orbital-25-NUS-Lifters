@@ -72,7 +72,7 @@ describe("AddWorkout Component", () => {
             { name: "Squat" },
             { name: "Deadlift" },
           ]),
-      })
+      }),
     );
   });
 
@@ -104,13 +104,13 @@ describe("AddWorkout Component", () => {
 
     fireEvent.changeText(
       getByPlaceholderText("Add in workout title"),
-      "Workout"
+      "Workout",
     );
 
     fireEvent.press(getByText("Submit"));
 
     expect(alertSpy).toHaveBeenCalledWith(
-      "Please select a workout time period."
+      "Please select a workout time period.",
     );
   });
 
@@ -120,7 +120,7 @@ describe("AddWorkout Component", () => {
 
     fireEvent.changeText(
       getByPlaceholderText("Add in workout title"),
-      "Workout"
+      "Workout",
     );
 
     fireEvent.press(getByText("Select Time Period:"));
@@ -129,7 +129,7 @@ describe("AddWorkout Component", () => {
 
     await waitFor(() => {
       expect(alertSpy).toHaveBeenCalledWith(
-        "Please add at least one exercise."
+        "Please add at least one exercise.",
       );
     });
   });
@@ -137,12 +137,12 @@ describe("AddWorkout Component", () => {
   test("shows alert if no sets were added to an exercise", async () => {
     const alertSpy = jest.spyOn(Alert, "alert");
     const { getByText, getByPlaceholderText, getAllByText } = render(
-      <AddWorkout />
+      <AddWorkout />,
     );
 
     fireEvent.changeText(
       getByPlaceholderText("Add in workout title"),
-      "Workout"
+      "Workout",
     );
 
     fireEvent.press(getByText("Select Time Period:"));
@@ -160,7 +160,7 @@ describe("AddWorkout Component", () => {
 
     await waitFor(() => {
       expect(alertSpy).toHaveBeenCalledWith(
-        "Please add at least one set to each exercise."
+        "Please add at least one set to each exercise.",
       );
     });
   });
@@ -168,12 +168,12 @@ describe("AddWorkout Component", () => {
   test("shows alert if no reps or weights are added in the set on submit", async () => {
     const alertSpy = jest.spyOn(Alert, "alert");
     const { getByText, getByPlaceholderText, getAllByText } = render(
-      <AddWorkout />
+      <AddWorkout />,
     );
 
     fireEvent.changeText(
       getByPlaceholderText("Add in workout title"),
-      "Workout"
+      "Workout",
     );
 
     fireEvent.press(getByText("Select Time Period:"));
@@ -191,7 +191,7 @@ describe("AddWorkout Component", () => {
 
     await waitFor(() => {
       expect(alertSpy).toHaveBeenCalledWith(
-        "Please fill in reps and weight for all sets."
+        "Please fill in reps and weight for all sets.",
       );
     });
   });
@@ -264,13 +264,13 @@ describe("AddWorkout Component", () => {
 
   test("submits successfully with valid data and confirms submission", async () => {
     const { getByText, getByPlaceholderText, getAllByText } = render(
-      <AddWorkout />
+      <AddWorkout />,
     );
     const alertSpy = jest.spyOn(Alert, "alert");
 
     fireEvent.changeText(
       getByPlaceholderText("Add in workout title"),
-      "Leg Day"
+      "Leg Day",
     );
 
     fireEvent.press(getByText("Select Time Period:"));
@@ -304,7 +304,7 @@ describe("AddWorkout Component", () => {
       expect(alertSpy).toHaveBeenCalledWith(
         "Save Workout",
         "Are you sure you want to save this workout?",
-        expect.any(Array)
+        expect.any(Array),
       );
     });
   });
@@ -323,7 +323,7 @@ describe("AddWorkout Component", () => {
 
     fireEvent.changeText(
       getByPlaceholderText("Add in workout title"),
-      "Workout"
+      "Workout",
     );
 
     fireEvent.press(getByText("+ Add Exercise"));
@@ -333,7 +333,7 @@ describe("AddWorkout Component", () => {
     expect(Alert.alert).toHaveBeenCalledWith(
       "Cancel New Workout?",
       "You have started creating a new workout. Are you sure you want to cancel?",
-      expect.any(Array)
+      expect.any(Array),
     );
   });
 
@@ -351,7 +351,7 @@ describe("AddWorkout Component", () => {
 
     fireEvent.changeText(
       getByPlaceholderText("Add in workout title"),
-      "Workout"
+      "Workout",
     );
 
     fireEvent.press(getByText("+ Add Exercise"));
@@ -382,7 +382,7 @@ describe("AddWorkout Component", () => {
   test("calls addDoc on confirmation of workout submission", async () => {
     jest.spyOn(Alert, "alert").mockImplementation((title, message, buttons) => {
       const confirmBtn = buttons.find(
-        (btn) => btn.text === "Save" || btn.text === "Update"
+        (btn) => btn.text === "Save" || btn.text === "Update",
       );
       if (confirmBtn && confirmBtn.onPress) {
         confirmBtn.onPress();
@@ -390,12 +390,12 @@ describe("AddWorkout Component", () => {
     });
 
     const { getByText, getByPlaceholderText, getAllByText } = render(
-      <AddWorkout />
+      <AddWorkout />,
     );
 
     fireEvent.changeText(
       getByPlaceholderText("Add in workout title"),
-      "Leg Day"
+      "Leg Day",
     );
 
     fireEvent.press(getByText("Select Time Period:"));
@@ -445,13 +445,13 @@ describe("AddWorkout Component", () => {
 
       await waitFor(() => {
         expect(getByPlaceholderText("Add in workout title").props.value).toBe(
-          "Original Workout"
+          "Original Workout",
         );
       });
 
       fireEvent.changeText(
         getByPlaceholderText("Add in workout title"),
-        "Updated Workout"
+        "Updated Workout",
       );
 
       fireEvent.press(getByText("Save"));
@@ -460,7 +460,7 @@ describe("AddWorkout Component", () => {
         expect(alertSpy).toHaveBeenCalledWith(
           "Update Workout",
           "Are you sure you want to update this workout?",
-          expect.any(Array)
+          expect.any(Array),
         );
         expect(mockUpdateDoc).toHaveBeenCalledTimes(1);
 
@@ -483,13 +483,13 @@ describe("AddWorkout Component", () => {
 
       await waitFor(() => {
         expect(getByPlaceholderText("Add in workout title").props.value).toBe(
-          "Original Workout"
+          "Original Workout",
         );
       });
 
       fireEvent.changeText(
         getByPlaceholderText("Add in workout title"),
-        "Updated Workout"
+        "Updated Workout",
       );
 
       fireEvent.press(getByText("Cancel"));
@@ -497,7 +497,7 @@ describe("AddWorkout Component", () => {
       expect(alertSpy).toHaveBeenCalledWith(
         "Discard Changes?",
         "You have unsaved changes. Are you sure you want to discard them?",
-        expect.any(Array)
+        expect.any(Array),
       );
     });
   });

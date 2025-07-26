@@ -43,10 +43,12 @@ const searchOptions = (query) => {
 
 const searchDB = async (query) => {
   try {
-    console.log(`https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${process.env.EXPO_PUBLIC_FOOD_API_KEY}`)
+    console.log(
+      `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${process.env.EXPO_PUBLIC_FOOD_API_KEY}`,
+    );
     const response = await fetch(
       `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${process.env.EXPO_PUBLIC_FOOD_API_KEY}`,
-      searchOptions(query)
+      searchOptions(query),
     );
     const data = await response.json();
     return data?.foods || [];
@@ -124,7 +126,7 @@ const Macro = () => {
       const numeric = parseFloat(text);
       if (!isNaN(numeric)) {
         const updated = mealList.map((item) =>
-          item.id === id ? { ...item, servings: Math.abs(numeric) } : item
+          item.id === id ? { ...item, servings: Math.abs(numeric) } : item,
         );
         setMealList(updated);
       }
@@ -332,13 +334,15 @@ const Macro = () => {
 
                                 const mealItem = item.foodNutrients
                                   .filter((nutrient) =>
-                                    wanted.hasOwnProperty(nutrient.nutrientName)
+                                    wanted.hasOwnProperty(
+                                      nutrient.nutrientName,
+                                    ),
                                   )
                                   .filter(
                                     (nutrient) =>
                                       nutrient.nutrientName !== "Energy" ||
                                       (nutrient.nutrientName === "Energy" &&
-                                        nutrient.unitName === "KCAL")
+                                        nutrient.unitName === "KCAL"),
                                   )
                                   .reduce(
                                     (food, nutrient) => {
@@ -349,14 +353,14 @@ const Macro = () => {
                                     {
                                       description: item.description,
                                       servings: 100,
-                                    }
+                                    },
                                   );
 
                                 const newMealList = [...mealList, mealItem].map(
                                   (item, index) => ({
                                     ...item,
                                     id: index,
-                                  })
+                                  }),
                                 );
                                 setMealList(newMealList);
                               }}

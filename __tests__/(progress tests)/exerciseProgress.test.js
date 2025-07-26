@@ -40,9 +40,9 @@ jest.mock("react-native-dropdown-picker", () => {
               .replace(/\s/g, "-")}`,
             onPress: () => props.setValue(item.value),
           },
-          React.createElement(Text, null, item.label)
-        )
-      )
+          React.createElement(Text, null, item.label),
+        ),
+      ),
     );
 });
 
@@ -126,7 +126,7 @@ describe("ExerciseProgress Component", () => {
 
   test("selects exercise and displays corresponding chart", async () => {
     const { getByText, queryByText, getByTestId } = render(
-      <ExerciseProgress />
+      <ExerciseProgress />,
     );
 
     await waitFor(() => {
