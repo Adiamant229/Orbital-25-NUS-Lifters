@@ -43,9 +43,6 @@ const searchOptions = (query) => {
 
 const searchDB = async (query) => {
   try {
-    console.log(
-      `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${process.env.EXPO_PUBLIC_FOOD_API_KEY}`,
-    );
     const response = await fetch(
       `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${process.env.EXPO_PUBLIC_FOOD_API_KEY}`,
       searchOptions(query),
@@ -65,6 +62,7 @@ const Macro = () => {
   const [debounced, setDebounced] = useState("");
   const [mealList, setMealList] = useState([]);
   const [servingInputs, setServingInputs] = useState({});
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -74,6 +72,11 @@ const Macro = () => {
         if (data) setMealList(JSON.parse(data));
       } catch (err) {
         console.error("Failed to load meal list:", err);
+      }
+      try {
+        const cache = await AsyncStorage.getItem("macroCache")
+      } catch (err) {
+        return;
       }
     };
     loadMealList();
@@ -88,9 +91,16 @@ const Macro = () => {
 
   useEffect(() => {
     if (debounced && debounced.length >= 3) {
+      setLoading(true);
       searchDB(debounced)
-        .then(setFoodList)
-        .catch((err) => console.error("Retrieval error: ", err));
+        .then(input => {
+          setFoodList(input);
+          setLoading(false);
+        })
+        .catch((err) => {
+          console.error("Retrieval error: ", err)
+          setLoading(false);
+        });
     }
   }, [debounced]);
 
@@ -312,6 +322,7 @@ const Macro = () => {
                       placeholder="Search Food"
                       onChangeText={setQuery}
                       value={query}
+                      loading={loading}
                     />
                     {foodList.length >= 1 && (
                       <View style={{ maxHeight: 300, flexShrink: 1 }}>
