@@ -6,8 +6,8 @@ const fetchMock = jest.fn(() =>
       Promise.resolve({
         timestamp: { _seconds: 1719300000 },
         gym_capacity: [
-          { name: "UTown", capacity: 100, maxCapacity: 110 }, 
-          { name: "USC", capacity: 35, maxCapacity: 120 }, 
+          { name: "USC", capacity: 100, maxCapacity: 110 }, 
+          { name: "UTown", capacity: 35, maxCapacity: 120 }, 
         ],
       }),
   })
@@ -58,8 +58,8 @@ describe("GymCapacity Component", () => {
 
     await waitFor(() => {
       expect(queryByText(/Loading/i)).toBeNull();
-      expect(getByText("UTown Gym: 100")).toBeTruthy();
-      expect(getByText("USC Gym: 35")).toBeTruthy();
+      expect(getByText("USC Gym: 100")).toBeTruthy();
+      expect(getByText("UTown Gym: 35")).toBeTruthy();
     });
   });
 
@@ -73,19 +73,19 @@ describe("GymCapacity Component", () => {
     expect(textContent).toMatch(/Last updated/);
   });
 
-  test("clicking UTown button navigates to /utownReports", async () => {
+  test("clicking UTown button navigates to /uscReports", async () => {
     const { getByText } = render(<GymCapacity />);
-    await waitFor(() => getByText("UTown Gym: 100"));
-
-    fireEvent.press(getByText(/UTown Gym/i));
-    expect(mockPush).toHaveBeenCalledWith("/utownReports");
-  });
-
-  test("clicking USC button navigates to /uscReports", async () => {
-    const { getByText } = render(<GymCapacity />);
-    await waitFor(() => getByText("USC Gym: 35"));
+    await waitFor(() => getByText("USC Gym: 100"));
 
     fireEvent.press(getByText(/USC Gym/i));
     expect(mockPush).toHaveBeenCalledWith("/uscReports");
+  });
+
+  test("clicking USC button navigates to /utownReports", async () => {
+    const { getByText } = render(<GymCapacity />);
+    await waitFor(() => getByText("UTown Gym: 35"));
+
+    fireEvent.press(getByText(/UTown Gym/i));
+    expect(mockPush).toHaveBeenCalledWith("/utownReports");
   });
 });

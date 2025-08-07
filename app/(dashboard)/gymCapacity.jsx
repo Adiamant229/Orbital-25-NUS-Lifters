@@ -107,10 +107,10 @@ const GymCapacity = () => {
                 ),
               },
             ]}
-            onPress={() => router.push("/utownReports")}
+            onPress={() => router.push("/uscReports")}
           >
             <ThemedText style={{ color: "white" }}>
-              UTown Gym:{" "}
+              USC Gym:{" "}
               {loading || gyms.length === 0
                 ? "Loading"
                 : `${gyms[0]?.capacity ?? "-"}`}
@@ -123,10 +123,10 @@ const GymCapacity = () => {
               styles.button,
               { backgroundColor: getCapacityColor(uscCapacityNum, uscMaxNum) },
             ]}
-            onPress={() => router.push("/uscReports")}
+            onPress={() => router.push("/utownReports")}
           >
             <ThemedText style={{ color: "white" }}>
-              USC Gym:{" "}
+              UTown Gym:{" "}
               {loading || gyms.length === 0
                 ? "Loading"
                 : `${gyms[1]?.capacity ?? "-"}`}
