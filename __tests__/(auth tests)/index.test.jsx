@@ -1,6 +1,8 @@
 import { render, fireEvent, waitFor, act } from "@testing-library/react-native";
 import { Alert } from "react-native";
 
+import Index from "../../app/index";
+
 jest.mock("../../firebaseConfig", () => ({
   auth: {},
 }));
@@ -46,8 +48,6 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
   clear: jest.fn(),
 }));
 
-import Index from "../../app/index";
-
 describe("Login Component", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -63,7 +63,7 @@ describe("Login Component", () => {
 
     expect(Alert.alert).toHaveBeenCalledWith(
       "Error",
-      "Please enter both email and password"
+      "Please enter both email and password",
     );
   });
 
@@ -80,7 +80,7 @@ describe("Login Component", () => {
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith(
         "Login Error",
-        "Invalid email or password."
+        "Invalid email or password.",
       );
     });
   });
@@ -98,7 +98,7 @@ describe("Login Component", () => {
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith(
         "Login Error",
-        "Please enter a valid email address."
+        "Please enter a valid email address.",
       );
     });
   });

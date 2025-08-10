@@ -134,7 +134,7 @@ const AddWorkout = () => {
             setWorkoutNotes(data.workoutNotes || "");
             setWorkoutTimePeriod(data.timePeriod || null);
             setDate(
-              data.createdAt?.toDate ? data.createdAt.toDate() : new Date()
+              data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
             );
 
             // **Refresh dropdown options to include saved exercises**
@@ -210,7 +210,7 @@ const AddWorkout = () => {
       return;
     }
     const validExercises = exercises.filter(
-      (ex) => ex.name && ex.name.trim() !== ""
+      (ex) => ex.name && ex.name.trim() !== "",
     );
     if (validExercises.length === 0) {
       Alert.alert("Please add at least one exercise.");
@@ -263,7 +263,7 @@ const AddWorkout = () => {
         Alert.alert(
           "Success",
           editWorkoutId ? "Workout updated!" : "Workout added!",
-          [{ text: "OK", onPress: () => router.back() }]
+          [{ text: "OK", onPress: () => router.back() }],
         );
       } catch (error) {
         console.error("Error saving workout:", error);
@@ -279,7 +279,7 @@ const AddWorkout = () => {
       [
         { text: "Cancel", style: "cancel" },
         { text: editWorkoutId ? "Update" : "Save", onPress: save },
-      ]
+      ],
     );
   };
 
@@ -302,8 +302,8 @@ const AddWorkout = () => {
                 ex.sets.some(
                   (set) =>
                     (set.reps && set.reps !== "") ||
-                    (set.weight && set.weight !== "")
-                ))
+                    (set.weight && set.weight !== ""),
+                )),
           ))
       );
     }
@@ -327,7 +327,7 @@ const AddWorkout = () => {
         [
           { text: "No", style: "cancel" },
           { text: "Yes", style: "destructive", onPress: () => router.back() },
-        ]
+        ],
       );
     } else {
       router.back();
@@ -518,7 +518,7 @@ const AddWorkout = () => {
                               exerciseIndex,
                               setIndex,
                               "reps",
-                              value
+                              value,
                             );
                           }}
                           placeholder="Reps"
@@ -553,7 +553,7 @@ const AddWorkout = () => {
                               exerciseIndex,
                               setIndex,
                               "weight",
-                              value
+                              value,
                             );
                           }}
                           placeholder="Weight (kg)"
@@ -724,6 +724,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: 37,
     height: 35,
-    marginLeft: 20
+    marginLeft: 20,
   },
 });

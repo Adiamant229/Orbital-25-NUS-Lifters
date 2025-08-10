@@ -43,10 +43,9 @@ const searchOptions = (query) => {
 
 const searchDB = async (query) => {
   try {
-    console.log(`https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${process.env.EXPO_PUBLIC_FOOD_API_KEY}`)
     const response = await fetch(
       `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${process.env.EXPO_PUBLIC_FOOD_API_KEY}`,
-      searchOptions(query)
+      searchOptions(query),
     );
     const data = await response.json();
     return data?.foods || [];
@@ -63,6 +62,7 @@ const Macro = () => {
   const [debounced, setDebounced] = useState("");
   const [mealList, setMealList] = useState([]);
   const [servingInputs, setServingInputs] = useState({});
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -72,6 +72,11 @@ const Macro = () => {
         if (data) setMealList(JSON.parse(data));
       } catch (err) {
         console.error("Failed to load meal list:", err);
+      }
+      try {
+        const cache = await AsyncStorage.getItem("macroCache")
+      } catch (err) {
+        return;
       }
     };
     loadMealList();
@@ -86,9 +91,16 @@ const Macro = () => {
 
   useEffect(() => {
     if (debounced && debounced.length >= 3) {
+      setLoading(true);
       searchDB(debounced)
-        .then(setFoodList)
-        .catch((err) => console.error("Retrieval error: ", err));
+        .then(input => {
+          setFoodList(input);
+          setLoading(false);
+        })
+        .catch((err) => {
+          console.error("Retrieval error: ", err)
+          setLoading(false);
+        });
     }
   }, [debounced]);
 
@@ -124,7 +136,7 @@ const Macro = () => {
       const numeric = parseFloat(text);
       if (!isNaN(numeric)) {
         const updated = mealList.map((item) =>
-          item.id === id ? { ...item, servings: Math.abs(numeric) } : item
+          item.id === id ? { ...item, servings: Math.abs(numeric) } : item,
         );
         setMealList(updated);
       }
@@ -310,6 +322,7 @@ const Macro = () => {
                       placeholder="Search Food"
                       onChangeText={setQuery}
                       value={query}
+                      loading={loading}
                     />
                     {foodList.length >= 1 && (
                       <View style={{ maxHeight: 300, flexShrink: 1 }}>
@@ -332,13 +345,15 @@ const Macro = () => {
 
                                 const mealItem = item.foodNutrients
                                   .filter((nutrient) =>
-                                    wanted.hasOwnProperty(nutrient.nutrientName)
+                                    wanted.hasOwnProperty(
+                                      nutrient.nutrientName,
+                                    ),
                                   )
                                   .filter(
                                     (nutrient) =>
                                       nutrient.nutrientName !== "Energy" ||
                                       (nutrient.nutrientName === "Energy" &&
-                                        nutrient.unitName === "KCAL")
+                                        nutrient.unitName === "KCAL"),
                                   )
                                   .reduce(
                                     (food, nutrient) => {
@@ -349,14 +364,14 @@ const Macro = () => {
                                     {
                                       description: item.description,
                                       servings: 100,
-                                    }
+                                    },
                                   );
 
                                 const newMealList = [...mealList, mealItem].map(
                                   (item, index) => ({
                                     ...item,
                                     id: index,
-                                  })
+                                  }),
                                 );
                                 setMealList(newMealList);
                               }}

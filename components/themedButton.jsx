@@ -8,15 +8,15 @@ const ThemedButton = ({ style, ...props }) => {
       {...props}
     />
   );
-}
+};
 
 export default ThemedButton;
 
 const styles = StyleSheet.create({
   btn: {
     backgroundColor: Colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     width: 110,
     padding: 18,
     borderRadius: 20,

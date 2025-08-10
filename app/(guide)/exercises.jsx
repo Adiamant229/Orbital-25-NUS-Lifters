@@ -9,7 +9,7 @@ import {
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
   Platform,
-  Keyboard
+  Keyboard,
 } from "react-native";
 
 //themed components
@@ -37,72 +37,69 @@ const options = {
 const Exercises = () => {
   const router = useRouter();
   //const [targets, setTargets] = useState(['']) //for filtering
- const [targets, setTargets] = useState([
-   "abductors",
-   "abs",
-   "adductors",
-   "biceps",
-   "calves",
-   "cardiovascular system",
-   "delts",
-   "forearms",
-   "glutes",
-   "hamstrings",
-   "lats",
-   "levator scapulae",
-   "pectorals",
-   "quads",
-   "serratus anterior",
-   "spine",
-   "traps",
-   "triceps",
-   "upper back",
- ]);
-
- const [equipment, setEquipment] = useState([
-   "assisted",
-   "band",
-   "barbell",
-   "body weight",
-   "bosu ball",
-   "cable",
-   "dumbbell",
-   "elliptical machine",
-   "ez barbell",
-   "hammer",
-   "kettlebell",
-   "leverage machine",
-   "medicine ball",
-   "olympic barbell",
-   "resistance band",
-   "roller",
-   "rope",
-   "skierg machine",
-   "sled machine",
-   "smith machine",
-   "stability ball",
-   "stationary bike",
-   "stepmill machine",
-   "tire",
-   "trap bar",
-   "upper body ergometer",
-   "weighted",
-   "wheel roller",
- ]);
-
+  const targets = [
+    "abductors",
+    "abs",
+    "adductors",
+    "biceps",
+    "calves",
+    "cardiovascular system",
+    "delts",
+    "forearms",
+    "glutes",
+    "hamstrings",
+    "lats",
+    "levator scapulae",
+    "pectorals",
+    "quads",
+    "serratus anterior",
+    "spine",
+    "traps",
+    "triceps",
+    "upper back",
+  ];
+  const equipment = [
+    "assisted",
+    "band",
+    "barbell",
+    "body weight",
+    "bosu ball",
+    "cable",
+    "dumbbell",
+    "elliptical machine",
+    "ez barbell",
+    "hammer",
+    "kettlebell",
+    "leverage machine",
+    "medicine ball",
+    "olympic barbell",
+    "resistance band",
+    "roller",
+    "rope",
+    "skierg machine",
+    "sled machine",
+    "smith machine",
+    "stability ball",
+    "stationary bike",
+    "stepmill machine",
+    "tire",
+    "trap bar",
+    "upper body ergometer",
+    "weighted",
+    "wheel roller",
+  ];
   const [searchRes, setSearchRes] = useState([]);
   const [query, setQuery] = useState("");
   const [lastSearched, setLastSearched] = useState("");
   const [toggleRec, setToggleRec] = useState(false);
-
 
   useEffect(() => {
     const fetchData = () => {
       try {
         const targetsUrl = baseURL + "targetList";
         const equipmentUrl = baseURL + "equipmentList";
-           const targetList = AsyncStorage.getItem("targetList");
-           const response1 = fetch(targetsUrl, options);
+        const targetList = AsyncStorage.getItem("targetList");
+        const response1 = fetch(targetsUrl, options);
         response1.then((res) => res.json()).then((res) => setTargets(res));
         const response2 = fetch(equipmentUrl, options);
         response2.then((res) => res.json()).then((res) => setEquipment(res));
@@ -112,7 +109,6 @@ const Exercises = () => {
     };
     fetchData();
   }, []);
-
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
@@ -264,7 +260,7 @@ const Exercises = () => {
                             bodyPart: item?.bodyPart,
                             secondaryMuscles: item?.secondaryMuscles,
                             instructions: encodeURIComponent(
-                              JSON.stringify(item?.instructions)
+                              JSON.stringify(item?.instructions),
                             ),
                           },
                         });

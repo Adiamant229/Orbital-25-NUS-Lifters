@@ -13,9 +13,9 @@ const ThemedTextInput = ({ style, ...props }) => {
           color: theme.text,
         },
         styles.input,
-        style, 
+        style,
       ]}
-       autoCapitalize="none"
+      autoCapitalize="none"
       {...props}
     />
   );

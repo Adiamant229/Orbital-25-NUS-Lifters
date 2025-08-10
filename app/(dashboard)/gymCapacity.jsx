@@ -29,7 +29,7 @@ const GymCapacity = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        "https://asia-southeast1-nus-lifters-club.cloudfunctions.net/getCapacity"
+        "https://asia-southeast1-nus-lifters-club.cloudfunctions.net/getCapacity",
       );
       const data = await response.json();
       const timestamp = new Date(data.timestamp._seconds * 1000);
@@ -103,7 +103,7 @@ const GymCapacity = () => {
               {
                 backgroundColor: getCapacityColor(
                   utownCapacityNum,
-                  utownMaxNum
+                  utownMaxNum,
                 ),
               },
             ]}

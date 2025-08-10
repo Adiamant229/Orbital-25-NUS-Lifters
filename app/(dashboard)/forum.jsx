@@ -102,7 +102,7 @@ const Forum = () => {
         ? query(collection(db, "threads"))
         : query(
             collection(db, "threads"),
-            where("category", "==", selectedCategory)
+            where("category", "==", selectedCategory),
           );
 
     setLoading(true);
