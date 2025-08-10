@@ -1,4 +1,4 @@
-import {  StyleSheet, TouchableOpacity, useColorScheme } from "react-native";
+import { StyleSheet, TouchableOpacity, useColorScheme } from "react-native";
 import { Colors } from "../constants/colors";
 
 const ThemedCard = ({ style, ...props }) => {

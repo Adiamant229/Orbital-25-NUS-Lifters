@@ -147,7 +147,7 @@ const AddEditThread = () => {
             },
           },
           { text: "Cancel", style: "cancel" },
-        ]
+        ],
       );
     } catch (error) {
       console.error("Error in handleTakePhoto:", error);
@@ -246,7 +246,7 @@ const AddEditThread = () => {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -262,7 +262,7 @@ const AddEditThread = () => {
             style: "destructive",
             onPress: () => router.back(),
           },
-        ]
+        ],
       );
     } else {
       router.back();
@@ -355,10 +355,7 @@ const AddEditThread = () => {
         )}
 
         <View style={styles.buttonRow}>
-          <ThemedButton
-            onPress={handleSubmit}
-            style={{ flex: 1 }}
-          >
+          <ThemedButton onPress={handleSubmit} style={{ flex: 1 }}>
             <ThemedText style={styles.submitText}>
               {loading ? "Saving..." : isEdit ? "Save" : "Create"}
             </ThemedText>

@@ -65,7 +65,7 @@ const ExerciseProgress = () => {
         const q = query(
           collection(db, "workouts"),
           where("userId", "==", currentUser.uid),
-          orderBy("createdAt", "asc")
+          orderBy("createdAt", "asc"),
         );
 
         const snapshot = await getDocs(q);
@@ -113,7 +113,7 @@ const ExerciseProgress = () => {
           exerciseArray.map((ex) => ({
             label: ex,
             value: ex,
-          }))
+          })),
         );
 
         setSelectedExercises(exerciseArray);

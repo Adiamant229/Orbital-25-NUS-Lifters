@@ -2,6 +2,8 @@ import { render, fireEvent, waitFor, act } from "@testing-library/react-native";
 import { Alert } from "react-native";
 import * as uuid from "uuid";
 
+import UscReports from "../../app/(reports)/uscReports";
+
 jest.mock("../../firebaseConfig", () => ({
   auth: {},
   db: {},
@@ -26,7 +28,7 @@ jest.mock("firebase/firestore", () => ({
           }),
         },
       ],
-    })
+    }),
   ),
   addDoc: jest.fn(() => Promise.resolve({ id: "newDocId" })),
   updateDoc: jest.fn(() => Promise.resolve()),
@@ -35,7 +37,7 @@ jest.mock("firebase/firestore", () => ({
     Promise.resolve({
       exists: () => true,
       data: () => ({ imageUrl: "https://fakeimage.url/image.jpg" }),
-    })
+    }),
   ),
   doc: jest.fn(() => ({})),
   deleteField: jest.fn(() => "deleteField"),
@@ -77,16 +79,16 @@ jest.mock("expo-image-picker", () => ({
     Promise.resolve({
       canceled: false,
       assets: [{ uri: "file://mock-image-uri" }],
-    })
+    }),
   ),
   launchCameraAsync: jest.fn(() =>
-    Promise.resolve({ canceled: false, assets: [{ uri: "mock-camera-uri" }] })
+    Promise.resolve({ canceled: false, assets: [{ uri: "mock-camera-uri" }] }),
   ),
   requestCameraPermissionsAsync: jest.fn(() =>
-    Promise.resolve({ granted: true })
+    Promise.resolve({ granted: true }),
   ),
   requestMediaLibraryPermissionsAsync: jest.fn(() =>
-    Promise.resolve({ granted: true })
+    Promise.resolve({ granted: true }),
   ),
   MediaTypeOptions: {
     Images: "Images",
@@ -108,9 +110,9 @@ jest.mock("react-native-dropdown-picker", () => {
             testID: `select-${item.value.toLowerCase().replace(/\s/g, "-")}`,
             onPress: () => props.setValue(item.value),
           },
-          React.createElement(Text, null, item.label)
-        )
-      )
+          React.createElement(Text, null, item.label),
+        ),
+      ),
     );
 });
 
@@ -124,7 +126,7 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
 jest.spyOn(Alert, "alert").mockImplementation((title, message, buttons) => {
   if (buttons) {
     const positiveButton = buttons.find(
-      (b) => b.style !== "cancel" && typeof b.onPress === "function"
+      (b) => b.style !== "cancel" && typeof b.onPress === "function",
     );
     if (positiveButton) {
       positiveButton.onPress();
@@ -139,8 +141,6 @@ jest.mock("react-native/Libraries/Linking/Linking", () => ({
   openURL: jest.fn(),
 }));
 
-import UscReports from "../../app/(reports)/uscReports";
-
 describe("UscReports component", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -149,7 +149,7 @@ describe("UscReports component", () => {
   test("fetches and renders reports", async () => {
     const { getByText } = render(<UscReports />);
     await waitFor(() =>
-      expect(getByText("Bench Press - Damaged")).toBeTruthy()
+      expect(getByText("Bench Press - Damaged")).toBeTruthy(),
     );
   });
 
@@ -163,7 +163,7 @@ describe("UscReports component", () => {
 
     const { getByText } = render(<UscReports />);
     await waitFor(() =>
-      expect(getByText("No reports yet. Tap + to add one.")).toBeTruthy()
+      expect(getByText("No reports yet. Tap + to add one.")).toBeTruthy(),
     );
   });
 
@@ -180,7 +180,7 @@ describe("UscReports component", () => {
     expect(Alert.alert).toHaveBeenCalledWith(
       "Submit Report",
       "Are you sure you want to submit this report?",
-      expect.any(Array)
+      expect.any(Array),
     );
   });
 
@@ -196,7 +196,7 @@ describe("UscReports component", () => {
 
     expect(Alert.alert).toHaveBeenCalledWith(
       expect.any(String),
-      "Please select equipment and issue type."
+      "Please select equipment and issue type.",
     );
   });
 
@@ -204,7 +204,7 @@ describe("UscReports component", () => {
     const alertSpy = jest.spyOn(Alert, "alert");
 
     require("expo-image-picker").requestCameraPermissionsAsync.mockImplementationOnce(
-      () => Promise.resolve({ granted: false })
+      () => Promise.resolve({ granted: false }),
     );
 
     const { getByText } = render(<UscReports />);
@@ -215,7 +215,7 @@ describe("UscReports component", () => {
     });
 
     expect(alertSpy).toHaveBeenCalledWith(
-      "Permission to access camera is required!"
+      "Permission to access camera is required!",
     );
   });
 
@@ -232,7 +232,7 @@ describe("UscReports component", () => {
 
   test("does not set imageUri when image picker is cancelled", async () => {
     require("expo-image-picker").launchImageLibraryAsync.mockImplementationOnce(
-      () => Promise.resolve({ canceled: true })
+      () => Promise.resolve({ canceled: true }),
     );
 
     const { getByText, queryByText } = render(<UscReports />);
@@ -257,7 +257,7 @@ describe("UscReports component", () => {
     expect(Alert.alert).toHaveBeenCalledWith(
       "Cancel New Report?",
       "You have started creating a new report. Are you sure you want to cancel?",
-      expect.any(Array)
+      expect.any(Array),
     );
   });
 
@@ -292,7 +292,7 @@ describe("UscReports component", () => {
     expect(Alert.alert).toHaveBeenCalledWith(
       "Update Report",
       "Are you sure you want to update this report?",
-      expect.any(Array)
+      expect.any(Array),
     );
   });
 
@@ -314,7 +314,7 @@ describe("UscReports component", () => {
     expect(Alert.alert).toHaveBeenCalledWith(
       "Discard Changes?",
       "You have unsaved changes. Are you sure you want to discard them?",
-      expect.any(Array)
+      expect.any(Array),
     );
   });
 
@@ -350,7 +350,7 @@ describe("UscReports component", () => {
     expect(Alert.alert).toHaveBeenCalledWith(
       "Update Report",
       "Are you sure you want to update this report?",
-      expect.any(Array)
+      expect.any(Array),
     );
   });
 
@@ -377,7 +377,7 @@ describe("UscReports component", () => {
     expect(Alert.alert).toHaveBeenCalledWith(
       "Resolve Report",
       "Are you sure you want to mark this report as resolved?",
-      expect.any(Array)
+      expect.any(Array),
     );
   });
 
@@ -395,7 +395,7 @@ describe("UscReports component", () => {
     await waitFor(() => {
       expect(consoleSpy).toHaveBeenCalledWith(
         "Error fetching real-time reports:",
-        expect.any(Error)
+        expect.any(Error),
       );
     });
 
@@ -410,12 +410,13 @@ describe("UscReports component", () => {
 
     const mockError = new Error("Failed to add doc");
     require("firebase/firestore").addDoc.mockImplementationOnce(() =>
-      Promise.reject(mockError)
+      Promise.reject(mockError),
     );
 
     alertSpy.mockImplementation((title, message, buttons) => {
       const confirmBtn = buttons?.find(
-        (btn) => btn.text?.toLowerCase().includes("submit") || btn.text === "OK"
+        (btn) =>
+          btn.text?.toLowerCase().includes("submit") || btn.text === "OK",
       );
       if (confirmBtn?.onPress) confirmBtn.onPress();
     });
@@ -431,7 +432,7 @@ describe("UscReports component", () => {
 
     expect(consoleSpy).toHaveBeenCalledWith(
       "Error submitting report:",
-      mockError
+      mockError,
     );
     expect(alertSpy).toHaveBeenCalledWith("Failed to submit report.");
 
@@ -446,7 +447,7 @@ describe("UscReports component", () => {
         .mockImplementation((title, message, buttons) => {
           if (buttons) {
             const positiveButton = buttons.find(
-              (b) => b.style !== "cancel" && typeof b.onPress === "function"
+              (b) => b.style !== "cancel" && typeof b.onPress === "function",
             );
             if (positiveButton) {
               positiveButton.onPress();
@@ -459,7 +460,7 @@ describe("UscReports component", () => {
       global.fetch = jest.fn(() =>
         Promise.resolve({
           blob: () => Promise.resolve("blob-data"),
-        })
+        }),
       );
 
       const firestore = require("firebase/firestore");
@@ -502,7 +503,7 @@ describe("UscReports component", () => {
 
       expect(Alert.alert).toHaveBeenCalledWith(
         "Success",
-        expect.stringContaining("updated")
+        expect.stringContaining("updated"),
       );
     });
 
@@ -531,11 +532,11 @@ describe("UscReports component", () => {
       expect(storage.deleteObject).toHaveBeenCalled();
       expect(firestore.updateDoc).toHaveBeenCalledWith(
         expect.any(Object),
-        expect.objectContaining({ imageUrl: firestore.deleteField() })
+        expect.objectContaining({ imageUrl: firestore.deleteField() }),
       );
       expect(Alert.alert).toHaveBeenCalledWith(
         "Success",
-        expect.stringContaining("updated")
+        expect.stringContaining("updated"),
       );
     });
 
@@ -560,11 +561,11 @@ describe("UscReports component", () => {
         expect.any(Object),
         expect.objectContaining({
           imageUrl: "https://fakeimage.url/image.jpg",
-        })
+        }),
       );
       expect(Alert.alert).toHaveBeenCalledWith(
         "Success",
-        expect.stringContaining("updated")
+        expect.stringContaining("updated"),
       );
     });
 
@@ -572,7 +573,7 @@ describe("UscReports component", () => {
       global.fetch = jest.fn(() =>
         Promise.resolve({
           blob: () => Promise.resolve("blob-data"),
-        })
+        }),
       );
 
       const firestore = require("firebase/firestore");
@@ -601,7 +602,7 @@ describe("UscReports component", () => {
       expect(firestore.addDoc).toHaveBeenCalled();
       expect(Alert.alert).toHaveBeenCalledWith(
         "Success",
-        expect.stringContaining("submitted")
+        expect.stringContaining("submitted"),
       );
     });
 
@@ -621,7 +622,7 @@ describe("UscReports component", () => {
       expect(firestore.addDoc).toHaveBeenCalled();
       expect(Alert.alert).toHaveBeenCalledWith(
         "Success",
-        expect.stringContaining("submitted")
+        expect.stringContaining("submitted"),
       );
     });
   });
@@ -640,13 +641,13 @@ describe("UscReports component", () => {
     });
 
     storage.deleteObject.mockRejectedValueOnce(
-      new Error("Storage delete failed")
+      new Error("Storage delete failed"),
     );
 
     global.fetch = jest.fn(() =>
       Promise.resolve({
         blob: () => Promise.resolve("blob-data"),
-      })
+      }),
     );
 
     const uuid = require("uuid");
@@ -672,7 +673,7 @@ describe("UscReports component", () => {
 
     expect(consoleWarnSpy).toHaveBeenCalledWith(
       "Failed to delete old image:",
-      expect.any(Error)
+      expect.any(Error),
     );
 
     consoleWarnSpy.mockRestore();
@@ -692,7 +693,7 @@ describe("UscReports component", () => {
     });
 
     storage.deleteObject.mockRejectedValueOnce(
-      new Error("Local delete failed")
+      new Error("Local delete failed"),
     );
 
     const { getByText, getByTestId } = render(<UscReports />);
@@ -710,7 +711,7 @@ describe("UscReports component", () => {
 
     expect(consoleWarnSpy).toHaveBeenCalledWith(
       "Failed to delete old image locally:",
-      expect.any(Error)
+      expect.any(Error),
     );
 
     consoleWarnSpy.mockRestore();
@@ -740,13 +741,13 @@ describe("UscReports component", () => {
 
     expect(updateDocSpy).toHaveBeenCalledWith(
       expect.any(Object),
-      expect.objectContaining({ imageUrl: firestore.deleteField() })
+      expect.objectContaining({ imageUrl: firestore.deleteField() }),
     );
   });
   test("alerts if media library permission denied on pickImage", async () => {
     const alertSpy = jest.spyOn(Alert, "alert");
     require("expo-image-picker").requestMediaLibraryPermissionsAsync.mockImplementationOnce(
-      () => Promise.resolve({ granted: false })
+      () => Promise.resolve({ granted: false }),
     );
 
     const { getByText } = render(<UscReports />);
@@ -757,7 +758,7 @@ describe("UscReports component", () => {
     });
 
     expect(alertSpy).toHaveBeenCalledWith(
-      "Permission to access media library is required!"
+      "Permission to access media library is required!",
     );
   });
 
@@ -765,7 +766,7 @@ describe("UscReports component", () => {
     const alertSpy = jest.spyOn(Alert, "alert");
 
     require("expo-image-picker").requestCameraPermissionsAsync.mockImplementationOnce(
-      () => Promise.resolve({ granted: false })
+      () => Promise.resolve({ granted: false }),
     );
 
     const { getByText } = render(<UscReports />);
@@ -776,20 +777,20 @@ describe("UscReports component", () => {
     });
 
     expect(alertSpy).toHaveBeenCalledWith(
-      "Permission to access camera is required!"
+      "Permission to access camera is required!",
     );
   });
 
   test("sets imageUri state when pickImage succeeds", async () => {
     require("expo-image-picker").requestMediaLibraryPermissionsAsync.mockImplementationOnce(
-      () => Promise.resolve({ granted: true })
+      () => Promise.resolve({ granted: true }),
     );
     require("expo-image-picker").launchImageLibraryAsync.mockImplementationOnce(
       () =>
         Promise.resolve({
           canceled: false,
           assets: [{ uri: "file://mock-image-uri-pick" }],
-        })
+        }),
     );
 
     const { getByText, getByTestId } = render(<UscReports />);
@@ -804,13 +805,13 @@ describe("UscReports component", () => {
 
   test("sets imageUri state when takePhoto succeeds", async () => {
     require("expo-image-picker").requestCameraPermissionsAsync.mockImplementationOnce(
-      () => Promise.resolve({ granted: true })
+      () => Promise.resolve({ granted: true }),
     );
     require("expo-image-picker").launchCameraAsync.mockImplementationOnce(() =>
       Promise.resolve({
         canceled: false,
         assets: [{ uri: "file://mock-image-uri-camera" }],
-      })
+      }),
     );
 
     const { getByText, getByTestId } = render(<UscReports />);
@@ -825,7 +826,7 @@ describe("UscReports component", () => {
 
   test("does not set imageUri when pickImage is cancelled", async () => {
     require("expo-image-picker").launchImageLibraryAsync.mockImplementationOnce(
-      () => Promise.resolve({ canceled: true })
+      () => Promise.resolve({ canceled: true }),
     );
 
     const { getByText, queryByTestId } = render(<UscReports />);
@@ -840,7 +841,7 @@ describe("UscReports component", () => {
 
   test("does not set imageUri when takePhoto is cancelled", async () => {
     require("expo-image-picker").launchCameraAsync.mockImplementationOnce(() =>
-      Promise.resolve({ canceled: true })
+      Promise.resolve({ canceled: true }),
     );
 
     const { getByText, queryByTestId } = render(<UscReports />);
