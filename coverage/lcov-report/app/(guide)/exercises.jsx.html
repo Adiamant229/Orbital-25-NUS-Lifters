@@ -383,9 +383,7 @@
 <a name='L318'></a><a href='#L318'>318</a>
 <a name='L319'></a><a href='#L319'>319</a>
 <a name='L320'></a><a href='#L320'>320</a>
-<a name='L321'></a><a href='#L321'>321</a>
-<a name='L322'></a><a href='#L322'>322</a>
-<a name='L323'></a><a href='#L323'>323</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L321'></a><a href='#L321'>321</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -422,11 +420,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -446,9 +442,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -477,13 +473,14 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
@@ -500,8 +497,7 @@
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
@@ -516,17 +512,17 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">94x</span>
-<span class="cline-any cline-yes">139x</span>
+<span class="cline-any cline-yes">93x</span>
+<span class="cline-any cline-yes">138x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -718,7 +714,7 @@ import {
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
   Platform,
-  Keyboard
+  Keyboard,
 } from "react-native";
 &nbsp;
 //themed components
@@ -745,73 +741,72 @@ const options = {
 &nbsp;
 const Exercises = () =&gt; {
   const router = useRouter();
-  //const [targets, setTargets] = useState(['']) //for filtering
- const [targets, setTargets] = useState([
-   "abductors",
-   "abs",
-   "adductors",
-   "biceps",
-   "calves",
-   "cardiovascular system",
-   "delts",
-   "forearms",
-   "glutes",
-   "hamstrings",
-   "lats",
-   "levator scapulae",
-   "pectorals",
-   "quads",
-   "serratus anterior",
-   "spine",
-   "traps",
-   "triceps",
-   "upper back",
- ]);
+  // Replace your current targets/equipment constants with state:
+  const [targets, setTargets] = useState([
+    "abductors",
+    "abs",
+    "adductors",
+    "biceps",
+    "calves",
+    "cardiovascular system",
+    "delts",
+    "forearms",
+    "glutes",
+    "hamstrings",
+    "lats",
+    "levator scapulae",
+    "pectorals",
+    "quads",
+    "serratus anterior",
+    "spine",
+    "traps",
+    "triceps",
+    "upper back",
+  ]);
 &nbsp;
- const [equipment, setEquipment] = useState([
-   "assisted",
-   "band",
-   "barbell",
-   "body weight",
-   "bosu ball",
-   "cable",
-   "dumbbell",
-   "elliptical machine",
-   "ez barbell",
-   "hammer",
-   "kettlebell",
-   "leverage machine",
-   "medicine ball",
-   "olympic barbell",
-   "resistance band",
-   "roller",
-   "rope",
-   "skierg machine",
-   "sled machine",
-   "smith machine",
-   "stability ball",
-   "stationary bike",
-   "stepmill machine",
-   "tire",
-   "trap bar",
-   "upper body ergometer",
-   "weighted",
-   "wheel roller",
- ]);
+  const [equipment, setEquipment] = useState([
+    "assisted",
+    "band",
+    "barbell",
+    "body weight",
+    "bosu ball",
+    "cable",
+    "dumbbell",
+    "elliptical machine",
+    "ez barbell",
+    "hammer",
+    "kettlebell",
+    "leverage machine",
+    "medicine ball",
+    "olympic barbell",
+    "resistance band",
+    "roller",
+    "rope",
+    "skierg machine",
+    "sled machine",
+    "smith machine",
+    "stability ball",
+    "stationary bike",
+    "stepmill machine",
+    "tire",
+    "trap bar",
+    "upper body ergometer",
+    "weighted",
+    "wheel roller",
+  ]);
 &nbsp;
   const [searchRes, setSearchRes] = useState([]);
   const [query, setQuery] = useState("");
   const [lastSearched, setLastSearched] = useState("");
   const [toggleRec, setToggleRec] = useState(false);
 &nbsp;
-&nbsp;
   useEffect(() =&gt; {
     const fetchData = () =&gt; {
       try {
         const targetsUrl = baseURL + "targetList";
         const equipmentUrl = baseURL + "equipmentList";
-           const targetList = AsyncStorage.getItem("targetList");
-           const response1 = fetch(targetsUrl, options);
+        const targetList = AsyncStorage.getItem("targetList");
+        const response1 = fetch(targetsUrl, options);
         response1.then((res) =&gt; res.json()).then((res) =&gt; setTargets(res));
         const response2 = fetch(equipmentUrl, options);
         response2.then((res) =&gt; res.json()).then((res) =&gt; setEquipment(res));
@@ -821,7 +816,6 @@ const Exercises = () =&gt; {
     };
     fetchData();
   }, []);
-&nbsp;
 &nbsp;
   useEffect(() =&gt; {
     const delayDebounce = setTimeout(() =&gt; {
@@ -1036,7 +1030,7 @@ const styles = StyleSheet.create({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-07-25T13:04:27.931Z
+                at 2025-08-10T06:35:25.135Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
