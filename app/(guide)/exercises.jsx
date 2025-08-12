@@ -36,8 +36,7 @@ const options = {
 
 const Exercises = () => {
   const router = useRouter();
-  //const [targets, setTargets] = useState(['']) //for filtering
-  const targets = [
+  const [targets, setTargets] = useState([
     "abductors",
     "abs",
     "adductors",
@@ -57,8 +56,9 @@ const Exercises = () => {
     "traps",
     "triceps",
     "upper back",
-  ];
-  const equipment = [
+  ]);
+
+  const [equipment, setEquipment] = useState([
     "assisted",
     "band",
     "barbell",
@@ -87,7 +87,8 @@ const Exercises = () => {
     "upper body ergometer",
     "weighted",
     "wheel roller",
-  ];
+  ]);
+
   const [searchRes, setSearchRes] = useState([]);
   const [query, setQuery] = useState("");
   const [lastSearched, setLastSearched] = useState("");
@@ -260,7 +261,7 @@ const Exercises = () => {
                             bodyPart: item?.bodyPart,
                             secondaryMuscles: item?.secondaryMuscles,
                             instructions: encodeURIComponent(
-                              JSON.stringify(item?.instructions),
+                              JSON.stringify(item?.instructions)
                             ),
                           },
                         });
