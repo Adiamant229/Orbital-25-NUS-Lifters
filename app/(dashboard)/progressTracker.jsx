@@ -1,4 +1,3 @@
-//react and expo imports
 import { useState, useEffect } from "react";
 import {
   Alert,
@@ -16,6 +15,7 @@ import {
   Platform,
   Dimensions,
   ScrollView,
+  Pressable,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import DropDownPicker from "react-native-dropdown-picker";
@@ -26,12 +26,10 @@ import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
-//themed components
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import ThemedButton from "../../components/themedButton";
 
-//firebase imports
 import { db, auth } from "../../firebaseConfig";
 import {
   collection,
@@ -49,32 +47,27 @@ import {
 const ProgressTracker = () => {
   const router = useRouter();
   const screenWidth = Dimensions.get("window").width;
+  const user = auth.currentUser;
 
   const [selectedTab, setSelectedTab] = useState("workouts");
   const [workouts, setWorkouts] = useState([]);
+  const [openWorkoutYearDropdown, setOpenWorkoutYearDropdown] = useState(false);
+  const [selectedWorkoutYear, setSelectedWorkoutYear] = useState("all");
+  const [workoutYearOptions, setWorkoutYearOptions] = useState([]);
   const [openedWorkouts, setOpenedWorkouts] = useState(new Set());
+  const [allWorkouts, setAllWorkouts] = useState([]);
 
   const [weights, setWeights] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [weightInput, setWeightInput] = useState("");
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-
   const [openYearDropdown, setOpenYearDropdown] = useState(false);
   const [selectedYear, setSelectedYear] = useState(null);
   const [yearOptions, setYearOptions] = useState([]);
   const [allWeights, setAllWeights] = useState([]);
-
-  const [openWorkoutYearDropdown, setOpenWorkoutYearDropdown] = useState(false);
-  const [selectedWorkoutYear, setSelectedWorkoutYear] = useState("all");
-  const [workoutYearOptions, setWorkoutYearOptions] = useState([]);
-
   const [weightListModalVisible, setWeightListModalVisible] = useState(false);
   const [editingWeight, setEditingWeight] = useState(null);
-  const user = auth.currentUser;
-
-  const [allWorkouts, setAllWorkouts] = useState([]);
-
   const [originalWeightInput, setOriginalWeightInput] = useState("");
   const [originalDate, setOriginalDate] = useState(new Date());
 
@@ -84,14 +77,13 @@ const ProgressTracker = () => {
   const [protein, setProtein] = useState("");
   const [carbs, setCarbs] = useState("");
   const [fats, setFats] = useState("");
-
+  const [macroSelectorDate, setMacroSelectorDate] = useState(new Date());
   const [macros, setMacros] = useState([]);
   const [allMacros, setAllMacros] = useState([]);
   const [openedMacros, setOpenedMacros] = useState(new Set());
   const [macroYearOptions, setMacroYearOptions] = useState([]);
   const [selectedMacroYear, setSelectedMacroYear] = useState("all");
   const [openMacroYearDropdown, setOpenMacroYearDropdown] = useState(false);
-
   const [editingMacro, setEditingMacro] = useState(null);
   const [originalMacroTitle, setOriginalMacroTitle] = useState("");
   const [originalCalories, setOriginalCalories] = useState("");
@@ -104,15 +96,44 @@ const ProgressTracker = () => {
   useEffect(() => {
     if (!user) {
       setAllMacros([]);
+      setMacros([]);
+      setAllWorkouts([]);
+      setAllWeights([]);
       return;
     }
 
-    const q = query(
+    const queryWeightData = query(
+      collection(db, "users", user.uid, "weights"),
+      orderBy("date", "desc"),
+    );
+
+    const unsubscribeWeight = onSnapshot(queryWeightData, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setAllWeights(data);
+    });
+    const queryWorkoutData = query(
+      collection(db, "workouts"),
+      where("userId", "==", user.uid),
+      orderBy("createdAt", "desc"),
+    );
+
+    const unsubscribeWork = onSnapshot(queryWorkoutData, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setAllWorkouts(data);
+    });
+
+    const queryMacroData = query(
       collection(db, "users", user.uid, "macros"),
       orderBy("createdAt", "desc"),
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribeMacs = onSnapshot(queryMacroData, (snapshot) => {
       const data = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -120,7 +141,11 @@ const ProgressTracker = () => {
       setAllMacros(data);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeWeight();
+      unsubscribeWork();
+      unsubscribeMacs();
+    };
   }, [user]);
 
   useEffect(() => {
@@ -162,7 +187,6 @@ const ProgressTracker = () => {
 
   useEffect(() => {
     if (!user) {
-      setMacros([]);
       return;
     }
 
@@ -203,26 +227,6 @@ const ProgressTracker = () => {
   };
 
   useEffect(() => {
-    if (!user) {
-      setAllWeights([]);
-      return;
-    }
-
-    const weightsCollection = collection(db, "users", user.uid, "weights");
-    const q = query(weightsCollection, orderBy("date", "desc"));
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setAllWeights(data);
-    });
-
-    return () => unsubscribe();
-  }, [user]);
-
-  useEffect(() => {
     if (allWeights.length === 0) {
       setYearOptions([]);
       setSelectedYear(null);
@@ -250,29 +254,6 @@ const ProgressTracker = () => {
       setSelectedYear(uniqueYears[0]);
     }
   }, [allWeights, selectedYear]);
-
-  useEffect(() => {
-    if (!user) {
-      setAllWorkouts([]);
-      return;
-    }
-
-    const q = query(
-      collection(db, "workouts"),
-      where("userId", "==", user.uid),
-      orderBy("createdAt", "desc"),
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setAllWorkouts(data);
-    });
-
-    return () => unsubscribe();
-  }, [user]);
 
   useEffect(() => {
     if (!user || allWorkouts.length === 0) {
@@ -873,6 +854,17 @@ const ProgressTracker = () => {
     importedMacroHandled,
   ]);
 
+  const onChangeDate = (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      const newDate = new Date(date);
+      newDate.setFullYear(selectedDate.getFullYear());
+      newDate.setMonth(selectedDate.getMonth());
+      newDate.setDate(selectedDate.getDate());
+      setMacroSelectorDate(newDate);
+    }
+  };
+
   return (
     <ThemedView style={styles.container}>
       <ThemedText style={styles.title}>Progress Tracker</ThemedText>
@@ -1177,6 +1169,26 @@ const ProgressTracker = () => {
               arrowIconStyle={{ tintColor: "#fff" }}
               tickIconStyle={{ tintColor: "#fff" }}
             />
+            <Pressable onPress={() => setShowDatePicker(!showDatePicker)}>
+              <View
+                style={{
+                  height: 50,
+                  backgroundColor: "#2c2c2c",
+                  borderColor: "#444444",
+                }}
+              >
+                <ThemedText>{macroSelectorDate}</ThemedText>
+              </View>
+            </Pressable>
+            {showDatePicker && (
+              <DateTimePicker
+                value={macroSelectorDate}
+                mode="date"
+                onChange={onChangeDate}
+                maximumDate={new Date()}
+                testID="date-picker"
+              />
+            )}
           </View>
 
           {macros.length === 0 ? (
