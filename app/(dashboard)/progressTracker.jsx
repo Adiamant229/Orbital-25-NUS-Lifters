@@ -15,7 +15,6 @@ import {
   Platform,
   Dimensions,
   ScrollView,
-  Pressable,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import DropDownPicker from "react-native-dropdown-picker";
@@ -77,7 +76,6 @@ const ProgressTracker = () => {
   const [protein, setProtein] = useState("");
   const [carbs, setCarbs] = useState("");
   const [fats, setFats] = useState("");
-  const [macroSelectorDate, setMacroSelectorDate] = useState(new Date());
   const [macros, setMacros] = useState([]);
   const [allMacros, setAllMacros] = useState([]);
   const [openedMacros, setOpenedMacros] = useState(new Set());
@@ -445,12 +443,6 @@ const ProgressTracker = () => {
           orderBy("date", "desc"),
         );
 
-        const snapshot = await getDocs(q);
-        const existingWeightsOnDate = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-
         if (editingWeight) {
           const weightDocRef = doc(userDocRef, "weights", editingWeight.id);
           await updateDoc(weightDocRef, {
@@ -475,7 +467,6 @@ const ProgressTracker = () => {
           allCurrentDayWeights.sort(
             (a, b) => b.date.getTime() - a.date.getTime(),
           );
-          const latestEntry = allCurrentDayWeights[0];
 
           for (let i = 1; i < allCurrentDayWeights.length; i++) {
             await deleteDoc(
@@ -854,17 +845,6 @@ const ProgressTracker = () => {
     importedMacroHandled,
   ]);
 
-  const onChangeDate = (event, selectedDate) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      const newDate = new Date(date);
-      newDate.setFullYear(selectedDate.getFullYear());
-      newDate.setMonth(selectedDate.getMonth());
-      newDate.setDate(selectedDate.getDate());
-      setMacroSelectorDate(newDate);
-    }
-  };
-
   return (
     <ThemedView style={styles.container}>
       <ThemedText style={styles.title}>Progress Tracker</ThemedText>
@@ -1169,26 +1149,6 @@ const ProgressTracker = () => {
               arrowIconStyle={{ tintColor: "#fff" }}
               tickIconStyle={{ tintColor: "#fff" }}
             />
-            <Pressable onPress={() => setShowDatePicker(!showDatePicker)}>
-              <View
-                style={{
-                  height: 50,
-                  backgroundColor: "#2c2c2c",
-                  borderColor: "#444444",
-                }}
-              >
-                <ThemedText>{macroSelectorDate}</ThemedText>
-              </View>
-            </Pressable>
-            {showDatePicker && (
-              <DateTimePicker
-                value={macroSelectorDate}
-                mode="date"
-                onChange={onChangeDate}
-                maximumDate={new Date()}
-                testID="date-picker"
-              />
-            )}
           </View>
 
           {macros.length === 0 ? (
@@ -1220,7 +1180,6 @@ const ProgressTracker = () => {
                 let dateStr = "";
                 let relativeStr = "";
                 if (createdDate) {
-                  const diffTime = Math.abs(now - createdDate);
                   const diffDays = (() => {
                     const d1 = new Date(
                       createdDate.getFullYear(),
