@@ -74,7 +74,7 @@ const Macro = () => {
         console.error("Failed to load meal list:", err);
       }
       try {
-        const cache = await AsyncStorage.getItem("macroCache")
+        const cache = await AsyncStorage.getItem("macroCache");
       } catch (err) {
         return;
       }
@@ -93,12 +93,12 @@ const Macro = () => {
     if (debounced && debounced.length >= 3) {
       setLoading(true);
       searchDB(debounced)
-        .then(input => {
+        .then((input) => {
           setFoodList(input);
           setLoading(false);
         })
         .catch((err) => {
-          console.error("Retrieval error: ", err)
+          console.error("Retrieval error: ", err);
           setLoading(false);
         });
     }

@@ -1,4 +1,3 @@
-//react and expo imports
 import { useState, useEffect } from "react";
 import {
   Alert,
@@ -26,12 +25,10 @@ import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
-//themed components
 import ThemedText from "../../components/themedText";
 import ThemedView from "../../components/themedView";
 import ThemedButton from "../../components/themedButton";
 
-//firebase imports
 import { db, auth } from "../../firebaseConfig";
 import {
   collection,
@@ -49,32 +46,27 @@ import {
 const ProgressTracker = () => {
   const router = useRouter();
   const screenWidth = Dimensions.get("window").width;
+  const user = auth.currentUser;
 
   const [selectedTab, setSelectedTab] = useState("workouts");
   const [workouts, setWorkouts] = useState([]);
+  const [openWorkoutYearDropdown, setOpenWorkoutYearDropdown] = useState(false);
+  const [selectedWorkoutYear, setSelectedWorkoutYear] = useState("all");
+  const [workoutYearOptions, setWorkoutYearOptions] = useState([]);
   const [openedWorkouts, setOpenedWorkouts] = useState(new Set());
+  const [allWorkouts, setAllWorkouts] = useState([]);
 
   const [weights, setWeights] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [weightInput, setWeightInput] = useState("");
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-
   const [openYearDropdown, setOpenYearDropdown] = useState(false);
   const [selectedYear, setSelectedYear] = useState(null);
   const [yearOptions, setYearOptions] = useState([]);
   const [allWeights, setAllWeights] = useState([]);
-
-  const [openWorkoutYearDropdown, setOpenWorkoutYearDropdown] = useState(false);
-  const [selectedWorkoutYear, setSelectedWorkoutYear] = useState("all");
-  const [workoutYearOptions, setWorkoutYearOptions] = useState([]);
-
   const [weightListModalVisible, setWeightListModalVisible] = useState(false);
   const [editingWeight, setEditingWeight] = useState(null);
-  const user = auth.currentUser;
-
-  const [allWorkouts, setAllWorkouts] = useState([]);
-
   const [originalWeightInput, setOriginalWeightInput] = useState("");
   const [originalDate, setOriginalDate] = useState(new Date());
 
@@ -84,14 +76,12 @@ const ProgressTracker = () => {
   const [protein, setProtein] = useState("");
   const [carbs, setCarbs] = useState("");
   const [fats, setFats] = useState("");
-
   const [macros, setMacros] = useState([]);
   const [allMacros, setAllMacros] = useState([]);
   const [openedMacros, setOpenedMacros] = useState(new Set());
   const [macroYearOptions, setMacroYearOptions] = useState([]);
   const [selectedMacroYear, setSelectedMacroYear] = useState("all");
   const [openMacroYearDropdown, setOpenMacroYearDropdown] = useState(false);
-
   const [editingMacro, setEditingMacro] = useState(null);
   const [originalMacroTitle, setOriginalMacroTitle] = useState("");
   const [originalCalories, setOriginalCalories] = useState("");
@@ -104,15 +94,44 @@ const ProgressTracker = () => {
   useEffect(() => {
     if (!user) {
       setAllMacros([]);
+      setMacros([]);
+      setAllWorkouts([]);
+      setAllWeights([]);
       return;
     }
 
-    const q = query(
+    const queryWeightData = query(
+      collection(db, "users", user.uid, "weights"),
+      orderBy("date", "desc"),
+    );
+
+    const unsubscribeWeight = onSnapshot(queryWeightData, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setAllWeights(data);
+    });
+    const queryWorkoutData = query(
+      collection(db, "workouts"),
+      where("userId", "==", user.uid),
+      orderBy("createdAt", "desc"),
+    );
+
+    const unsubscribeWork = onSnapshot(queryWorkoutData, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setAllWorkouts(data);
+    });
+
+    const queryMacroData = query(
       collection(db, "users", user.uid, "macros"),
       orderBy("createdAt", "desc"),
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribeMacs = onSnapshot(queryMacroData, (snapshot) => {
       const data = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -120,7 +139,11 @@ const ProgressTracker = () => {
       setAllMacros(data);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeWeight();
+      unsubscribeWork();
+      unsubscribeMacs();
+    };
   }, [user]);
 
   useEffect(() => {
@@ -162,7 +185,6 @@ const ProgressTracker = () => {
 
   useEffect(() => {
     if (!user) {
-      setMacros([]);
       return;
     }
 
@@ -203,26 +225,6 @@ const ProgressTracker = () => {
   };
 
   useEffect(() => {
-    if (!user) {
-      setAllWeights([]);
-      return;
-    }
-
-    const weightsCollection = collection(db, "users", user.uid, "weights");
-    const q = query(weightsCollection, orderBy("date", "desc"));
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setAllWeights(data);
-    });
-
-    return () => unsubscribe();
-  }, [user]);
-
-  useEffect(() => {
     if (allWeights.length === 0) {
       setYearOptions([]);
       setSelectedYear(null);
@@ -250,29 +252,6 @@ const ProgressTracker = () => {
       setSelectedYear(uniqueYears[0]);
     }
   }, [allWeights, selectedYear]);
-
-  useEffect(() => {
-    if (!user) {
-      setAllWorkouts([]);
-      return;
-    }
-
-    const q = query(
-      collection(db, "workouts"),
-      where("userId", "==", user.uid),
-      orderBy("createdAt", "desc"),
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setAllWorkouts(data);
-    });
-
-    return () => unsubscribe();
-  }, [user]);
 
   useEffect(() => {
     if (!user || allWorkouts.length === 0) {
@@ -464,12 +443,6 @@ const ProgressTracker = () => {
           orderBy("date", "desc"),
         );
 
-        const snapshot = await getDocs(q);
-        const existingWeightsOnDate = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-
         if (editingWeight) {
           const weightDocRef = doc(userDocRef, "weights", editingWeight.id);
           await updateDoc(weightDocRef, {
@@ -494,7 +467,6 @@ const ProgressTracker = () => {
           allCurrentDayWeights.sort(
             (a, b) => b.date.getTime() - a.date.getTime(),
           );
-          const latestEntry = allCurrentDayWeights[0];
 
           for (let i = 1; i < allCurrentDayWeights.length; i++) {
             await deleteDoc(
@@ -1208,7 +1180,6 @@ const ProgressTracker = () => {
                 let dateStr = "";
                 let relativeStr = "";
                 if (createdDate) {
-                  const diffTime = Math.abs(now - createdDate);
                   const diffDays = (() => {
                     const d1 = new Date(
                       createdDate.getFullYear(),
